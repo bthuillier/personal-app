@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Album Inventory API
+  version: '1.0'
+paths:
+  /wishlist/albums:
+    get:
+      operationId: getWishlistAlbums
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishlistAlbum'
+    post:
+      operationId: postWishlistAlbums
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddAlbumToWishlist'
+        required: true
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+  /wishlist/albums/received:
+    post:
+      operationId: postWishlistAlbumsReceived
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: artist
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: query parameter name, Invalid value for:
+            query parameter artist'
+          content:
+            text/plain:
+              schema:
+                type: string
+  /wishlist/albums/order:
+    post:
+      operationId: postWishlistAlbumsOrder
+      parameters:
+      - name: name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: artist
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: query parameter name, Invalid value for:
+            query parameter artist'
+          content:
+            text/plain:
+              schema:
+                type: string
+  /albums:
+    get:
+      operationId: getAlbums
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartialAlbum'
+components:
+  schemas:
+    AddAlbumToWishlist:
+      title: AddAlbumToWishlist
+      type: object
+      required:
+      - name
+      - artist
+      - format
+      - releaseDate
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+        format:
+          $ref: '#/components/schemas/AlbumFormat'
+        releaseDate:
+          type: string
+          format: date
+    AlbumFormat:
+      title: AlbumFormat
+      type: string
+      enum:
+      - CD
+      - Vinyl
+    PartialAlbum:
+      title: PartialAlbum
+      type: object
+      required:
+      - name
+      - artist
+      - format
+      - releaseDate
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+        format:
+          $ref: '#/components/schemas/AlbumFormat'
+        releaseDate:
+          type: string
+          format: date
+    WishlistAlbum:
+      title: WishlistAlbum
+      type: object
+      required:
+      - name
+      - artist
+      - format
+      - releaseDate
+      - status
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+        format:
+          $ref: '#/components/schemas/AlbumFormat'
+        releaseDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/WishlistStatus'
+    WishlistStatus:
+      title: WishlistStatus
+      type: string
+      enum:
+      - Ordered
+      - Received
+      - Wanted
