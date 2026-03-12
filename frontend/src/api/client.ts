@@ -1,21 +1,14 @@
-const BASE = "/api";
+import createClient from "openapi-fetch";
+import { QueryClient } from "@tanstack/react-query";
+import type { paths } from "./schema";
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
-  return res.json() as Promise<T>;
-}
+export const api = createClient<paths>({ baseUrl: "/api" });
 
-export async function apiPost<T = void>(
-  path: string,
-  body?: unknown,
-): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method: "POST",
-    headers: body ? { "Content-Type": "application/json" } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
-  const text = await res.text();
-  return text ? (JSON.parse(text) as T) : (undefined as T);
-}
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+    },
+  },
+});

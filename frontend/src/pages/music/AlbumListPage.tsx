@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { PartialAlbum } from "@/types/album";
-import { fetchAlbums } from "@/api/albums";
+import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { components } from "@/api/schema";
+import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
+
+type PartialAlbum = components["schemas"]["PartialAlbum"];
 
 const searchFields: (keyof PartialAlbum & string)[] = ["name", "artist"];
 
@@ -14,19 +17,16 @@ const columns: Column<PartialAlbum>[] = [
 ];
 
 export function AlbumListPage() {
-  const [albums, setAlbums] = useState<PartialAlbum[]>([]);
   const [displayed, setDisplayed] = useState<PartialAlbum[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAlbums()
-      .then(setAlbums)
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Failed to load albums"),
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: albums = [], isLoading, error } = useQuery({
+    queryKey: ["albums"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/albums");
+      if (error) throw new Error("Failed to load albums");
+      return data;
+    },
+  });
 
   const handleFiltered = useCallback((filtered: PartialAlbum[]) => {
     setDisplayed(filtered);
@@ -49,11 +49,11 @@ export function AlbumListPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Albums</h2>
       </div>
-      {loading && (
+      {isLoading && (
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {!loading && !error && (
+      {error && <p className="text-sm text-destructive">{error.message}</p>}
+      {!isLoading && !error && (
         <>
           <FilterBar
             data={albums}

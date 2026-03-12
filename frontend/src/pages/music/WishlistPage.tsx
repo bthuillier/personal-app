@@ -1,15 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
-import type { WishlistAlbum, AddAlbumToWishlist, WishlistStatus } from "@/types/wishlist";
-import {
-  fetchWishlistAlbums,
-  addAlbumToWishlist,
-  orderAlbum,
-  markAlbumReceived,
-} from "@/api/wishlist";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { components } from "@/api/schema";
+import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { Button } from "@/components/ui/button";
+
+type WishlistAlbum = components["schemas"]["WishlistAlbum"];
+type WishlistStatus = components["schemas"]["WishlistStatus"];
 
 const statusColorMap: Record<WishlistStatus, "default" | "secondary" | "outline"> = {
   Wanted: "outline",
@@ -25,39 +23,49 @@ const formFields: FieldDefinition[] = [
 ];
 
 export function WishlistPage() {
-  const [albums, setAlbums] = useState<WishlistAlbum[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const load = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await fetchWishlistAlbums();
-      setAlbums(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load albums");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: albums = [], isLoading, error } = useQuery({
+    queryKey: ["wishlist-albums"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/wishlist/albums");
+      if (error) throw new Error("Failed to load wishlist albums");
+      return data;
+    },
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const addMutation = useMutation({
+    mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {
+      const { error } = await api.POST("/wishlist/albums", { body });
+      if (error) throw new Error("Failed to add album");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
+  });
+
+  const orderMutation = useMutation({
+    mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
+      const { error } = await api.POST("/wishlist/albums/order", {
+        params: { query: { name, artist } },
+      });
+      if (error) throw new Error("Failed to order album");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
+  });
+
+  const receivedMutation = useMutation({
+    mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
+      const { error } = await api.POST("/wishlist/albums/received", {
+        params: { query: { name, artist } },
+      });
+      if (error) throw new Error("Failed to mark album received");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
+  });
 
   async function handleAdd(values: Record<string, string>) {
-    await addAlbumToWishlist(values as unknown as AddAlbumToWishlist);
-    load();
-  }
-
-  async function handleOrder(name: string, artist: string) {
-    await orderAlbum(name, artist);
-    load();
-  }
-
-  async function handleReceived(name: string, artist: string) {
-    await markAlbumReceived(name, artist);
-    load();
+    await addMutation.mutateAsync(
+      values as unknown as components["schemas"]["AddAlbumToWishlist"],
+    );
   }
 
   const columns: Column<WishlistAlbum>[] = [
@@ -79,7 +87,7 @@ export function WishlistPage() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => handleOrder(row.name, row.artist)}
+              onClick={() => orderMutation.mutate({ name: row.name, artist: row.artist })}
             >
               Mark Ordered
             </Button>
@@ -87,7 +95,7 @@ export function WishlistPage() {
           {row.status === "Ordered" && (
             <Button
               size="sm"
-              onClick={() => handleReceived(row.name, row.artist)}
+              onClick={() => receivedMutation.mutate({ name: row.name, artist: row.artist })}
             >
               Mark Received
             </Button>
@@ -108,11 +116,11 @@ export function WishlistPage() {
           submitLabel="Add to Wishlist"
         />
       </div>
-      {loading && (
+      {isLoading && (
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {!loading && !error && (
+      {error && <p className="text-sm text-destructive">{error.message}</p>}
+      {!isLoading && !error && (
         <DataTable
           columns={columns}
           data={albums}
