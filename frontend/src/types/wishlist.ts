@@ -1,4 +1,4 @@
-export type AlbumFormat = "CD" | "Vinyl";
+import type { AlbumFormat } from "./album";
 
 export type WishlistStatus = "Wanted" | "Ordered" | "Received";
 

@@ -1,5 +1,4 @@
-import type { AlbumFormat } from "./wishlist";
-
+export type AlbumFormat = "CD" | "Vinyl";
 export interface PartialAlbum {
   name: string;
   artist: string;
