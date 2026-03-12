@@ -10,17 +10,20 @@ object AlbumWishlists {
 
   val listAlbums =
     endpoint.get
+      .name("List Wishlist Albums")
       .in("wishlist" / "albums")
       .out(jsonBody[List[WishlistAlbum]])
 
   val addAlbumToWishlist =
     endpoint.post
+      .name("Add Album to Wishlist")
       .in("wishlist" / "albums")
       .in(jsonBody[WishlistService.AddAlbumToWishlist])
       .out(emptyOutput)
 
   val confirmAlbumReceived =
     endpoint.post
+      .name("Confirm Album Received")
       .in("wishlist" / "albums" / "received")
       .in(query[String]("name"))
       .in(query[String]("artist"))
@@ -28,6 +31,7 @@ object AlbumWishlists {
 
   val orderAlbum =
     endpoint.post
+      .name("Order Album")
       .in("wishlist" / "albums" / "order")
       .in(query[String]("name"))
       .in(query[String]("artist"))

@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
-  title: Album Inventory API
+  title: Personal App API
   version: '1.0'
 paths:
   /wishlist/albums:
     get:
-      operationId: getWishlistAlbums
+      operationId: List Wishlist Albums
       responses:
         '200':
           description: ''
@@ -16,7 +16,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/WishlistAlbum'
     post:
-      operationId: postWishlistAlbums
+      operationId: Add Album to Wishlist
       requestBody:
         content:
           application/json:
@@ -34,7 +34,7 @@ paths:
                 type: string
   /wishlist/albums/received:
     post:
-      operationId: postWishlistAlbumsReceived
+      operationId: Confirm Album Received
       parameters:
       - name: name
         in: query
@@ -58,7 +58,7 @@ paths:
                 type: string
   /wishlist/albums/order:
     post:
-      operationId: postWishlistAlbumsOrder
+      operationId: Order Album
       parameters:
       - name: name
         in: query
@@ -82,7 +82,7 @@ paths:
                 type: string
   /albums:
     get:
-      operationId: getAlbums
+      operationId: List Albums
       responses:
         '200':
           description: ''
@@ -92,6 +92,92 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PartialAlbum'
+  /guitars:
+    get:
+      operationId: List Guitars
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Guitar'
+  /guitars/{serialNumber}/events:
+    get:
+      operationId: Get Guitar Events
+      parameters:
+      - name: serialNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuitarEvent'
+        '404':
+          description: ''
+  /guitars/{serialNumber}/commands:
+    post:
+      operationId: Handle Guitar Command
+      parameters:
+      - name: serialNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuitarCommand'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Guitar'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+  /amplifiers:
+    get:
+      operationId: List Amplifiers
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Amplifier'
+  /guitar-pedals:
+    get:
+      operationId: List Guitar Pedals
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuitarPedal'
 components:
   schemas:
     AddAlbumToWishlist:
@@ -118,6 +204,272 @@ components:
       enum:
       - CD
       - Vinyl
+    AmpType:
+      title: AmpType
+      type: string
+      enum:
+      - SolidState
+      - Tube
+    Amplifier:
+      title: Amplifier
+      type: object
+      required:
+      - model
+      - serialNumber
+      - brand
+      - year
+      - wattage
+      - type
+      properties:
+        model:
+          type: string
+        serialNumber:
+          type: string
+        brand:
+          $ref: '#/components/schemas/AmplifierBrand'
+        year:
+          type: integer
+          format: int32
+        wattage:
+          type: integer
+          format: int32
+        type:
+          $ref: '#/components/schemas/AmpType'
+    AmplifierBrand:
+      title: AmplifierBrand
+      type: string
+      enum:
+      - Revv
+      - Victory
+    ChangeStrings:
+      title: ChangeStrings
+      type: object
+      required:
+      - date
+      - stringBrand
+      - tuning
+      properties:
+        date:
+          type: string
+          format: date
+        stringBrand:
+          type: string
+        stringGauge:
+          type: array
+          items:
+            type: number
+            format: double
+        tuning:
+          $ref: '#/components/schemas/GuitarTuning'
+    Guitar:
+      title: Guitar
+      type: object
+      required:
+      - model
+      - brand
+      - year
+      - serialNumber
+      - specifications
+      - setup
+      properties:
+        model:
+          type: string
+        brand:
+          $ref: '#/components/schemas/GuitarBrand'
+        year:
+          type: integer
+          format: int32
+        serialNumber:
+          type: string
+        specifications:
+          $ref: '#/components/schemas/GuitarSpecifications'
+        setup:
+          $ref: '#/components/schemas/GuitarSetup'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuitarEvent'
+    GuitarBrand:
+      title: GuitarBrand
+      type: string
+      enum:
+      - Aristides
+      - Charvel
+      - Dunable
+      - Epiphone
+      - Ibanez
+      - Jackson
+      - Ltd
+      - PRS
+      - Schecter
+    GuitarCommand:
+      title: GuitarCommand
+      oneOf:
+      - $ref: '#/components/schemas/ChangeStrings'
+    GuitarEvent:
+      title: GuitarEvent
+      oneOf:
+      - $ref: '#/components/schemas/StringsChanged'
+    GuitarMaterial:
+      title: GuitarMaterial
+      type: string
+      enum:
+      - Alder
+      - Arium
+      - Ash
+      - Basswood
+      - Ebony
+      - FlamedMaple
+      - MacassarEbony
+      - Mahogany
+      - Mango
+      - Maple
+      - PauFerro
+      - PoplarBurl
+      - PurpleHeart
+      - QuiltedMaple
+      - RichLite
+      - RoastedMaple
+      - Rosewood
+      - SwampAsh
+      - Walnut
+      - Wenge
+    GuitarPedal:
+      title: GuitarPedal
+      type: object
+      required:
+      - model
+      - serialNumber
+      - brand
+      - year
+      - type
+      properties:
+        model:
+          type: string
+        serialNumber:
+          type: string
+        brand:
+          $ref: '#/components/schemas/GuitarPedalBrand'
+        year:
+          type: integer
+          format: int32
+        type:
+          $ref: '#/components/schemas/PedalType'
+    GuitarPedalBrand:
+      title: GuitarPedalBrand
+      type: string
+      enum:
+      - Boss
+      - Digitech
+      - EarthQuakerDevices
+      - Fortin
+      - GroundFx
+      - Hologram
+      - JHS
+      - JPTRFX
+      - KMAMachines
+      - Klirrton
+      - LichtlaermAudio
+      - OldBloodNoiseEndeavors
+      - Revv
+      - ScienceAmplification
+      - SeymourDuncan
+      - StoneDeaf
+      - TcElectronic
+      - WalrusAudio
+      - WayHuge
+    GuitarSetup:
+      title: GuitarSetup
+      type: object
+      required:
+      - stringBrand
+      - tuning
+      - lastStringChange
+      properties:
+        stringGauge:
+          type: array
+          items:
+            type: number
+            format: double
+        stringBrand:
+          type: string
+        tuning:
+          $ref: '#/components/schemas/GuitarTuning'
+        lastStringChange:
+          type: string
+          format: date
+    GuitarSpecifications:
+      title: GuitarSpecifications
+      type: object
+      required:
+      - bodyFinish
+      - bodyMaterial
+      - pickupConfiguration
+      - fretboardMaterial
+      - numberOfFrets
+      - scaleLengthInInches
+      - numberOfStrings
+      properties:
+        bodyFinish:
+          type: string
+        top:
+          $ref: '#/components/schemas/GuitarMaterial'
+        bodyMaterial:
+          $ref: '#/components/schemas/GuitarMaterial'
+        pickupConfiguration:
+          $ref: '#/components/schemas/PickupConfiguration'
+        fretboardMaterial:
+          $ref: '#/components/schemas/GuitarMaterial'
+        neckMaterial:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuitarMaterial'
+        numberOfFrets:
+          type: integer
+          format: int32
+        scaleLengthInInches:
+          type: number
+          format: double
+        numberOfStrings:
+          type: integer
+          format: int32
+    GuitarTuning:
+      title: GuitarTuning
+      type: object
+      properties:
+        notes:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Note'
+    Note:
+      title: Note
+      type: object
+      required:
+      - name
+      - octave
+      properties:
+        name:
+          $ref: '#/components/schemas/NoteName'
+        octave:
+          type: integer
+          format: int32
+    NoteName:
+      title: NoteName
+      type: string
+      enum:
+      - A
+      - As
+      - B
+      - C
+      - Cs
+      - D
+      - Ds
+      - E
+      - F
+      - Fs
+      - G
+      - Gs
     PartialAlbum:
       title: PartialAlbum
       type: object
@@ -136,6 +488,86 @@ components:
         releaseDate:
           type: string
           format: date
+    PedalType:
+      title: PedalType
+      type: string
+      enum:
+      - Boost
+      - Chorus
+      - Delay
+      - Distortion
+      - Fuzz
+      - NoiseGate
+      - Overdrive
+      - PowerAmplifier
+      - Preamp
+      - Reverb
+      - Splitter
+      - Tuner
+    Pickup:
+      title: Pickup
+      type: object
+      required:
+      - type
+      - brand
+      - model
+      properties:
+        type:
+          $ref: '#/components/schemas/PickupType'
+        brand:
+          $ref: '#/components/schemas/PickupBrand'
+        model:
+          type: string
+    PickupBrand:
+      title: PickupBrand
+      type: string
+      enum:
+      - BareKnuckle
+      - DiMarzio
+      - Dunable
+      - EMG
+      - Fishman
+      - Lundgren
+      - SeymourDuncan
+    PickupConfiguration:
+      title: PickupConfiguration
+      type: object
+      required:
+      - bridgePickup
+      properties:
+        neckPickup:
+          $ref: '#/components/schemas/Pickup'
+        middlePickup:
+          $ref: '#/components/schemas/Pickup'
+        bridgePickup:
+          $ref: '#/components/schemas/Pickup'
+    PickupType:
+      title: PickupType
+      type: string
+      enum:
+      - Humbucker
+      - P90
+      - SingleCoil
+    StringsChanged:
+      title: StringsChanged
+      type: object
+      required:
+      - date
+      - stringBrand
+      - tuning
+      properties:
+        date:
+          type: string
+          format: date
+        stringBrand:
+          type: string
+        stringGauge:
+          type: array
+          items:
+            type: number
+            format: double
+        tuning:
+          $ref: '#/components/schemas/GuitarTuning'
     WishlistAlbum:
       title: WishlistAlbum
       type: object

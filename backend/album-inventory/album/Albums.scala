@@ -9,6 +9,7 @@ object Albums {
 
   val listAlbums =
     endpoint.get
+      .name("List Albums")
       .in("albums")
       .out(jsonBody[List[album.PartialAlbum]])
 

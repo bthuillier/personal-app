@@ -10,6 +10,7 @@ object GuitarPedals {
 
   val listGuitarPedalsEndpoint =
     endpoint.get
+      .name("List Guitar Pedals")
       .in("guitar-pedals")
       .out(jsonBody[List[GuitarPedal]])
 
@@ -18,6 +19,10 @@ object GuitarPedals {
   ) = listGuitarPedalsEndpoint.serverLogicSuccess { _ =>
     IO.pure(service.list)
   }
+
+  val endpointDefinitions = List(
+    listGuitarPedalsEndpoint
+  )
 
   def endpoints(
       service: GuitarPedalService

@@ -10,6 +10,7 @@ object AmplifierEndpoints {
 
   val listAmplifierEndpoint =
     endpoint.get
+      .name("List Amplifiers")
       .in("amplifiers")
       .out(jsonBody[List[Amplifier]])
 
@@ -18,6 +19,10 @@ object AmplifierEndpoints {
   ) = listAmplifierEndpoint.serverLogicSuccess { _ =>
     IO.pure(service.list)
   }
+
+  val endpointDefinitions = List(
+    listAmplifierEndpoint
+  )
 
   def endpoints(
       service: AmplifierService

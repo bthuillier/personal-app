@@ -11,6 +11,7 @@ object Guitars {
 
   val listGuitarsEndpoint =
     endpoint.get
+      .name("List Guitars")
       .in("guitars")
       .out(jsonBody[List[Guitar]])
 
@@ -22,6 +23,7 @@ object Guitars {
 
   val getGuitarEventsEndpoint =
     endpoint.get
+      .name("Get Guitar Events")
       .in("guitars" / path[String]("serialNumber") / "events")
       .out(jsonBody[List[GuitarEvent]])
       .errorOut(statusCode(StatusCode.NotFound))
@@ -37,6 +39,7 @@ object Guitars {
 
   val handleGuitarCommandEndpoint =
     endpoint.post
+      .name("Handle Guitar Command")
       .in("guitars" / path[String]("serialNumber") / "commands")
       .in(jsonBody[GuitarCommand])
       .out(jsonBody[Guitar])
@@ -50,6 +53,12 @@ object Guitars {
       case Right(guitar) => Right(guitar)
     }
   }
+
+  val endpointDefinitions = List(
+    listGuitarsEndpoint,
+    getGuitarEventsEndpoint,
+    handleGuitarCommandEndpoint
+  )
 
   def endpoints(
       guitarService: GuitarService
