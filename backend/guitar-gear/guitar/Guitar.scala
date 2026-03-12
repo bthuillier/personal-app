@@ -1,4 +1,4 @@
-package guitar
+package guitargear.guitar
 
 import java.time.LocalDate
 import io.circe.Codec

@@ -1,7 +1,4 @@
-package backend
-
-import guitar.*
-import pedal.*
+import guitargear.GuitarGear
 import sttp.tapir.server.netty.cats.NettyCatsServer
 import cats.effect.ResourceApp
 import cats.effect.{IO, Resource}
@@ -24,20 +21,12 @@ object App extends ResourceApp.Forever {
         WishlistService.fileBacked(s"$basePath/music-inventory/wishlist.json", eventBus)
       )
       albums <- Resource.eval(
-        album.AlbumService.fileBacked(s"$basePath/music-inventory/album/albums")
+        album.AlbumService.fileBacked(s"$basePath/music-inventory/albums")
       )
       _ <- Resource.eval(
         albums.addHandler(eventBus).start
       )
-      guitarService <- Resource.eval(
-        GuitarService.fromFile(basePath)
-      )
-      ampService <- Resource.eval(
-        amplifier.AmplifierService.fromFile(basePath)
-      )
-      pedalService <- Resource.eval(
-        GuitarPedalService.fromFile(basePath)
-      )
+      guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(basePath))
       server = NettyCatsServer[IO](
         NettyCatsServerOptions
           .default[IO](dispatcher)
@@ -55,9 +44,7 @@ object App extends ResourceApp.Forever {
             .addEndpoints(
               wishlist.AlbumWishlists.endpoints(wishlists) ++
                 album.Albums.endpoints(albums) ++
-                Guitars.endpoints(guitarService) ++
-                amplifier.AmplifierEndpoints.endpoints(ampService) ++
-                GuitarPedals.endpoints(pedalService)
+                guitarGearEndpoints
             )
             .start()
         } {

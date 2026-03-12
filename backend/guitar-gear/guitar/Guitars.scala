@@ -1,4 +1,4 @@
-package guitar
+package guitargear.guitar
 
 import cats.effect.IO
 import sttp.model.StatusCode

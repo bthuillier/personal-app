@@ -1,4 +1,4 @@
-package pedal
+package guitargear.pedal
 
 import cats.effect.IO
 

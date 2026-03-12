@@ -1,4 +1,4 @@
-package amplifier
+package guitargear.amplifier
 
 import json.JsonLoader
 import cats.effect.*

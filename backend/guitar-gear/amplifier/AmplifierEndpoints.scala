@@ -1,4 +1,4 @@
-package amplifier
+package guitargear.amplifier
 
 import cats.effect.IO
 

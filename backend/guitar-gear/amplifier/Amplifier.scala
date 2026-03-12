@@ -1,4 +1,4 @@
-package amplifier
+package guitargear.amplifier
 
 import io.circe.Codec
 import io.circe.derivation.Configuration

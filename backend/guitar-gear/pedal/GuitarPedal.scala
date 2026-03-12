@@ -1,4 +1,4 @@
-package pedal
+package guitargear.pedal
 
 import io.circe.Codec
 import io.circe.derivation.Configuration
