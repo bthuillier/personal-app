@@ -4,6 +4,8 @@ import { fetchAlbums } from "@/api/albums";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 
+const searchFields: (keyof PartialAlbum & string)[] = ["name", "artist"];
+
 const columns: Column<PartialAlbum>[] = [
   { header: "Album", accessor: "name" },
   { header: "Artist", accessor: "artist" },
@@ -56,7 +58,7 @@ export function AlbumListPage() {
           <FilterBar
             data={albums}
             searchPlaceholder="Search by name or artist..."
-            searchFields={["name", "artist"]}
+            searchFields={searchFields}
             filters={filters}
             onFiltered={handleFiltered}
           />
