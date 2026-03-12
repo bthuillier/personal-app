@@ -6,6 +6,7 @@ const sections = [
     title: "Music",
     links: [
       { to: "/music/wishlist", label: "Wishlist" },
+      { to: "/music/albums", label: "Albums" },
     ],
   },
 ];
