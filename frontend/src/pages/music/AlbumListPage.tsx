@@ -19,12 +19,11 @@ const columns: Column<PartialAlbum>[] = [
 export function AlbumListPage() {
   const [displayed, setDisplayed] = useState<PartialAlbum[]>([]);
 
-  const { data: albums = [], isLoading, error } = useQuery({
+  const { data: albums = [], isLoading } = useQuery({
     queryKey: ["albums"],
     queryFn: async () => {
-      const { data, error } = await api.GET("/albums");
-      if (error) throw new Error("Failed to load albums");
-      return data;
+      const { data } = await api.GET("/albums");
+      return data!;
     },
   });
 
@@ -52,8 +51,7 @@ export function AlbumListPage() {
       {isLoading && (
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
-      {!isLoading && !error && (
+      {!isLoading && (
         <>
           <FilterBar
             data={albums}

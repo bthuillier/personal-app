@@ -25,39 +25,35 @@ const formFields: FieldDefinition[] = [
 export function WishlistPage() {
   const queryClient = useQueryClient();
 
-  const { data: albums = [], isLoading, error } = useQuery({
+  const { data: albums = [], isLoading } = useQuery({
     queryKey: ["wishlist-albums"],
     queryFn: async () => {
-      const { data, error } = await api.GET("/wishlist/albums");
-      if (error) throw new Error("Failed to load wishlist albums");
-      return data;
+      const { data } = await api.GET("/wishlist/albums");
+      return data!;
     },
   });
 
   const addMutation = useMutation({
     mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {
-      const { error } = await api.POST("/wishlist/albums", { body });
-      if (error) throw new Error("Failed to add album");
+      await api.POST("/wishlist/albums", { body });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
   });
 
   const orderMutation = useMutation({
     mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
-      const { error } = await api.POST("/wishlist/albums/order", {
+      await api.POST("/wishlist/albums/order", {
         params: { query: { name, artist } },
       });
-      if (error) throw new Error("Failed to order album");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
   });
 
   const receivedMutation = useMutation({
     mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
-      const { error } = await api.POST("/wishlist/albums/received", {
+      await api.POST("/wishlist/albums/received", {
         params: { query: { name, artist } },
       });
-      if (error) throw new Error("Failed to mark album received");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
   });
@@ -119,8 +115,7 @@ export function WishlistPage() {
       {isLoading && (
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
-      {error && <p className="text-sm text-destructive">{error.message}</p>}
-      {!isLoading && !error && (
+      {!isLoading && (
         <DataTable
           columns={columns}
           data={albums}
