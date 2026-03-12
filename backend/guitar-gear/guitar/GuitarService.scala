@@ -1,6 +1,6 @@
 package guitar
 
-import utils.JsonLoader
+import json.JsonLoader
 import cats.effect.*
 import cats.effect.std.AtomicCell
 import io.circe.syntax.*

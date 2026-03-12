@@ -1,4 +1,4 @@
-package utils
+package json
 
 import io.circe.{Decoder, Encoder}
 import io.circe.syntax.*
@@ -65,5 +65,30 @@ object JsonLoader {
       folderPath: String
   )(using IORuntime): List[A] = {
     loadJsonFolder[A](folderPath).unsafeRunSync()
+  }
+
+  def loadJsonFolderWithPaths[A: Decoder](folderPath: String): IO[List[(A, String)]] = {
+    val folder = new File(folderPath)
+
+    val exists = IO.raiseWhen(!folder.exists())(
+      new RuntimeException(s"Folder does not exist: $folderPath")
+    )
+    val isDirectory = IO.raiseWhen(!folder.isDirectory())(
+      new RuntimeException(s"Path is not a directory: $folderPath")
+    )
+
+    (exists *> isDirectory).flatMap { _ =>
+      val jsonFiles = folder.listFiles().filter { file =>
+        file.isFile && file.getName.toLowerCase.endsWith(".json")
+      }
+
+      if (jsonFiles.isEmpty) {
+        IO.pure(List.empty)
+      } else {
+        jsonFiles.toList.traverse { file =>
+          loadJsonFile[A](file.getAbsolutePath).map(_ -> file.getAbsolutePath)
+        }
+      }
+    }
   }
 }

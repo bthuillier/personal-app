@@ -1,6 +1,6 @@
 package amplifier
 
-import utils.JsonLoader
+import json.JsonLoader
 import cats.effect.*
 
 class AmplifierService(initialAmplifiers: List[Amplifier]) {

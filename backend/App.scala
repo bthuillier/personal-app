@@ -1,3 +1,7 @@
+package backend
+
+import guitar.*
+import pedal.*
 import sttp.tapir.server.netty.cats.NettyCatsServer
 import cats.effect.ResourceApp
 import cats.effect.{IO, Resource}
@@ -12,19 +16,27 @@ object App extends ResourceApp.Forever {
   override def run(args: List[String]): Resource[IO, Unit] =
     for {
       dispatcher <- Dispatcher.parallel[IO]
-      basePathOpt <- Resource.Eval(Env[IO].get("DB_BASE_PATH"))
-      basePath = basePathOpt.getOrElse("data")
-      eventBus <- Resource.Eval(
+      basePath <- Resource.eval(Env[IO].get("DB_BASE_PATH").map(_.getOrElse("data")))
+      eventBus <- Resource.eval(
         eventbus.EventBus.create[wishlist.WishlistAlbum]
       )
       wishlists <- Resource.eval(
-        WishlistService.fileBacked(s"$basePath/wishlist.json", eventBus)
+        WishlistService.fileBacked(s"$basePath/music-inventory/wishlist.json", eventBus)
       )
       albums <- Resource.eval(
-        album.AlbumService.fileBacked(s"$basePath/albums")
+        album.AlbumService.fileBacked(s"$basePath/music-inventory/album/albums")
       )
       _ <- Resource.eval(
         albums.addHandler(eventBus).start
+      )
+      guitarService <- Resource.eval(
+        GuitarService.fromFile(basePath)
+      )
+      ampService <- Resource.eval(
+        amplifier.AmplifierService.fromFile(basePath)
+      )
+      pedalService <- Resource.eval(
+        GuitarPedalService.fromFile(basePath)
       )
       server = NettyCatsServer[IO](
         NettyCatsServerOptions
@@ -41,8 +53,11 @@ object App extends ResourceApp.Forever {
             .port(8080)
             .host("0.0.0.0")
             .addEndpoints(
-              wishlist.AlbumWishlists.endpoints(wishlists) ++ album.Albums
-                .endpoints(albums)
+              wishlist.AlbumWishlists.endpoints(wishlists) ++
+                album.Albums.endpoints(albums) ++
+                Guitars.endpoints(guitarService) ++
+                amplifier.AmplifierEndpoints.endpoints(ampService) ++
+                GuitarPedals.endpoints(pedalService)
             )
             .start()
         } {

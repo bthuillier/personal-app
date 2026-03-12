@@ -1,6 +1,6 @@
 package pedal
 
-import utils.JsonLoader
+import json.JsonLoader
 import cats.effect.*
 
 class GuitarPedalService(initialPedals: List[GuitarPedal]) {

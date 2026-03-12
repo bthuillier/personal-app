@@ -2,7 +2,7 @@ package wishlist
 
 import cats.effect.IO
 import scala.collection.mutable
-import utils.JsonLoader
+import json.JsonLoader
 
 trait WishlistStore {
   def list: IO[List[WishlistAlbum]]

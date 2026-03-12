@@ -2,7 +2,7 @@ package album
 
 import cats.effect.*
 import scala.collection.mutable
-import utils.JsonLoader
+import json.JsonLoader
 
 trait AlbumStore {
   def list: IO[List[PartialAlbum]]
