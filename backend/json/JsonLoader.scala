@@ -9,8 +9,12 @@ import java.io.File
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object JsonLoader {
+
+  private val logger: IO[Logger[IO]] = Slf4jLogger.create[IO]
 
   def saveJsonFile[A: Encoder](filePath: String, data: A): IO[Unit] = {
     val jsonString = data.asJson.spaces2
@@ -31,8 +35,8 @@ object JsonLoader {
       git
         .commitFile(filePath, commitMessage)
         .handleErrorWith { e =>
-          IO.println(
-            s"[GitCommitter] Warning: git commit failed for $filePath — ${e.getMessage}"
+          logger.flatMap(
+            _.warn(s"Git commit failed for $filePath — ${e.getMessage}")
           )
         }
 

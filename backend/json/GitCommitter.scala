@@ -4,13 +4,16 @@ import cats.effect.IO
 import cats.effect.std.Semaphore
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import java.io.File
 import java.nio.file.Path
 
 class GitCommitter private (
     git: Git,
     repoRoot: Path,
-    lock: Semaphore[IO]
+    lock: Semaphore[IO],
+    logger: Logger[IO]
 ) {
 
   /** Commits a specific file with the given message.
@@ -32,13 +35,16 @@ class GitCommitter private (
           val commit = git.commit()
             .setMessage(message)
             .call()
-          println(
-            s"[GitCommitter] Committed ${commit.abbreviate(7).name()}: $message"
-          )
+          (true, commit.abbreviate(7).name(), message)
+        } else {
+          (false, "", "")
         }
+      }.flatMap { case (committed, shortId, msg) =>
+        if (committed) logger.info(s"Committed $shortId: $msg")
+        else IO.unit
       }.adaptError { case e =>
         new RuntimeException(
-          s"[GitCommitter] Failed to commit file: $filePath — ${e.getMessage}",
+          s"Failed to commit file: $filePath — ${e.getMessage}",
           e
         )
       }
@@ -48,16 +54,19 @@ class GitCommitter private (
 object GitCommitter {
 
   def create(basePath: String): IO[GitCommitter] =
-    IO.blocking {
-      val dbDir = new File(basePath).getCanonicalFile
-      val repo = new FileRepositoryBuilder()
-        .findGitDir(dbDir)
-        .build()
-      val git = new Git(repo)
-      val repoRoot = repo.getWorkTree.toPath
-      println(s"[GitCommitter] Initialized for repo: $repoRoot")
-      (git, repoRoot)
-    }.flatMap { case (git, repoRoot) =>
-      Semaphore[IO](1).map(new GitCommitter(git, repoRoot, _))
-    }
+    for {
+      logger <- Slf4jLogger.create[IO]
+      result <- IO.blocking {
+        val dbDir = new File(basePath).getCanonicalFile
+        val repo = new FileRepositoryBuilder()
+          .findGitDir(dbDir)
+          .build()
+        val git = new Git(repo)
+        val repoRoot = repo.getWorkTree.toPath
+        (git, repoRoot)
+      }
+      (git, repoRoot) = result
+      _ <- logger.info(s"Initialized for repo: ${repoRoot}")
+      lock <- Semaphore[IO](1)
+    } yield new GitCommitter(git, repoRoot, lock, logger)
 }

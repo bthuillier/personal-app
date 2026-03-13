@@ -6,9 +6,12 @@ import cats.effect.std.AtomicCell
 import io.circe.syntax.*
 import java.io.{File, PrintWriter}
 import scala.util.Using
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class GuitarService(
-    cell: AtomicCell[IO, Map[String, (Guitar, String)]]
+    cell: AtomicCell[IO, Map[String, (Guitar, String)]],
+    logger: Logger[IO]
 )(using git: GitCommitter) {
 
   def list: IO[List[Guitar]] =
@@ -41,8 +44,8 @@ class GuitarService(
         s"Update guitar ${guitar.serialNumber}: ${command.productPrefix}"
       )
       .handleErrorWith { e =>
-        IO.println(
-          s"[GitCommitter] Warning: git commit failed for $filePath — ${e.getMessage}"
+        logger.warn(
+          s"Git commit failed for $filePath — ${e.getMessage}"
         )
       }
 
@@ -50,10 +53,12 @@ class GuitarService(
 
 object GuitarService {
   def fromFile(basePath: String)(using GitCommitter): IO[GuitarService] =
-    JsonLoader.loadJsonFolderWithPaths[Guitar](s"$basePath/guitar").flatMap { entries =>
-      val stateMap = entries.map { case (guitar, path) =>
+    for {
+      logger <- Slf4jLogger.create[IO]
+      entries <- JsonLoader.loadJsonFolderWithPaths[Guitar](s"$basePath/guitar")
+      stateMap = entries.map { case (guitar, path) =>
         guitar.serialNumber -> (guitar, path)
       }.toMap
-      AtomicCell[IO].of(stateMap).map(new GuitarService(_))
-    }
+      cell <- AtomicCell[IO].of(stateMap)
+    } yield new GuitarService(cell, logger)
 }

@@ -7,8 +7,10 @@ import io.circe.Codec
 import sttp.tapir.Schema
 import eventbus.EventBus
 import json.GitCommitter
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum]) {
+class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum], logger: Logger[IO]) {
 
   def list: IO[List[WishlistAlbum]] = store.list
   def addAlbumToWishlist(album: WishlistService.AddAlbumToWishlist): IO[Unit] =
@@ -17,7 +19,7 @@ class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum]) {
     store.get(name, artist).flatMap {
       case Some(existingAlbum) =>
         val updatedAlbum = existingAlbum.copy(status = WishlistStatus.Received)
-        IO.println(s"Confirming album received: $name by $artist") *> eventBus
+        logger.info(s"Confirming album received: $name by $artist") *> eventBus
           .publish(updatedAlbum) *> store.updateStatus(
           name,
           artist,
@@ -51,9 +53,10 @@ object WishlistService {
       filePath: String,
       eventBus: EventBus[WishlistAlbum]
   )(using GitCommitter): IO[WishlistService] = {
-    WishlistStore
-      .fileBacked(filePath)
-      .map(store => WishlistService(store, eventBus))
+    for {
+      logger <- Slf4jLogger.create[IO]
+      store <- WishlistStore.fileBacked(filePath)
+    } yield WishlistService(store, eventBus, logger)
   }
 
 }
