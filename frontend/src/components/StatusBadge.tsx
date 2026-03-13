@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatEnum } from "@/lib/utils";
 
 type ColorVariant =
   | "default"
@@ -20,7 +20,7 @@ export function StatusBadge<T extends string>({
 }: StatusBadgeProps<T>) {
   return (
     <Badge variant={colorMap[status]} className={cn(className)}>
-      {status}
+      {formatEnum(status)}
     </Badge>
   );
 }

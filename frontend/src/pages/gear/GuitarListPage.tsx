@@ -5,6 +5,7 @@ import type { components } from "@/api/schema";
 import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
+import { formatEnum } from "@/lib/utils";
 
 type Guitar = components["schemas"]["Guitar"];
 
@@ -56,7 +57,7 @@ export function GuitarListPage() {
           to={`/gear/guitars/${encodeURIComponent(row.serialNumber)}`}
           className="text-primary underline-offset-4 hover:underline"
         >
-          {row.brand} {row.model}
+          {formatEnum(row.brand)} {row.model}
         </Link>
       ),
     },

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { formatEnum } from "@/lib/utils";
 import { SearchInput } from "@/components/SearchInput";
 import {
   Select,
@@ -142,7 +143,7 @@ export function FilterBar<T>({
             <SelectItem value={allValue(filter)}>{allValue(filter)}</SelectItem>
             {(resolvedOptions[filter.name] ?? []).map((opt) => (
               <SelectItem key={opt} value={opt}>
-                {opt}
+                {formatEnum(opt)}
               </SelectItem>
             ))}
           </SelectContent>

@@ -5,6 +5,7 @@ import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { StatusBadge } from "@/components/StatusBadge";
+import { formatEnum } from "@/lib/utils";
 
 type Amplifier = components["schemas"]["Amplifier"];
 type AmpType = components["schemas"]["AmpType"];
@@ -49,7 +50,7 @@ export function AmplifierListPage() {
 
   const columns: Column<Amplifier>[] = [
     { header: "Model", accessor: "model" },
-    { header: "Brand", accessor: "brand" },
+    { header: "Brand", accessor: "brand", render: (row) => formatEnum(row.brand) },
     { header: "Year", accessor: "year" },
     {
       header: "Wattage",

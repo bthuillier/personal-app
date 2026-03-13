@@ -6,8 +6,8 @@ import { api } from "@/api/client";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { DataTable, type Column } from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
+import { formatEnum } from "@/lib/utils";
 
-type Guitar = components["schemas"]["Guitar"];
 type GuitarEvent = components["schemas"]["GuitarEvent"];
 type GuitarTuning = components["schemas"]["GuitarTuning"];
 
@@ -24,12 +24,12 @@ function formatGauge(gauge?: number[]): string {
 
 function formatPickup(pickup?: components["schemas"]["Pickup"]) {
   if (!pickup) return "-";
-  return `${pickup.brand} ${pickup.model} (${pickup.type})`;
+  return `${formatEnum(pickup.brand)} ${pickup.model} (${formatEnum(pickup.type)})`;
 }
 
 function formatMaterials(materials?: components["schemas"]["GuitarMaterial"][]): string {
   if (!materials || materials.length === 0) return "-";
-  return materials.join(" / ");
+  return materials.map(formatEnum).join(" | ");
 }
 
 const changeStringsFields: FieldDefinition[] = [
@@ -128,7 +128,7 @@ export function GuitarDetailPage() {
             &larr; Back to Guitars
           </Link>
           <h2 className="text-xl font-semibold">
-            {guitar.brand} {guitar.model}
+            {formatEnum(guitar.brand)} {guitar.model}
           </h2>
           <p className="text-sm text-muted-foreground">
             {guitar.year} &middot; S/N: {guitar.serialNumber}
@@ -144,11 +144,11 @@ export function GuitarDetailPage() {
           </h3>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Body</dt>
-            <dd>{specs.bodyMaterial} — {specs.bodyFinish}</dd>
+            <dd>{formatEnum(specs.bodyMaterial)} — {specs.bodyFinish}</dd>
             {specs.top && (
               <>
                 <dt className="text-muted-foreground">Top</dt>
-                <dd>{specs.top}</dd>
+                <dd>{formatEnum(specs.top)}</dd>
               </>
             )}
             {specs.neckMaterial && specs.neckMaterial.length > 0 && (
@@ -158,7 +158,7 @@ export function GuitarDetailPage() {
               </>
             )}
             <dt className="text-muted-foreground">Fretboard</dt>
-            <dd>{specs.fretboardMaterial}</dd>
+            <dd>{formatEnum(specs.fretboardMaterial)}</dd>
             <dt className="text-muted-foreground">Frets</dt>
             <dd>{specs.numberOfFrets}</dd>
             <dt className="text-muted-foreground">Scale Length</dt>

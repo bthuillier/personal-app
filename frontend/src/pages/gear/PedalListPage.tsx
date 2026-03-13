@@ -5,6 +5,7 @@ import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { StatusBadge } from "@/components/StatusBadge";
+import { formatEnum } from "@/lib/utils";
 
 type GuitarPedal = components["schemas"]["GuitarPedal"];
 type PedalType = components["schemas"]["PedalType"];
@@ -59,7 +60,7 @@ export function PedalListPage() {
 
   const columns: Column<GuitarPedal>[] = [
     { header: "Model", accessor: "model" },
-    { header: "Brand", accessor: "brand" },
+    { header: "Brand", accessor: "brand", render: (row) => formatEnum(row.brand) },
     { header: "Year", accessor: "year" },
     {
       header: "Type",
