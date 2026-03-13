@@ -84,7 +84,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{serialNumber}/events": {
+    "/guitars/{id}/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{serialNumber}/commands": {
+    "/guitars/{id}/commands": {
         parameters: {
             query?: never;
             header?: never;
@@ -172,6 +172,7 @@ export interface components {
         AmpType: "SolidState" | "Tube";
         /** Amplifier */
         Amplifier: {
+            id: string;
             model: string;
             serialNumber: string;
             brand: components["schemas"]["AmplifierBrand"];
@@ -196,6 +197,7 @@ export interface components {
         };
         /** Guitar */
         Guitar: {
+            id: string;
             model: string;
             brand: components["schemas"]["GuitarBrand"];
             /** Format: int32 */
@@ -221,6 +223,7 @@ export interface components {
         GuitarMaterial: "Alder" | "Arium" | "Ash" | "Basswood" | "Ebony" | "FlamedMaple" | "MacassarEbony" | "Mahogany" | "Mango" | "Maple" | "PauFerro" | "PoplarBurl" | "PurpleHeart" | "QuiltedMaple" | "RichLite" | "RoastedMaple" | "Rosewood" | "SwampAsh" | "Walnut" | "Wenge";
         /** GuitarPedal */
         GuitarPedal: {
+            id: string;
             model: string;
             serialNumber: string;
             brand: components["schemas"]["GuitarPedalBrand"];
@@ -487,7 +490,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                serialNumber: string;
+                id: string;
             };
             cookie?: never;
         };
@@ -514,7 +517,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                serialNumber: string;
+                id: string;
             };
             cookie?: never;
         };

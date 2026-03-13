@@ -18,7 +18,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "gear", element: <GearHomePage /> },
       { path: "gear/guitars", element: <GuitarListPage /> },
-      { path: "gear/guitars/:serial", element: <GuitarDetailPage /> },
+      { path: "gear/guitars/:id", element: <GuitarDetailPage /> },
       { path: "gear/amplifiers", element: <AmplifierListPage /> },
       { path: "gear/pedals", element: <PedalListPage /> },
       { path: "music", element: <MusicHomePage /> },

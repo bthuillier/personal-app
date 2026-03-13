@@ -72,7 +72,7 @@ export function AmplifierListPage() {
             <DataTable
               columns={columns}
               data={filtered}
-              rowKey={(a) => a.serialNumber}
+              rowKey={(a) => a.id}
               emptyMessage="No amplifiers found."
             />
           )}

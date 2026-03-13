@@ -77,7 +77,7 @@ export function PedalListPage() {
             <DataTable
               columns={columns}
               data={filtered}
-              rowKey={(p) => p.serialNumber}
+              rowKey={(p) => p.id}
               emptyMessage="No pedals found."
             />
           )}
