@@ -6,6 +6,7 @@ import io.circe.derivation.ConfiguredEnumCodec
 import sttp.tapir.Schema
 
 final case class Amplifier(
+    id: String,
     model: String,
     serialNumber: String,
     brand: AmplifierBrand,
