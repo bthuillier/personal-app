@@ -3,6 +3,14 @@ import { cn } from "@/lib/utils";
 
 const sections = [
   {
+    title: "Gear",
+    links: [
+      { to: "/gear/guitars", label: "Guitars" },
+      { to: "/gear/amplifiers", label: "Amplifiers" },
+      { to: "/gear/pedals", label: "Pedals" },
+    ],
+  },
+  {
     title: "Music",
     links: [
       { to: "/music/wishlist", label: "Wishlist" },
