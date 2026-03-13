@@ -1,23 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { api } from "@/api/client";
+import { albumsQuery, wishlistQuery } from "@/api/queries";
 
 export function MusicHomePage() {
-  const { data: albums = [] } = useQuery({
-    queryKey: ["albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/albums");
-      return data!;
-    },
-  });
-
-  const { data: wishlist = [] } = useQuery({
-    queryKey: ["wishlist-albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/wishlist/albums");
-      return data!;
-    },
-  });
+  const { data: albums = [] } = useQuery(albumsQuery);
+  const { data: wishlist = [] } = useQuery(wishlistQuery);
 
   const wanted = wishlist.filter((w) => w.status === "Wanted");
   const ordered = wishlist.filter((w) => w.status === "Ordered");

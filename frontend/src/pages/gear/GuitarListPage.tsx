@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
+import { guitarsQuery } from "@/api/queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { TuningBadge } from "@/components/TuningBadge";
@@ -13,19 +13,7 @@ type Guitar = components["schemas"]["Guitar"];
 const searchFields: (keyof Guitar & string)[] = ["model", "brand"];
 
 export function GuitarListPage() {
-  const [displayed, setDisplayed] = useState<Guitar[]>([]);
-
-  const { data: guitars = [], isLoading } = useQuery({
-    queryKey: ["guitars"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitars");
-      return data!;
-    },
-  });
-
-  const handleFiltered = useCallback((filtered: Guitar[]) => {
-    setDisplayed(filtered);
-  }, []);
+  const { data: guitars = [], isLoading } = useQuery(guitarsQuery);
 
   const filters: FilterOption<Guitar>[] = useMemo(
     () => [
@@ -85,21 +73,21 @@ export function GuitarListPage() {
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
       {!isLoading && (
-        <>
-          <FilterBar
-            data={guitars}
-            searchPlaceholder="Search by model or brand..."
-            searchFields={searchFields}
-            filters={filters}
-            onFiltered={handleFiltered}
-          />
-          <DataTable
-            columns={columns}
-            data={displayed}
-            rowKey={(g) => g.serialNumber}
-            emptyMessage="No guitars found."
-          />
-        </>
+        <FilterBar
+          data={guitars}
+          searchPlaceholder="Search by model or brand..."
+          searchFields={searchFields}
+          filters={filters}
+        >
+          {(filtered) => (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey={(g) => g.serialNumber}
+              emptyMessage="No guitars found."
+            />
+          )}
+        </FilterBar>
       )}
     </div>
   );

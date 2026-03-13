@@ -1,47 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { api } from "@/api/client";
+import {
+  guitarsQuery,
+  amplifiersQuery,
+  pedalsQuery,
+  albumsQuery,
+  wishlistQuery,
+} from "@/api/queries";
 
 export function HomePage() {
-  const { data: guitars = [] } = useQuery({
-    queryKey: ["guitars"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitars");
-      return data!;
-    },
-  });
-
-  const { data: amplifiers = [] } = useQuery({
-    queryKey: ["amplifiers"],
-    queryFn: async () => {
-      const { data } = await api.GET("/amplifiers");
-      return data!;
-    },
-  });
-
-  const { data: pedals = [] } = useQuery({
-    queryKey: ["guitar-pedals"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitar-pedals");
-      return data!;
-    },
-  });
-
-  const { data: albums = [] } = useQuery({
-    queryKey: ["albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/albums");
-      return data!;
-    },
-  });
-
-  const { data: wishlist = [] } = useQuery({
-    queryKey: ["wishlist-albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/wishlist/albums");
-      return data!;
-    },
-  });
+  const { data: guitars = [] } = useQuery(guitarsQuery);
+  const { data: amplifiers = [] } = useQuery(amplifiersQuery);
+  const { data: pedals = [] } = useQuery(pedalsQuery);
+  const { data: albums = [] } = useQuery(albumsQuery);
+  const { data: wishlist = [] } = useQuery(wishlistQuery);
 
   const totalGear = guitars.length + amplifiers.length + pedals.length;
   const totalMusic = albums.length + wishlist.length;

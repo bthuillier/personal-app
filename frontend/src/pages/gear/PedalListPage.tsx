@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
+import { pedalsQuery } from "@/api/queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -28,19 +28,7 @@ const pedalTypeColorMap: Record<PedalType, "default" | "secondary" | "outline" |
 };
 
 export function PedalListPage() {
-  const [displayed, setDisplayed] = useState<GuitarPedal[]>([]);
-
-  const { data: pedals = [], isLoading } = useQuery({
-    queryKey: ["guitar-pedals"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitar-pedals");
-      return data!;
-    },
-  });
-
-  const handleFiltered = useCallback((filtered: GuitarPedal[]) => {
-    setDisplayed(filtered);
-  }, []);
+  const { data: pedals = [], isLoading } = useQuery(pedalsQuery);
 
   const filters: FilterOption<GuitarPedal>[] = useMemo(
     () => [
@@ -79,21 +67,21 @@ export function PedalListPage() {
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
       {!isLoading && (
-        <>
-          <FilterBar
-            data={pedals}
-            searchPlaceholder="Search by model or brand..."
-            searchFields={searchFields}
-            filters={filters}
-            onFiltered={handleFiltered}
-          />
-          <DataTable
-            columns={columns}
-            data={displayed}
-            rowKey={(p) => p.serialNumber}
-            emptyMessage="No pedals found."
-          />
-        </>
+        <FilterBar
+          data={pedals}
+          searchPlaceholder="Search by model or brand..."
+          searchFields={searchFields}
+          filters={filters}
+        >
+          {(filtered) => (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey={(p) => p.serialNumber}
+              emptyMessage="No pedals found."
+            />
+          )}
+        </FilterBar>
       )}
     </div>
   );

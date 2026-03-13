@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { api } from "@/api/client";
+import { wishlistQuery } from "@/api/queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
@@ -25,13 +26,7 @@ const formFields: FieldDefinition[] = [
 export function WishlistPage() {
   const queryClient = useQueryClient();
 
-  const { data: albums = [], isLoading } = useQuery({
-    queryKey: ["wishlist-albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/wishlist/albums");
-      return data!;
-    },
-  });
+  const { data: albums = [], isLoading } = useQuery(wishlistQuery);
 
   const addMutation = useMutation({
     mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {

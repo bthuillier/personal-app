@@ -1,31 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import { api } from "@/api/client";
+import { guitarsQuery, amplifiersQuery, pedalsQuery } from "@/api/queries";
+import { formatEnum } from "@/lib/utils";
 
 export function GearHomePage() {
-  const { data: guitars = [] } = useQuery({
-    queryKey: ["guitars"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitars");
-      return data!;
-    },
-  });
-
-  const { data: amplifiers = [] } = useQuery({
-    queryKey: ["amplifiers"],
-    queryFn: async () => {
-      const { data } = await api.GET("/amplifiers");
-      return data!;
-    },
-  });
-
-  const { data: pedals = [] } = useQuery({
-    queryKey: ["guitar-pedals"],
-    queryFn: async () => {
-      const { data } = await api.GET("/guitar-pedals");
-      return data!;
-    },
-  });
+  const { data: guitars = [] } = useQuery(guitarsQuery);
+  const { data: amplifiers = [] } = useQuery(amplifiersQuery);
+  const { data: pedals = [] } = useQuery(pedalsQuery);
 
   const brandCounts = guitars.reduce(
     (acc, g) => {
@@ -85,7 +66,7 @@ export function GearHomePage() {
                   key={brand}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <span className="font-medium">{brand}</span>{" "}
+                  <span className="font-medium">{formatEnum(brand)}</span>{" "}
                   <span className="text-muted-foreground">{count}</span>
                 </div>
               ))}
@@ -104,7 +85,7 @@ export function GearHomePage() {
                   key={type}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <span className="font-medium">{type}</span>{" "}
+                  <span className="font-medium">{formatEnum(type)}</span>{" "}
                   <span className="text-muted-foreground">{count}</span>
                 </div>
               ))}

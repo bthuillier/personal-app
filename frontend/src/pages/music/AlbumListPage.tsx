@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
+import { albumsQuery } from "@/api/queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 
@@ -17,19 +17,7 @@ const columns: Column<PartialAlbum>[] = [
 ];
 
 export function AlbumListPage() {
-  const [displayed, setDisplayed] = useState<PartialAlbum[]>([]);
-
-  const { data: albums = [], isLoading } = useQuery({
-    queryKey: ["albums"],
-    queryFn: async () => {
-      const { data } = await api.GET("/albums");
-      return data!;
-    },
-  });
-
-  const handleFiltered = useCallback((filtered: PartialAlbum[]) => {
-    setDisplayed(filtered);
-  }, []);
+  const { data: albums = [], isLoading } = useQuery(albumsQuery);
 
   const filters: FilterOption<PartialAlbum>[] = useMemo(
     () => [
@@ -52,21 +40,21 @@ export function AlbumListPage() {
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
       {!isLoading && (
-        <>
-          <FilterBar
-            data={albums}
-            searchPlaceholder="Search by name or artist..."
-            searchFields={searchFields}
-            filters={filters}
-            onFiltered={handleFiltered}
-          />
-          <DataTable
-            columns={columns}
-            data={displayed}
-            rowKey={(a) => `${a.artist}-${a.name}`}
-            emptyMessage="No albums found."
-          />
-        </>
+        <FilterBar
+          data={albums}
+          searchPlaceholder="Search by name or artist..."
+          searchFields={searchFields}
+          filters={filters}
+        >
+          {(filtered) => (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey={(a) => `${a.artist}-${a.name}`}
+              emptyMessage="No albums found."
+            />
+          )}
+        </FilterBar>
       )}
     </div>
   );

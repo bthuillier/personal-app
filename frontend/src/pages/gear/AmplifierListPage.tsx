@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
+import { amplifiersQuery } from "@/api/queries";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -18,19 +18,7 @@ const typeColorMap: Record<AmpType, "default" | "secondary" | "outline"> = {
 };
 
 export function AmplifierListPage() {
-  const [displayed, setDisplayed] = useState<Amplifier[]>([]);
-
-  const { data: amplifiers = [], isLoading } = useQuery({
-    queryKey: ["amplifiers"],
-    queryFn: async () => {
-      const { data } = await api.GET("/amplifiers");
-      return data!;
-    },
-  });
-
-  const handleFiltered = useCallback((filtered: Amplifier[]) => {
-    setDisplayed(filtered);
-  }, []);
+  const { data: amplifiers = [], isLoading } = useQuery(amplifiersQuery);
 
   const filters: FilterOption<Amplifier>[] = useMemo(
     () => [
@@ -74,21 +62,21 @@ export function AmplifierListPage() {
         <p className="text-sm text-muted-foreground">Loading...</p>
       )}
       {!isLoading && (
-        <>
-          <FilterBar
-            data={amplifiers}
-            searchPlaceholder="Search by model or brand..."
-            searchFields={searchFields}
-            filters={filters}
-            onFiltered={handleFiltered}
-          />
-          <DataTable
-            columns={columns}
-            data={displayed}
-            rowKey={(a) => a.serialNumber}
-            emptyMessage="No amplifiers found."
-          />
-        </>
+        <FilterBar
+          data={amplifiers}
+          searchPlaceholder="Search by model or brand..."
+          searchFields={searchFields}
+          filters={filters}
+        >
+          {(filtered) => (
+            <DataTable
+              columns={columns}
+              data={filtered}
+              rowKey={(a) => a.serialNumber}
+              emptyMessage="No amplifiers found."
+            />
+          )}
+        </FilterBar>
       )}
     </div>
   );

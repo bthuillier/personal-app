@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
 import { formatEnum } from "@/lib/utils";
 import { SearchInput } from "@/components/SearchInput";
 import {
@@ -28,7 +28,7 @@ interface FilterBarProps<T> {
   searchPlaceholder?: string;
   searchFields: (keyof T & string)[];
   filters?: FilterOption<T>[];
-  onFiltered: (filtered: T[]) => void;
+  children: (filtered: T[]) => ReactNode;
 }
 
 function allValue(filter: { label: string }) {
@@ -44,7 +44,7 @@ export function FilterBar<T>({
   searchPlaceholder = "Search...",
   searchFields,
   filters = [],
-  onFiltered,
+  children,
 }: FilterBarProps<T>) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -109,47 +109,46 @@ export function FilterBar<T>({
     });
   }, [data, debouncedSearch, searchFields, activeFilters, filters]);
 
-  useEffect(() => {
-    onFiltered(filtered);
-  }, [filtered, onFiltered]);
-
   function updateFilter(name: string, value: string) {
     setActiveFilters((prev) => ({ ...prev, [name]: value }));
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <SearchInput
-        placeholder={searchPlaceholder}
-        value={search}
-        onChange={setSearch}
-        suggestions={suggestions}
-        className="w-64"
-      />
-      {filters.map((filter) => {
-        const isAll = activeFilters[filter.name] === allValue(filter);
-        return (
-        <Select
-          key={filter.name}
-          value={activeFilters[filter.name]}
-          onValueChange={(val) => {
-            if (val != null) updateFilter(filter.name, val);
-          }}
-        >
-          <SelectTrigger className={isAll ? "text-muted-foreground" : ""}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={allValue(filter)}>{allValue(filter)}</SelectItem>
-            {(resolvedOptions[filter.name] ?? []).map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {formatEnum(opt)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        );
-      })}
-    </div>
+    <>
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput
+          placeholder={searchPlaceholder}
+          value={search}
+          onChange={setSearch}
+          suggestions={suggestions}
+          className="w-64"
+        />
+        {filters.map((filter) => {
+          const isAll = activeFilters[filter.name] === allValue(filter);
+          return (
+            <Select
+              key={filter.name}
+              value={activeFilters[filter.name]}
+              onValueChange={(val) => {
+                if (val != null) updateFilter(filter.name, val);
+              }}
+            >
+              <SelectTrigger className={isAll ? "text-muted-foreground" : ""}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={allValue(filter)}>{allValue(filter)}</SelectItem>
+                {(resolvedOptions[filter.name] ?? []).map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {formatEnum(opt)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        })}
+      </div>
+      {children(filtered)}
+    </>
   );
 }
