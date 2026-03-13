@@ -61,7 +61,7 @@ export interface paths {
         };
         get: operations["List Albums"];
         put?: never;
-        post?: never;
+        post: operations["Create Album"];
         delete?: never;
         options?: never;
         head?: never;
@@ -194,6 +194,14 @@ export interface components {
             stringBrand: string;
             stringGauge?: number[];
             tuning: components["schemas"]["GuitarTuning"];
+        };
+        /** CreateAlbum */
+        CreateAlbum: {
+            name: string;
+            artist: string;
+            format: components["schemas"]["AlbumFormat"];
+            /** Format: date */
+            releaseDate: string;
         };
         /** Guitar */
         Guitar: {
@@ -408,15 +416,6 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: path parameter id */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
         };
     };
     "Order Album": {
@@ -436,15 +435,6 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: path parameter id */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
         };
     };
     "List Albums": {
@@ -462,6 +452,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PartialAlbum"][];
+                };
+            };
+        };
+    };
+    "Create Album": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAlbum"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid value for: body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
                 };
             };
         };
