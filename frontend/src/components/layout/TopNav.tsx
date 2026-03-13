@@ -2,8 +2,8 @@ import { NavLink, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
 
 const domains = [
-  { to: "/gear/guitars", label: "Gear", prefix: "/gear" },
-  { to: "/music/wishlist", label: "Music", prefix: "/music" },
+  { to: "/gear", label: "Gear", prefix: "/gear" },
+  { to: "/music", label: "Music", prefix: "/music" },
 ];
 
 export function TopNav() {
@@ -11,7 +11,9 @@ export function TopNav() {
 
   return (
     <header className="flex h-14 items-center gap-8 border-b border-border px-6">
-      <h1 className="text-lg font-semibold">Personal App</h1>
+      <NavLink to="/" className="text-lg font-semibold hover:text-foreground">
+        Personal App
+      </NavLink>
       <nav className="flex items-center gap-1">
         {domains.map((domain) => {
           const isActive = pathname.startsWith(domain.prefix);
