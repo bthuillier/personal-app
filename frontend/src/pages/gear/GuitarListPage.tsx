@@ -37,7 +37,7 @@ export function GuitarListPage() {
       accessor: "model",
       render: (row) => (
         <Link
-          to={`/gear/guitars/${encodeURIComponent(row.serialNumber)}`}
+          to={`/gear/guitars/${encodeURIComponent(row.id)}`}
           className="text-primary underline-offset-4 hover:underline"
         >
           {formatEnum(row.brand)} {row.model}
@@ -83,7 +83,7 @@ export function GuitarListPage() {
             <DataTable
               columns={columns}
               data={filtered}
-              rowKey={(g) => g.serialNumber}
+              rowKey={(g) => g.id}
               emptyMessage="No guitars found."
             />
           )}

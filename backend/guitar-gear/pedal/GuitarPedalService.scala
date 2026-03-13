@@ -5,13 +5,12 @@ import cats.effect.*
 
 class GuitarPedalService(initialPedals: List[GuitarPedal]) {
 
-  private val guitars = initialPedals.map { g =>
-    (g.serialNumber, g.brand) -> g
+  private val pedals = initialPedals.map { g =>
+    g.id -> g
   }.toMap
 
   def list: List[GuitarPedal] = initialPedals
-  def find(serial: String, brand: GuitarPedalBrand): Option[GuitarPedal] =
-    guitars.get((serial, brand))
+  def find(id: String): Option[GuitarPedal] = pedals.get(id)
 
 }
 

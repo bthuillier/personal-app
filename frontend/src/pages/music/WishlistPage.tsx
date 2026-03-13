@@ -36,18 +36,18 @@ export function WishlistPage() {
   });
 
   const orderMutation = useMutation({
-    mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
-      await api.POST("/wishlist/albums/order", {
-        params: { query: { name, artist } },
+    mutationFn: async (id: string) => {
+      await api.POST("/wishlist/albums/{id}/order", {
+        params: { path: { id } },
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
   });
 
   const receivedMutation = useMutation({
-    mutationFn: async ({ name, artist }: { name: string; artist: string }) => {
-      await api.POST("/wishlist/albums/received", {
-        params: { query: { name, artist } },
+    mutationFn: async (id: string) => {
+      await api.POST("/wishlist/albums/{id}/received", {
+        params: { path: { id } },
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
@@ -78,7 +78,7 @@ export function WishlistPage() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => orderMutation.mutate({ name: row.name, artist: row.artist })}
+              onClick={() => orderMutation.mutate(row.id)}
             >
               Mark Ordered
             </Button>
@@ -86,7 +86,7 @@ export function WishlistPage() {
           {row.status === "Ordered" && (
             <Button
               size="sm"
-              onClick={() => receivedMutation.mutate({ name: row.name, artist: row.artist })}
+              onClick={() => receivedMutation.mutate(row.id)}
             >
               Mark Received
             </Button>
@@ -114,7 +114,7 @@ export function WishlistPage() {
         <DataTable
           columns={columns}
           data={albums}
-          rowKey={(a) => `${a.artist}-${a.name}`}
+          rowKey={(a) => a.id}
           emptyMessage="No albums in your wishlist yet."
         />
       )}

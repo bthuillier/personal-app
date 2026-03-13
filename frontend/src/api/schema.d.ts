@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/received": {
+    "/wishlist/albums/{id}/received": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/order": {
+    "/wishlist/albums/{id}/order": {
         parameters: {
             query?: never;
             header?: never;
@@ -84,7 +84,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{serialNumber}/events": {
+    "/guitars/{id}/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{serialNumber}/commands": {
+    "/guitars/{id}/commands": {
         parameters: {
             query?: never;
             header?: never;
@@ -172,6 +172,7 @@ export interface components {
         AmpType: "SolidState" | "Tube";
         /** Amplifier */
         Amplifier: {
+            id: string;
             model: string;
             serialNumber: string;
             brand: components["schemas"]["AmplifierBrand"];
@@ -196,6 +197,7 @@ export interface components {
         };
         /** Guitar */
         Guitar: {
+            id: string;
             model: string;
             brand: components["schemas"]["GuitarBrand"];
             /** Format: int32 */
@@ -221,6 +223,7 @@ export interface components {
         GuitarMaterial: "Alder" | "Arium" | "Ash" | "Basswood" | "Ebony" | "FlamedMaple" | "MacassarEbony" | "Mahogany" | "Mango" | "Maple" | "PauFerro" | "PoplarBurl" | "PurpleHeart" | "QuiltedMaple" | "RichLite" | "RoastedMaple" | "Rosewood" | "SwampAsh" | "Walnut" | "Wenge";
         /** GuitarPedal */
         GuitarPedal: {
+            id: string;
             model: string;
             serialNumber: string;
             brand: components["schemas"]["GuitarPedalBrand"];
@@ -273,6 +276,7 @@ export interface components {
         NoteName: "A" | "As" | "B" | "C" | "Cs" | "D" | "Ds" | "E" | "F" | "Fs" | "G" | "Gs";
         /** PartialAlbum */
         PartialAlbum: {
+            id: string;
             name: string;
             artist: string;
             format: components["schemas"]["AlbumFormat"];
@@ -316,6 +320,7 @@ export interface components {
         };
         /** WishlistAlbum */
         WishlistAlbum: {
+            id: string;
             name: string;
             artist: string;
             format: components["schemas"]["AlbumFormat"];
@@ -388,12 +393,11 @@ export interface operations {
     };
     "Confirm Album Received": {
         parameters: {
-            query: {
-                name: string;
-                artist: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -404,7 +408,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: query parameter name, Invalid value for: query parameter artist */
+            /** @description Invalid value for: path parameter id */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -417,12 +421,11 @@ export interface operations {
     };
     "Order Album": {
         parameters: {
-            query: {
-                name: string;
-                artist: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -433,7 +436,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: query parameter name, Invalid value for: query parameter artist */
+            /** @description Invalid value for: path parameter id */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -487,7 +490,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                serialNumber: string;
+                id: string;
             };
             cookie?: never;
         };
@@ -514,7 +517,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                serialNumber: string;
+                id: string;
             };
             cookie?: never;
         };

@@ -41,6 +41,7 @@ object GuitarEvent {
 }
 
 final case class Guitar(
+    id: String,
     model: String,
     brand: GuitarBrand,
     year: Int,

@@ -24,17 +24,13 @@ object AlbumWishlists {
   val confirmAlbumReceived =
     endpoint.post
       .name("Confirm Album Received")
-      .in("wishlist" / "albums" / "received")
-      .in(query[String]("name"))
-      .in(query[String]("artist"))
+      .in("wishlist" / "albums" / path[String]("id") / "received")
       .out(emptyOutput)
 
   val orderAlbum =
     endpoint.post
       .name("Order Album")
-      .in("wishlist" / "albums" / "order")
-      .in(query[String]("name"))
-      .in(query[String]("artist"))
+      .in("wishlist" / "albums" / path[String]("id") / "order")
       .out(emptyOutput)
 
   val endpointDefininitions = List(
@@ -59,15 +55,15 @@ object AlbumWishlists {
   private def confirmAlbumReceivedLogic(
       service: WishlistService
   ): ServerEndpoint[Any, IO] =
-    confirmAlbumReceived.serverLogicSuccess { (name, artist) =>
-      service.confirmAlbumReceived(name, artist)
+    confirmAlbumReceived.serverLogicSuccess { id =>
+      service.confirmAlbumReceived(id)
     }
 
   private def orderAlbumLogic(
       service: WishlistService
   ): ServerEndpoint[Any, IO] =
-    orderAlbum.serverLogicSuccess { (name, artist) =>
-      service.orderAlbum(name, artist)
+    orderAlbum.serverLogicSuccess { id =>
+      service.orderAlbum(id)
     }
 
   def endpoints(service: WishlistService): List[ServerEndpoint[Any, IO]] =

@@ -6,17 +6,17 @@ import cats.effect.*
 class AmplifierService(initialAmplifiers: List[Amplifier]) {
 
   private val amplifiers = initialAmplifiers.map { a =>
-    a.serialNumber -> a
+    a.id -> a
   }.toMap
 
   def list: List[Amplifier] = initialAmplifiers
-  def find(serial: String): Option[Amplifier] = amplifiers.get(serial)
+  def find(id: String): Option[Amplifier] = amplifiers.get(id)
 }
 
 object AmplifierService {
   def fromFile(basePath: String): IO[AmplifierService] = {
     JsonLoader.loadJsonFolder[Amplifier](s"$basePath/guitar-amp").map { data =>
-      new AmplifierService(data)
+      AmplifierService(data)
     }
   }
 }

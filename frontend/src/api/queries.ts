@@ -41,15 +41,15 @@ export const wishlistQuery = queryOptions({
   },
 });
 
-export function guitarEventsQuery(serialNumber: string) {
+export function guitarEventsQuery(id: string) {
   return queryOptions({
-    queryKey: ["guitar-events", serialNumber],
+    queryKey: ["guitar-events", id],
     queryFn: async () => {
-      const { data } = await api.GET("/guitars/{serialNumber}/events", {
-        params: { path: { serialNumber } },
+      const { data } = await api.GET("/guitars/{id}/events", {
+        params: { path: { id } },
       });
       return data!;
     },
-    enabled: !!serialNumber,
+    enabled: !!id,
   });
 }

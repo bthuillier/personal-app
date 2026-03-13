@@ -50,7 +50,7 @@ export function AlbumListPage() {
             <DataTable
               columns={columns}
               data={filtered}
-              rowKey={(a) => `${a.artist}-${a.name}`}
+              rowKey={(a) => a.id}
               emptyMessage="No albums found."
             />
           )}

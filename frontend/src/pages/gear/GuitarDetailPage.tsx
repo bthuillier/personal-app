@@ -33,28 +33,28 @@ const changeStringsFields: FieldDefinition[] = [
 ];
 
 export function GuitarDetailPage() {
-  const { serial } = useParams<{ serial: string }>();
+  const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
 
   const { data: guitars = [] } = useQuery(guitarsQuery);
 
   const guitar = useMemo(
-    () => guitars.find((g) => g.serialNumber === serial),
-    [guitars, serial],
+    () => guitars.find((g) => g.id === id),
+    [guitars, id],
   );
 
-  const { data: events = [] } = useQuery(guitarEventsQuery(serial!));
+  const { data: events = [] } = useQuery(guitarEventsQuery(id!));
 
   const changeStringsMutation = useMutation({
     mutationFn: async (body: components["schemas"]["ChangeStrings"]) => {
-      await api.POST("/guitars/{serialNumber}/commands", {
-        params: { path: { serialNumber: serial! } },
+      await api.POST("/guitars/{id}/commands", {
+        params: { path: { id: id! } },
         body,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guitars"] });
-      queryClient.invalidateQueries({ queryKey: ["guitar-events", serial] });
+      queryClient.invalidateQueries({ queryKey: ["guitar-events", id] });
     },
   });
 
