@@ -8,12 +8,14 @@ import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import wishlist.WishlistService
 import cats.effect.std.Env
+import json.GitCommitter
 
 object App extends ResourceApp.Forever {
   override def run(args: List[String]): Resource[IO, Unit] =
     for {
       dispatcher <- Dispatcher.parallel[IO]
       basePath <- Resource.eval(Env[IO].get("DB_BASE_PATH").map(_.getOrElse("data")))
+      given GitCommitter <- Resource.eval(GitCommitter.create(basePath))
       eventBus <- Resource.eval(
         eventbus.EventBus.create[wishlist.WishlistAlbum]
       )

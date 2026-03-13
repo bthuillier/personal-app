@@ -5,6 +5,7 @@ import sttp.tapir.server.ServerEndpoint
 import guitargear.amplifier.*
 import guitargear.guitar.*
 import guitargear.pedal.*
+import json.GitCommitter
 
 object GuitarGear {
 
@@ -12,7 +13,7 @@ object GuitarGear {
 
   def dbPath(basePath: String): String = s"$basePath/$db"
   
-  def endpoints[F[_]](basePath: String): IO[List[ServerEndpoint[Any, IO]]] = for {
+  def endpoints[F[_]](basePath: String)(using GitCommitter): IO[List[ServerEndpoint[Any, IO]]] = for {
     guitarService <- GuitarService.fromFile(dbPath(basePath))
     ampService <- AmplifierService.fromFile(dbPath(basePath))
     pedalService <- GuitarPedalService.fromFile(dbPath(basePath))

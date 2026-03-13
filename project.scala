@@ -21,6 +21,9 @@
 
 //> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
 
+// git
+//> using dependency org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r
+
 // test
 //> using test.dep org.scalameta::munit::1.2.4
 //> using test.dep org.typelevel::munit-cats-effect:2.2.0

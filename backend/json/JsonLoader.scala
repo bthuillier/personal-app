@@ -22,6 +22,20 @@ object JsonLoader {
     }
   }
 
+  def saveJsonFileAndCommit[A: Encoder](
+      filePath: String,
+      data: A,
+      commitMessage: String
+  )(using git: GitCommitter): IO[Unit] =
+    saveJsonFile(filePath, data) *>
+      git
+        .commitFile(filePath, commitMessage)
+        .handleErrorWith { e =>
+          IO.println(
+            s"[GitCommitter] Warning: git commit failed for $filePath — ${e.getMessage}"
+          )
+        }
+
   def loadJsonFile[A: Decoder](filePath: String): IO[A] = {
     val fileContentResult = Using(Source.fromFile(filePath)) { source =>
       source.mkString

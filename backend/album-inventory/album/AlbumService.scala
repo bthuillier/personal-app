@@ -3,6 +3,7 @@ package album
 import cats.effect.IO
 import wishlist.WishlistAlbum
 import eventbus.EventBus
+import json.GitCommitter
 
 class AlbumService(store: AlbumStore) {
 
@@ -25,7 +26,7 @@ object AlbumService {
         .drain
   }
 
-  def fileBacked(filepath: String): IO[AlbumService] =
+  def fileBacked(filepath: String)(using GitCommitter): IO[AlbumService] =
     AlbumStore.fileBacked(filepath).map(store => AlbumService(store))
 
 }

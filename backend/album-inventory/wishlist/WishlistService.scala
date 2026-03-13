@@ -6,6 +6,7 @@ import java.time.LocalDate
 import io.circe.Codec
 import sttp.tapir.Schema
 import eventbus.EventBus
+import json.GitCommitter
 
 class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum]) {
 
@@ -49,7 +50,7 @@ object WishlistService {
   def fileBacked(
       filePath: String,
       eventBus: EventBus[WishlistAlbum]
-  ): IO[WishlistService] = {
+  )(using GitCommitter): IO[WishlistService] = {
     WishlistStore
       .fileBacked(filePath)
       .map(store => WishlistService(store, eventBus))

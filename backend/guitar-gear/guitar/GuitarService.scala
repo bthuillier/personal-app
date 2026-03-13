@@ -1,6 +1,6 @@
 package guitargear.guitar
 
-import json.JsonLoader
+import json.{JsonLoader, GitCommitter}
 import cats.effect.*
 import cats.effect.std.AtomicCell
 import io.circe.syntax.*
@@ -9,7 +9,7 @@ import scala.util.Using
 
 class GuitarService(
     cell: AtomicCell[IO, Map[String, (Guitar, String)]]
-) {
+)(using git: GitCommitter) {
 
   def list: IO[List[Guitar]] =
     cell.get.map(_.values.map(_._1).toList)
@@ -24,22 +24,32 @@ class GuitarService(
         case Some((guitar, filePath)) =>
           val (event, updated) = guitar.handle(command)
           val withEvent = updated.copy(events = Some(guitar.events.getOrElse(List.empty) :+ event))
-          persistGuitar(withEvent, filePath).map { _ =>
+          persistGuitar(withEvent, filePath, command).map { _ =>
             state.updated(serial, (withEvent, filePath)) -> Right(withEvent)
           }
       }
     }
 
-  private def persistGuitar(guitar: Guitar, filePath: String): IO[Unit] = IO {
-    Using(new PrintWriter(new File(filePath))) { pw =>
-      pw.write(guitar.asJson.spaces2)
-    }.get
-  }
+  private def persistGuitar(guitar: Guitar, filePath: String, command: GuitarCommand): IO[Unit] =
+    IO.blocking {
+      Using(new PrintWriter(new File(filePath))) { pw =>
+        pw.write(guitar.asJson.spaces2)
+      }.get
+    } *> git
+      .commitFile(
+        filePath,
+        s"Update guitar ${guitar.serialNumber}: ${command.productPrefix}"
+      )
+      .handleErrorWith { e =>
+        IO.println(
+          s"[GitCommitter] Warning: git commit failed for $filePath — ${e.getMessage}"
+        )
+      }
 
 }
 
 object GuitarService {
-  def fromFile(basePath: String): IO[GuitarService] =
+  def fromFile(basePath: String)(using GitCommitter): IO[GuitarService] =
     JsonLoader.loadJsonFolderWithPaths[Guitar](s"$basePath/guitar").flatMap { entries =>
       val stateMap = entries.map { case (guitar, path) =>
         guitar.serialNumber -> (guitar, path)

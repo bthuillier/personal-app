@@ -2,7 +2,7 @@ package wishlist
 
 import cats.effect.IO
 import scala.collection.mutable
-import json.JsonLoader
+import json.{JsonLoader, GitCommitter}
 
 trait WishlistStore {
   def list: IO[List[WishlistAlbum]]
@@ -60,14 +60,18 @@ object WishlistStore {
   private class FileBackedWishlistStore(
       filePath: String,
       internalStore: WishlistStore
-  ) extends WishlistStore {
+  )(using GitCommitter) extends WishlistStore {
 
     override def list: IO[List[WishlistAlbum]] = internalStore.list
 
     override def add(wishlistAlbum: WishlistAlbum): IO[Unit] =
       internalStore.add(wishlistAlbum) *>
         internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFile(filePath, albums)
+          JsonLoader.saveJsonFileAndCommit(
+            filePath,
+            albums,
+            s"Add to wishlist: ${wishlistAlbum.name} by ${wishlistAlbum.artist}"
+          )
         }
 
     override def updateStatus(
@@ -77,7 +81,11 @@ object WishlistStore {
     ): IO[Unit] =
       internalStore.updateStatus(name, artist, status) *>
         internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFile(filePath, albums)
+          JsonLoader.saveJsonFileAndCommit(
+            filePath,
+            albums,
+            s"Update wishlist status: $name by $artist -> $status"
+          )
         }
 
     override def get(name: String, artist: String): IO[Option[WishlistAlbum]] =
@@ -86,13 +94,17 @@ object WishlistStore {
     override def delete(name: String, artist: String): IO[Unit] =
       internalStore.delete(name, artist) *>
         internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFile(filePath, albums)
+          JsonLoader.saveJsonFileAndCommit(
+            filePath,
+            albums,
+            s"Remove from wishlist: $name by $artist"
+          )
         }
   }
 
   def fileBacked(
       filePath: String
-  ): IO[WishlistStore] = {
+  )(using GitCommitter): IO[WishlistStore] = {
     JsonLoader
       .loadJsonFile[List[WishlistAlbum]](filePath)
       .recover { case _: Throwable =>
