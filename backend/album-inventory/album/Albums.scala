@@ -13,8 +13,16 @@ object Albums {
       .in("albums")
       .out(jsonBody[List[album.PartialAlbum]])
 
+  val createAlbum =
+    endpoint.post
+      .name("Create Album")
+      .in("albums")
+      .in(jsonBody[album.AlbumService.CreateAlbum])
+      .out(emptyOutput)
+
   val endpointDefininitions = List(
-    listAlbums
+    listAlbums,
+    createAlbum
   )
 
   private def listAlbumsLogic(
@@ -22,9 +30,17 @@ object Albums {
   ): ServerEndpoint[Any, IO] =
     listAlbums.serverLogicSuccess(_ => service.list)
 
+  private def createAlbumLogic(
+      service: album.AlbumService
+  ): ServerEndpoint[Any, IO] =
+    createAlbum.serverLogicSuccess { request =>
+      service.create(request)
+    }
+
   def endpoints(service: album.AlbumService): List[ServerEndpoint[Any, IO]] =
     List(
-      listAlbumsLogic(service)
+      listAlbumsLogic(service),
+      createAlbumLogic(service)
     )
 
 }

@@ -32,54 +32,30 @@ paths:
             text/plain:
               schema:
                 type: string
-  /wishlist/albums/received:
+  /wishlist/albums/{id}/received:
     post:
       operationId: Confirm Album Received
       parameters:
-      - name: name
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: artist
-        in: query
+      - name: id
+        in: path
         required: true
         schema:
           type: string
       responses:
         '200':
           description: ''
-        '400':
-          description: 'Invalid value for: query parameter name, Invalid value for:
-            query parameter artist'
-          content:
-            text/plain:
-              schema:
-                type: string
-  /wishlist/albums/order:
+  /wishlist/albums/{id}/order:
     post:
       operationId: Order Album
       parameters:
-      - name: name
-        in: query
-        required: true
-        schema:
-          type: string
-      - name: artist
-        in: query
+      - name: id
+        in: path
         required: true
         schema:
           type: string
       responses:
         '200':
           description: ''
-        '400':
-          description: 'Invalid value for: query parameter name, Invalid value for:
-            query parameter artist'
-          content:
-            text/plain:
-              schema:
-                type: string
   /albums:
     get:
       operationId: List Albums
@@ -92,6 +68,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PartialAlbum'
+    post:
+      operationId: Create Album
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlbum'
+        required: true
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
   /guitars:
     get:
       operationId: List Guitars
@@ -104,11 +97,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Guitar'
-  /guitars/{serialNumber}/events:
+  /guitars/{id}/events:
     get:
       operationId: Get Guitar Events
       parameters:
-      - name: serialNumber
+      - name: id
         in: path
         required: true
         schema:
@@ -124,11 +117,11 @@ paths:
                   $ref: '#/components/schemas/GuitarEvent'
         '404':
           description: ''
-  /guitars/{serialNumber}/commands:
+  /guitars/{id}/commands:
     post:
       operationId: Handle Guitar Command
       parameters:
-      - name: serialNumber
+      - name: id
         in: path
         required: true
         schema:
@@ -214,6 +207,7 @@ components:
       title: Amplifier
       type: object
       required:
+      - id
       - model
       - serialNumber
       - brand
@@ -221,6 +215,8 @@ components:
       - wattage
       - type
       properties:
+        id:
+          type: string
         model:
           type: string
         serialNumber:
@@ -261,10 +257,29 @@ components:
             format: double
         tuning:
           $ref: '#/components/schemas/GuitarTuning'
+    CreateAlbum:
+      title: CreateAlbum
+      type: object
+      required:
+      - name
+      - artist
+      - format
+      - releaseDate
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+        format:
+          $ref: '#/components/schemas/AlbumFormat'
+        releaseDate:
+          type: string
+          format: date
     Guitar:
       title: Guitar
       type: object
       required:
+      - id
       - model
       - brand
       - year
@@ -272,6 +287,8 @@ components:
       - specifications
       - setup
       properties:
+        id:
+          type: string
         model:
           type: string
         brand:
@@ -338,12 +355,15 @@ components:
       title: GuitarPedal
       type: object
       required:
+      - id
       - model
       - serialNumber
       - brand
       - year
       - type
       properties:
+        id:
+          type: string
         model:
           type: string
         serialNumber:
@@ -474,11 +494,14 @@ components:
       title: PartialAlbum
       type: object
       required:
+      - id
       - name
       - artist
       - format
       - releaseDate
       properties:
+        id:
+          type: string
         name:
           type: string
         artist:
@@ -572,12 +595,15 @@ components:
       title: WishlistAlbum
       type: object
       required:
+      - id
       - name
       - artist
       - format
       - releaseDate
       - status
       properties:
+        id:
+          type: string
         name:
           type: string
         artist:
