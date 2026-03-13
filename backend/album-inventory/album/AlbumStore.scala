@@ -16,18 +16,12 @@ object AlbumStore {
     override def list: IO[List[PartialAlbum]] = IO(albums.values.toList)
 
     override def add(partialAlbum: PartialAlbum): IO[Unit] = IO {
-      albums.update(
-        (partialAlbum.name, partialAlbum.artist, partialAlbum.format),
-        partialAlbum
-      )
+      albums.update(partialAlbum.id, partialAlbum)
     }
 
-    private val albums
-        : mutable.Map[(String, String, AlbumFormat), PartialAlbum] =
+    private val albums: mutable.Map[String, PartialAlbum] =
       mutable.Map.from(
-        initialState.map(album =>
-          (album.name, album.artist, album.format) -> album
-        )
+        initialState.map(album => album.id -> album)
       )
 
   }
@@ -41,15 +35,11 @@ object AlbumStore {
 
     override def add(partialAlbum: PartialAlbum): IO[Unit] =
       internalStore.add(partialAlbum) *>
-        internalStore.list
-          .map(_.filter(_.index == partialAlbum.index))
-          .flatMap { albumsForIndex =>
-            JsonLoader.saveJsonFileAndCommit(
-              s"$filepath/${partialAlbum.index}.json",
-              albumsForIndex,
-              s"Add album: ${partialAlbum.name} by ${partialAlbum.artist}"
-            )
-          }
+        JsonLoader.saveJsonFileAndCommit(
+          s"$filepath/${partialAlbum.id}.json",
+          partialAlbum,
+          s"Add album: ${partialAlbum.name} by ${partialAlbum.artist}"
+        )
   }
 
   def inMemory(initialState: List[PartialAlbum] = List.empty): AlbumStore =
@@ -57,9 +47,9 @@ object AlbumStore {
 
   def fileBacked(filepath: String)(using GitCommitter): IO[AlbumStore] = {
     JsonLoader
-      .loadJsonFolder[List[PartialAlbum]](filepath)
+      .loadJsonFolder[PartialAlbum](filepath)
       .map(initialAlbums =>
-        FilebackedAlbumStore(filepath, inMemory(initialAlbums.flatten))
+        FilebackedAlbumStore(filepath, inMemory(initialAlbums))
       )
   }
 

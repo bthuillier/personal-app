@@ -5,21 +5,19 @@ import sttp.tapir.Schema
 import java.time.LocalDate
 
 final case class PartialAlbum(
+    id: String,
     name: String,
     artist: String,
     format: AlbumFormat,
     releaseDate: LocalDate
 ) derives Codec.AsObject,
-      Schema {
-  
-  val index: Char = artist.head.toLower
-
-}
+      Schema
 
 object PartialAlbum {
 
   def fromWishlist(wishlistAlbum: wishlist.WishlistAlbum): PartialAlbum =
     PartialAlbum(
+      wishlistAlbum.id,
       wishlistAlbum.name,
       wishlistAlbum.artist,
       wishlistAlbum.format,

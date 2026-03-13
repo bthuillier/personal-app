@@ -20,7 +20,7 @@ object App extends ResourceApp.Forever {
         eventbus.EventBus.create[wishlist.WishlistAlbum]
       )
       wishlists <- Resource.eval(
-        WishlistService.fileBacked(s"$basePath/music-inventory/wishlist.json", eventBus)
+        WishlistService.fileBacked(s"$basePath/music-inventory/wishlist", eventBus)
       )
       albums <- Resource.eval(
         album.AlbumService.fileBacked(s"$basePath/music-inventory/albums")

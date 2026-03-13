@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/received": {
+    "/wishlist/albums/{id}/received": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/order": {
+    "/wishlist/albums/{id}/order": {
         parameters: {
             query?: never;
             header?: never;
@@ -276,6 +276,7 @@ export interface components {
         NoteName: "A" | "As" | "B" | "C" | "Cs" | "D" | "Ds" | "E" | "F" | "Fs" | "G" | "Gs";
         /** PartialAlbum */
         PartialAlbum: {
+            id: string;
             name: string;
             artist: string;
             format: components["schemas"]["AlbumFormat"];
@@ -319,6 +320,7 @@ export interface components {
         };
         /** WishlistAlbum */
         WishlistAlbum: {
+            id: string;
             name: string;
             artist: string;
             format: components["schemas"]["AlbumFormat"];
@@ -391,12 +393,11 @@ export interface operations {
     };
     "Confirm Album Received": {
         parameters: {
-            query: {
-                name: string;
-                artist: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -407,7 +408,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: query parameter name, Invalid value for: query parameter artist */
+            /** @description Invalid value for: path parameter id */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -420,12 +421,11 @@ export interface operations {
     };
     "Order Album": {
         parameters: {
-            query: {
-                name: string;
-                artist: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -436,7 +436,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invalid value for: query parameter name, Invalid value for: query parameter artist */
+            /** @description Invalid value for: path parameter id */
             400: {
                 headers: {
                     [name: string]: unknown;

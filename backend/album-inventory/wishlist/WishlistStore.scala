@@ -8,12 +8,11 @@ trait WishlistStore {
   def list: IO[List[WishlistAlbum]]
   def add(wishlistAlbum: WishlistAlbum): IO[Unit]
   def updateStatus(
-      name: String,
-      artist: String,
+      id: String,
       status: WishlistStatus
   ): IO[Unit]
-  def get(name: String, artist: String): IO[Option[WishlistAlbum]]
-  def delete(name: String, artist: String): IO[Unit]
+  def get(id: String): IO[Option[WishlistAlbum]]
+  def delete(id: String): IO[Unit]
 }
 
 object WishlistStore {
@@ -23,42 +22,35 @@ object WishlistStore {
 
     override def list: IO[List[WishlistAlbum]] = IO(albums.values.toList)
 
-    override def get(name: String, artist: String): IO[Option[WishlistAlbum]] =
-      IO(albums.get((name, artist)))
+    override def get(id: String): IO[Option[WishlistAlbum]] =
+      IO(albums.get(id))
 
-    override def delete(name: String, artist: String): IO[Unit] = IO {
-      albums.remove((name, artist))
+    override def delete(id: String): IO[Unit] = IO {
+      albums.remove(id)
     }
 
     override def add(wishlistAlbum: WishlistAlbum): IO[Unit] = IO {
-      albums.update(
-        (wishlistAlbum.name, wishlistAlbum.artist),
-        wishlistAlbum
-      )
+      albums.update(wishlistAlbum.id, wishlistAlbum)
     }
 
     override def updateStatus(
-        name: String,
-        artist: String,
+        id: String,
         status: WishlistStatus
     ): IO[Unit] = IO {
-      albums.get((name, artist)).foreach { album =>
-        albums.update(
-          (name, artist),
-          album.copy(status = status)
-        )
+      albums.get(id).foreach { album =>
+        albums.update(id, album.copy(status = status))
       }
     }
 
-    private val albums: mutable.Map[(String, String), WishlistAlbum] =
+    private val albums: mutable.Map[String, WishlistAlbum] =
       mutable.Map.from(
-        initialState.map(album => (album.name, album.artist) -> album)
+        initialState.map(album => album.id -> album)
       )
 
   }
 
   private class FileBackedWishlistStore(
-      filePath: String,
+      folderPath: String,
       internalStore: WishlistStore
   )(using GitCommitter) extends WishlistStore {
 
@@ -66,52 +58,58 @@ object WishlistStore {
 
     override def add(wishlistAlbum: WishlistAlbum): IO[Unit] =
       internalStore.add(wishlistAlbum) *>
-        internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFileAndCommit(
-            filePath,
-            albums,
-            s"Add to wishlist: ${wishlistAlbum.name} by ${wishlistAlbum.artist}"
-          )
-        }
+        JsonLoader.saveJsonFileAndCommit(
+          s"$folderPath/${wishlistAlbum.id}.json",
+          wishlistAlbum,
+          s"Add to wishlist: ${wishlistAlbum.name} by ${wishlistAlbum.artist}"
+        )
 
     override def updateStatus(
-        name: String,
-        artist: String,
+        id: String,
         status: WishlistStatus
     ): IO[Unit] =
-      internalStore.updateStatus(name, artist, status) *>
-        internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFileAndCommit(
-            filePath,
-            albums,
-            s"Update wishlist status: $name by $artist -> $status"
-          )
+      internalStore.updateStatus(id, status) *>
+        internalStore.get(id).flatMap {
+          case Some(album) =>
+            JsonLoader.saveJsonFileAndCommit(
+              s"$folderPath/$id.json",
+              album,
+              s"Update wishlist status: ${album.name} by ${album.artist} -> $status"
+            )
+          case None => IO.unit
         }
 
-    override def get(name: String, artist: String): IO[Option[WishlistAlbum]] =
-      internalStore.get(name, artist)
+    override def get(id: String): IO[Option[WishlistAlbum]] =
+      internalStore.get(id)
 
-    override def delete(name: String, artist: String): IO[Unit] =
-      internalStore.delete(name, artist) *>
-        internalStore.list.flatMap { albums =>
-          JsonLoader.saveJsonFileAndCommit(
-            filePath,
-            albums,
-            s"Remove from wishlist: $name by $artist"
-          )
-        }
+    override def delete(id: String): IO[Unit] =
+      internalStore.get(id).flatMap {
+        case Some(album) =>
+          internalStore.delete(id) *>
+            IO.blocking {
+              val file = new java.io.File(s"$folderPath/$id.json")
+              if (file.exists()) file.delete()
+            }.void *>
+            summon[GitCommitter]
+              .commitFile(
+                s"$folderPath/$id.json",
+                s"Remove from wishlist: ${album.name} by ${album.artist}"
+              )
+              .handleErrorWith(_ => IO.unit)
+        case None => IO.unit
+      }
   }
 
   def fileBacked(
-      filePath: String
+      folderPath: String
   )(using GitCommitter): IO[WishlistStore] = {
     JsonLoader
-      .loadJsonFile[List[WishlistAlbum]](filePath)
+      .loadJsonFolder[WishlistAlbum](folderPath)
       .recover { case _: Throwable =>
         List.empty[WishlistAlbum]
       }
       .map { initialAlbums =>
-        FileBackedWishlistStore(filePath, inMemory(initialAlbums.toSet))
+        FileBackedWishlistStore(folderPath, inMemory(initialAlbums.toSet))
       }
   }
 

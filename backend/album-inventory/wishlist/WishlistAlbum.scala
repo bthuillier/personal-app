@@ -8,6 +8,7 @@ import io.circe.derivation.Configuration
 import album.AlbumFormat
 
 final case class WishlistAlbum(
+    id: String,
     name: String,
     artist: String,
     format: AlbumFormat,

@@ -57,7 +57,7 @@ export function MusicHomePage() {
           <div className="flex flex-col gap-2">
             {ordered.map((album) => (
               <div
-                key={`${album.artist}-${album.name}`}
+                key={album.id}
                 className="rounded-md border border-border px-4 py-3 text-sm"
               >
                 <span className="font-medium">{album.name}</span>{" "}
@@ -74,7 +74,7 @@ export function MusicHomePage() {
           <div className="flex flex-col gap-2">
             {wanted.map((album) => (
               <div
-                key={`${album.artist}-${album.name}`}
+                key={album.id}
                 className="rounded-md border border-border px-4 py-3 text-sm"
               >
                 <span className="font-medium">{album.name}</span>{" "}

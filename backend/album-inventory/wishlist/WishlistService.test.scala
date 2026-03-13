@@ -5,6 +5,7 @@ import album.AlbumFormat
 import java.time.LocalDate
 import eventbus.EventBus
 import org.typelevel.log4cats.noop.NoOpLogger
+import utils.GenerateId
 
 class WishlistServiceTest extends munit.CatsEffectSuite {
 
@@ -23,12 +24,16 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     releaseDate = LocalDate.of(1973, 3, 1)
   )
 
+  val sampleAlbumId = GenerateId.makeId("Dark Side of the Moon", "Pink Floyd")()
+
   val anotherAlbum = WishlistService.AddAlbumToWishlist(
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.CD,
     releaseDate = LocalDate.of(1969, 9, 26)
   )
+
+  val anotherAlbumId = GenerateId.makeId("Abbey Road", "The Beatles")()
 
   test("list returns empty list initially") {
     for {
@@ -48,6 +53,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
       assertEquals(albums.head.artist, "Pink Floyd")
       assertEquals(albums.head.format, AlbumFormat.Vinyl)
       assertEquals(albums.head.status, WishlistStatus.Wanted)
+      assertEquals(albums.head.id, sampleAlbumId)
     }
   }
 
@@ -68,7 +74,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     for {
       service <- createService()
       _ <- service.addAlbumToWishlist(sampleAlbum)
-      _ <- service.orderAlbum("Dark Side of the Moon", "Pink Floyd")
+      _ <- service.orderAlbum(sampleAlbumId)
       albums <- service.list
     } yield {
       assertEquals(albums.length, 1)
@@ -80,7 +86,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     for {
       service <- createService()
       _ <- service.addAlbumToWishlist(sampleAlbum)
-      _ <- service.confirmAlbumReceived("Dark Side of the Moon", "Pink Floyd")
+      _ <- service.confirmAlbumReceived(sampleAlbumId)
       albums <- service.list
     } yield {
       assertEquals(albums.length, 0)
@@ -91,7 +97,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     for {
       service <- createService()
       result <- service
-        .confirmAlbumReceived("Non-existent Album", "Unknown Artist")
+        .confirmAlbumReceived("nonexistent-id")
         .attempt
     } yield {
       assert(result.isLeft)
@@ -114,7 +120,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
         .drain
         .start
       _ <- IO.sleep(scala.concurrent.duration.DurationInt(100).millis)
-      _ <- service.confirmAlbumReceived("Dark Side of the Moon", "Pink Floyd")
+      _ <- service.confirmAlbumReceived(sampleAlbumId)
       _ <- IO.sleep(scala.concurrent.duration.DurationInt(100).millis)
       events <- publishedEvents.get
       _ <- fiber.cancel
@@ -130,7 +136,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
       service <- createService()
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.addAlbumToWishlist(anotherAlbum)
-      _ <- service.orderAlbum("Abbey Road", "The Beatles")
+      _ <- service.orderAlbum(anotherAlbumId)
       albums <- service.list
     } yield {
       val darkSide = albums.find(_.name == "Dark Side of the Moon").get

@@ -4,6 +4,7 @@ import cats.effect.IO
 import java.time.LocalDate
 import wishlist.{WishlistAlbum, WishlistStatus}
 import eventbus.EventBus
+import utils.GenerateId
 
 class AlbumServiceTest extends munit.CatsEffectSuite {
 
@@ -13,6 +14,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
   }
 
   val sampleAlbum = PartialAlbum(
+    id = GenerateId.makeId("Dark Side of the Moon", "Pink Floyd", "Vinyl")(),
     name = "Dark Side of the Moon",
     artist = "Pink Floyd",
     format = AlbumFormat.Vinyl,
@@ -20,6 +22,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
   )
 
   val anotherAlbum = PartialAlbum(
+    id = GenerateId.makeId("Abbey Road", "The Beatles", "CD")(),
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.CD,
@@ -27,6 +30,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
   )
 
   val vinylVersionAlbum = PartialAlbum(
+    id = GenerateId.makeId("Abbey Road", "The Beatles", "Vinyl")(),
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.Vinyl,
@@ -82,7 +86,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("add overwrites existing album with same name, artist, and format") {
+  test("add overwrites existing album with same id") {
     val service = createService()
     val updatedAlbum = sampleAlbum.copy(releaseDate = LocalDate.of(1973, 3, 15))
     for {
@@ -97,6 +101,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
 
   test("PartialAlbum.fromWishlist converts WishlistAlbum correctly") {
     val wishlistAlbum = WishlistAlbum(
+      id = GenerateId.makeId("The Wall", "Pink Floyd")(),
       name = "The Wall",
       artist = "Pink Floyd",
       format = AlbumFormat.Vinyl,
@@ -112,16 +117,12 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     assertEquals(partialAlbum.releaseDate, LocalDate.of(1979, 11, 30))
   }
 
-  test("PartialAlbum index is the lowercase first character of name") {
-    assertEquals(sampleAlbum.index, 'p')
-    assertEquals(anotherAlbum.index, 't')
-  }
-
   test("addHandler subscribes to event bus and adds albums") {
     for {
       eventBus <- EventBus.create[WishlistAlbum]
       service = createService()
       wishlistAlbum = WishlistAlbum(
+        id = GenerateId.makeId("Led Zeppelin IV", "Led Zeppelin")(),
         name = "Led Zeppelin IV",
         artist = "Led Zeppelin",
         format = AlbumFormat.Vinyl,
@@ -146,6 +147,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
       eventBus <- EventBus.create[WishlistAlbum]
       service = createService()
       wishlistAlbum1 = WishlistAlbum(
+        id = GenerateId.makeId("Hotel California", "Eagles")(),
         name = "Hotel California",
         artist = "Eagles",
         format = AlbumFormat.CD,
@@ -153,6 +155,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
         status = WishlistStatus.Received
       )
       wishlistAlbum2 = WishlistAlbum(
+        id = GenerateId.makeId("Rumours", "Fleetwood Mac")(),
         name = "Rumours",
         artist = "Fleetwood Mac",
         format = AlbumFormat.Vinyl,
