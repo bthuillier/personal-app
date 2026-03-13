@@ -31,12 +31,12 @@ object App extends ResourceApp.Forever {
       guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(basePath))
       server = NettyCatsServer[IO](
         NettyCatsServerOptions
-          .default[IO](dispatcher)
-          .prependInterceptor(
-            CORSInterceptor.customOrThrow(
+        .customiseInterceptors[IO](dispatcher)
+        .exceptionHandler(JsonExceptionHandler[IO])
+        .corsInterceptor(CORSInterceptor.customOrThrow(
               CORSConfig.default.allowAllHeaders.allowAllMethods.allowAllOrigins
-            )
-          )
+            ))
+            .options
       )
       _ <-
         Resource.make {
