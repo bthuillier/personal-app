@@ -5,17 +5,10 @@ import type { components } from "@/api/schema";
 import { api } from "@/api/client";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { DataTable, type Column } from "@/components/DataTable";
-import { Badge } from "@/components/ui/badge";
+import { TuningBadge } from "@/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
-type GuitarTuning = components["schemas"]["GuitarTuning"];
-
-function formatTuning(tuning: GuitarTuning): string {
-  const notes = tuning.notes;
-  if (!notes || notes.length === 0) return "-";
-  return notes.map((n) => n.name.replace("s", "#")).join(" ");
-}
 
 function formatGauge(gauge?: number[]): string {
   if (!gauge || gauge.length === 0) return "-";
@@ -115,7 +108,7 @@ export function GuitarDetailPage() {
     },
     {
       header: "Tuning",
-      render: (row) => formatTuning(row.tuning),
+      render: (row) => <TuningBadge tuning={row.tuning} />,
       sortable: false,
     },
   ];
@@ -202,7 +195,7 @@ export function GuitarDetailPage() {
             <dd>{formatGauge(setup.stringGauge)}</dd>
             <dt className="text-muted-foreground">Tuning</dt>
             <dd>
-              <Badge variant="outline">{formatTuning(setup.tuning)}</Badge>
+              <TuningBadge tuning={setup.tuning} />
             </dd>
             <dt className="text-muted-foreground">Last Change</dt>
             <dd>{setup.lastStringChange}</dd>

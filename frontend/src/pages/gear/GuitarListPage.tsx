@@ -5,17 +5,12 @@ import type { components } from "@/api/schema";
 import { api } from "@/api/client";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
+import { TuningBadge } from "@/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
 
 type Guitar = components["schemas"]["Guitar"];
 
 const searchFields: (keyof Guitar & string)[] = ["model", "brand"];
-
-function formatTuning(guitar: Guitar): string {
-  const notes = guitar.setup.tuning.notes;
-  if (!notes || notes.length === 0) return "-";
-  return notes.map((n) => n.name.replace("s", "#")).join(" ");
-}
 
 export function GuitarListPage() {
   const [displayed, setDisplayed] = useState<Guitar[]>([]);
@@ -70,7 +65,7 @@ export function GuitarListPage() {
     },
     {
       header: "Tuning",
-      render: (row) => formatTuning(row),
+      render: (row) => <TuningBadge tuning={row.setup.tuning} />,
       sortable: false,
     },
     {
