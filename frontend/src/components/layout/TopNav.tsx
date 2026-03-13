@@ -22,10 +22,10 @@ export function TopNav() {
               key={domain.prefix}
               to={domain.to}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "relative px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "text-foreground after:absolute after:bottom-[-13px] after:left-0 after:h-[2px] after:w-full after:bg-primary after:content-['']"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {domain.label}

@@ -23,7 +23,7 @@ export function Sidebar() {
   if (!links) return null;
 
   return (
-    <aside className="flex w-56 flex-col gap-1 border-r border-border bg-muted/30 p-4">
+    <aside className="flex w-56 flex-col gap-1 border-r border-border bg-muted/30 py-4 pl-4">
       <nav className="flex flex-col gap-0.5">
         {links.map((link) => (
           <NavLink
@@ -32,10 +32,10 @@ export function Sidebar() {
             end={link.to === `/gear` || link.to === `/music`}
             className={({ isActive }) =>
               cn(
-                "rounded-md px-3 py-2 text-sm transition-colors",
+                "border-l-2 px-3 py-1.5 text-sm transition-colors",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-foreground hover:bg-muted",
+                  ? "border-primary bg-primary/10 text-foreground font-medium"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
               )
             }
           >
