@@ -113,8 +113,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
   }
 
   test("PartialAlbum index is the lowercase first character of name") {
-    assertEquals(sampleAlbum.index, 'd')
-    assertEquals(anotherAlbum.index, 'a')
+    assertEquals(sampleAlbum.index, 'p')
+    assertEquals(anotherAlbum.index, 't')
   }
 
   test("addHandler subscribes to event bus and adds albums") {

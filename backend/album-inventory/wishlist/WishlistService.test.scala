@@ -4,13 +4,16 @@ import cats.effect.IO
 import album.AlbumFormat
 import java.time.LocalDate
 import eventbus.EventBus
+import org.typelevel.log4cats.noop.NoOpLogger
 
 class WishlistServiceTest extends munit.CatsEffectSuite {
+
+  given logger: org.typelevel.log4cats.Logger[IO] = NoOpLogger[IO]
 
   def createService(): IO[WishlistService] =
     EventBus.create[WishlistAlbum].map { eventBus =>
       val store = WishlistStore.inMemory()
-      WishlistService(store, eventBus)
+      WishlistService(store, eventBus, logger)
     }
 
   val sampleAlbum = WishlistService.AddAlbumToWishlist(
@@ -102,7 +105,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     for {
       eventBus <- EventBus.create[WishlistAlbum]
       store = WishlistStore.inMemory()
-      service = WishlistService(store, eventBus)
+      service = WishlistService(store, eventBus, logger)
       publishedEvents <- IO.ref(List.empty[WishlistAlbum])
       _ <- service.addAlbumToWishlist(sampleAlbum)
       fiber <- eventBus
