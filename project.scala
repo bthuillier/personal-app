@@ -22,8 +22,8 @@
 //> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
 
 // logging
-//> using dependency org.typelevel::log4cats-core:2.7.1
-//> using dependency org.typelevel::log4cats-slf4j:2.7.1
+//> using dependency org.typelevel::log4cats-core:2.8.0
+//> using dependency org.typelevel::log4cats-slf4j:2.8.0
 //> using dependency org.slf4j:slf4j-api:2.0.17
 //> using dependency org.slf4j:slf4j-simple:2.0.17
 
