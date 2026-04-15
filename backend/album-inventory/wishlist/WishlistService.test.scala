@@ -21,7 +21,8 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     name = "Dark Side of the Moon",
     artist = "Pink Floyd",
     format = AlbumFormat.Vinyl,
-    releaseDate = LocalDate.of(1973, 3, 1)
+    releaseDate = LocalDate.of(1973, 3, 1),
+    status = WishlistStatus.Wanted
   )
 
   val sampleAlbumId = GenerateId.makeId("Dark Side of the Moon", "Pink Floyd")()
@@ -30,7 +31,8 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.CD,
-    releaseDate = LocalDate.of(1969, 9, 26)
+    releaseDate = LocalDate.of(1969, 9, 26),
+    status = WishlistStatus.Wanted
   )
 
   val anotherAlbumId = GenerateId.makeId("Abbey Road", "The Beatles")()

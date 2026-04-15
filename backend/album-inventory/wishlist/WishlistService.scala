@@ -42,7 +42,8 @@ object WishlistService {
       name: String,
       artist: String,
       format: AlbumFormat,
-      releaseDate: LocalDate
+      releaseDate: LocalDate,
+      status: WishlistStatus
   ) derives Codec.AsObject,
         Schema {
     def toAlbum =
@@ -52,7 +53,7 @@ object WishlistService {
         artist,
         format,
         releaseDate,
-        WishlistStatus.Wanted
+        status
       )
   }
 

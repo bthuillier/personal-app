@@ -181,6 +181,7 @@ components:
       - artist
       - format
       - releaseDate
+      - status
       properties:
         name:
           type: string
@@ -191,6 +192,8 @@ components:
         releaseDate:
           type: string
           format: date
+        status:
+          $ref: '#/components/schemas/WishlistStatus'
     AlbumFormat:
       title: AlbumFormat
       type: string

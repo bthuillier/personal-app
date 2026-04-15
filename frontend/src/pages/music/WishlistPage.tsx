@@ -21,6 +21,7 @@ const formFields: FieldDefinition[] = [
   { name: "artist", label: "Artist", type: "text" },
   { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },
   { name: "releaseDate", label: "Release Date", type: "date" },
+  { name: "status", label: "Status", type: "select", options: ["Wanted", "Ordered"] },
 ];
 
 export function WishlistPage() {

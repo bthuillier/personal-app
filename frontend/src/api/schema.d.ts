@@ -159,6 +159,7 @@ export interface components {
             format: components["schemas"]["AlbumFormat"];
             /** Format: date */
             releaseDate: string;
+            status: components["schemas"]["WishlistStatus"];
         };
         /**
          * AlbumFormat
