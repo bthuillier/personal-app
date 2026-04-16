@@ -29,7 +29,8 @@ class GitCommitter private (
 
         val status = git.status().call()
         val hasChanges = !status.getChanged().isEmpty ||
-          !status.getAdded().isEmpty
+          !status.getAdded().isEmpty ||
+          !status.getRemoved().isEmpty
 
         if (hasChanges) {
           val commit = git.commit()
