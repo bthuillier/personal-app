@@ -114,7 +114,7 @@ export function DataTable<T>({
 
   return (
     <div className="flex flex-col gap-3">
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
