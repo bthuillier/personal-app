@@ -31,9 +31,11 @@ export function SearchInput({
       .slice(0, maxSuggestions);
   }, [value, suggestions, maxSuggestions]);
 
-  useEffect(() => {
+  const [prevFiltered, setPrevFiltered] = useState(filtered);
+  if (prevFiltered !== filtered) {
+    setPrevFiltered(filtered);
     setHighlightIndex(-1);
-  }, [filtered]);
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
