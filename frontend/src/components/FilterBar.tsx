@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
-import { formatEnum } from "@/lib/utils";
+import { cn, formatEnum } from "@/lib/utils";
 import { SearchInput } from "@/components/SearchInput";
 import {
   Select,
@@ -18,7 +18,7 @@ interface StaticFilterOption {
 interface DynamicFilterOption<T> {
   name: string;
   label: string;
-  extract: (row: T) => string;
+  extract: (row: T) => string | string[];
 }
 
 export type FilterOption<T> = StaticFilterOption | DynamicFilterOption<T>;
@@ -76,8 +76,16 @@ export function FilterBar<T>({
       if (isStatic(filter)) {
         map[filter.name] = filter.options;
       } else {
-        const values = [...new Set(data.map(filter.extract))].sort();
-        map[filter.name] = values;
+        const values = new Set<string>();
+        for (const row of data) {
+          const extracted = filter.extract(row);
+          if (Array.isArray(extracted)) {
+            for (const v of extracted) values.add(v);
+          } else {
+            values.add(extracted);
+          }
+        }
+        map[filter.name] = [...values].sort();
       }
     }
     return map;
@@ -98,10 +106,15 @@ export function FilterBar<T>({
       for (const filter of filters) {
         const selected = activeFilters[filter.name];
         if (selected && selected !== allValue(filter)) {
-          const rowValue = isStatic(filter)
-            ? String(row[filter.name as keyof T])
-            : filter.extract(row);
-          if (rowValue !== selected) return false;
+          if (isStatic(filter)) {
+            if (String(row[filter.name as keyof T]) !== selected) return false;
+          } else {
+            const extracted = filter.extract(row);
+            const matched = Array.isArray(extracted)
+              ? extracted.includes(selected)
+              : extracted === selected;
+            if (!matched) return false;
+          }
         }
       }
 
@@ -133,10 +146,12 @@ export function FilterBar<T>({
                 if (val != null) updateFilter(filter.name, val);
               }}
             >
-              <SelectTrigger className={isAll ? "text-muted-foreground" : ""}>
+              <SelectTrigger
+                className={cn("min-w-40", isAll && "text-muted-foreground")}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="start" alignItemWithTrigger={false}>
                 <SelectItem value={allValue(filter)}>{allValue(filter)}</SelectItem>
                 {(resolvedOptions[filter.name] ?? []).map((opt) => (
                   <SelectItem key={opt} value={opt}>

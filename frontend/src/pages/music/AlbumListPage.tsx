@@ -64,6 +64,11 @@ export function AlbumListPage() {
         label: "Year",
         extract: (row: PartialAlbum) => row.releaseDate.slice(0, 4),
       },
+      {
+        name: "genre",
+        label: "Genre",
+        extract: (row: PartialAlbum) => row.genre ?? [],
+      },
     ],
     [],
   );
