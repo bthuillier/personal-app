@@ -1,4 +1,4 @@
-//> using scala 3.7.4
+//> using scala 3.8.3
 //> using options --deprecation --explain -Wunused:all -source 3.0
 
 // cats
