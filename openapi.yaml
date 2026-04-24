@@ -514,6 +514,11 @@ components:
         releaseDate:
           type: string
           format: date
+        genre:
+          type: array
+          minItems: 1
+          items:
+            type: string
     PedalType:
       title: PedalType
       type: string

@@ -16,8 +16,8 @@ class GitCommitter private (
     logger: Logger[IO]
 ) {
 
-  /** Commits a specific file with the given message.
-    * Operations are serialized via a semaphore to prevent concurrent git index access.
+  /** Commits a specific file with the given message. Operations are serialized
+    * via a semaphore to prevent concurrent git index access.
     */
   def commitFile(filePath: String, message: String): IO[Unit] =
     lock.permit.use { _ =>
@@ -33,7 +33,8 @@ class GitCommitter private (
           !status.getRemoved().isEmpty
 
         if (hasChanges) {
-          val commit = git.commit()
+          val commit = git
+            .commit()
             .setMessage(message)
             .call()
           (true, commit.abbreviate(7).name(), message)

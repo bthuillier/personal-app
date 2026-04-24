@@ -12,7 +12,8 @@ trait EventBus[E] {
 
 object EventBus {
 
-  private class TopicEventBus[E](topic: Topic[IO, E], logger: Logger[IO]) extends EventBus[E] {
+  private class TopicEventBus[E](topic: Topic[IO, E], logger: Logger[IO])
+      extends EventBus[E] {
 
     override def publish(event: E): IO[Unit] =
       topic.publish1(event) *> topic.subscribers

@@ -12,14 +12,15 @@ object GuitarGear {
   private val db = "guitar-gear"
 
   def dbPath(basePath: String): String = s"$basePath/$db"
-  
-  def endpoints[F[_]](basePath: String)(using GitCommitter): IO[List[ServerEndpoint[Any, IO]]] = for {
+
+  def endpoints[F[_]](
+      basePath: String
+  )(using GitCommitter): IO[List[ServerEndpoint[Any, IO]]] = for {
     guitarService <- GuitarService.fromFile(dbPath(basePath))
     ampService <- AmplifierService.fromFile(dbPath(basePath))
     pedalService <- GuitarPedalService.fromFile(dbPath(basePath))
-  } yield
-    Guitars.endpoints(guitarService) ++
-      AmplifierEndpoints.endpoints(ampService) ++
-      GuitarPedals.endpoints(pedalService)
-  
+  } yield Guitars.endpoints(guitarService) ++
+    AmplifierEndpoints.endpoints(ampService) ++
+    GuitarPedals.endpoints(pedalService)
+
 }

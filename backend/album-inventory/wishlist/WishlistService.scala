@@ -11,7 +11,11 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import utils.GenerateId
 
-class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum], logger: Logger[IO]) {
+class WishlistService(
+    store: WishlistStore,
+    eventBus: EventBus[WishlistAlbum],
+    logger: Logger[IO]
+) {
 
   def list: IO[List[WishlistAlbum]] = store.list
   def addAlbumToWishlist(album: WishlistService.AddAlbumToWishlist): IO[Unit] =
@@ -20,7 +24,9 @@ class WishlistService(store: WishlistStore, eventBus: EventBus[WishlistAlbum], l
     store.get(id).flatMap {
       case Some(existingAlbum) =>
         val updatedAlbum = existingAlbum.copy(status = WishlistStatus.Received)
-        logger.info(s"Confirming album received: ${existingAlbum.name} by ${existingAlbum.artist}") *> eventBus
+        logger.info(
+          s"Confirming album received: ${existingAlbum.name} by ${existingAlbum.artist}"
+        ) *> eventBus
           .publish(updatedAlbum) *> store.updateStatus(
           id,
           WishlistStatus.Received

@@ -13,6 +13,13 @@ class AlbumService(store: AlbumStore) {
 
   def list: IO[List[PartialAlbum]] = store.list
   def add(partialAlbum: PartialAlbum): IO[Unit] = store.add(partialAlbum)
+  def addGenre(albumId: String, genre: String): IO[Unit] =
+    store.addGenre(albumId, genre)
+  def removeGenre(albumId: String, genre: String): IO[Unit] =
+    store.removeGenre(albumId, genre)
+  def getById(albumId: String): IO[Option[PartialAlbum]] =
+    store.getById(albumId)
+
   def create(request: AlbumService.CreateAlbum): IO[Unit] =
     store.add(request.toAlbum)
 
@@ -33,7 +40,8 @@ object AlbumService {
         name,
         artist,
         format,
-        releaseDate
+        releaseDate,
+        None
       )
   }
 

@@ -85,7 +85,9 @@ object JsonLoader {
     loadJsonFolder[A](folderPath).unsafeRunSync()
   }
 
-  def loadJsonFolderWithPaths[A: Decoder](folderPath: String): IO[List[(A, String)]] = {
+  def loadJsonFolderWithPaths[A: Decoder](
+      folderPath: String
+  ): IO[List[(A, String)]] = {
     val folder = new File(folderPath)
 
     val exists = IO.raiseWhen(!folder.exists())(

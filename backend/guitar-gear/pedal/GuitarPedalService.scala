@@ -16,8 +16,9 @@ class GuitarPedalService(initialPedals: List[GuitarPedal]) {
 
 object GuitarPedalService {
   def fromFile(basePath: String): IO[GuitarPedalService] = {
-    JsonLoader.loadJsonFolder[GuitarPedal](s"$basePath/guitar-pedal").map { data =>
-      new GuitarPedalService(data)
+    JsonLoader.loadJsonFolder[GuitarPedal](s"$basePath/guitar-pedal").map {
+      data =>
+        new GuitarPedalService(data)
     }
   }
 }

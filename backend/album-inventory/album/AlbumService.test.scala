@@ -5,6 +5,7 @@ import java.time.LocalDate
 import wishlist.{WishlistAlbum, WishlistStatus}
 import eventbus.EventBus
 import utils.GenerateId
+import cats.data.NonEmptySet
 
 class AlbumServiceTest extends munit.CatsEffectSuite {
 
@@ -18,7 +19,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     name = "Dark Side of the Moon",
     artist = "Pink Floyd",
     format = AlbumFormat.Vinyl,
-    releaseDate = LocalDate.of(1973, 3, 1)
+    releaseDate = LocalDate.of(1973, 3, 1),
+    genre = None
   )
 
   val anotherAlbum = PartialAlbum(
@@ -26,7 +28,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.CD,
-    releaseDate = LocalDate.of(1969, 9, 26)
+    releaseDate = LocalDate.of(1969, 9, 26),
+    genre = None
   )
 
   val vinylVersionAlbum = PartialAlbum(
@@ -34,7 +37,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     name = "Abbey Road",
     artist = "The Beatles",
     format = AlbumFormat.Vinyl,
-    releaseDate = LocalDate.of(1969, 9, 26)
+    releaseDate = LocalDate.of(1969, 9, 26),
+    genre = None
   )
 
   test("list returns empty list initially") {
@@ -139,6 +143,32 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
       assertEquals(albums.length, 1)
       assertEquals(albums.head.name, "Led Zeppelin IV")
       assertEquals(albums.head.artist, "Led Zeppelin")
+    }
+  }
+
+  test("addGenre adds genre to existing album") {
+    val service = createService()
+    for {
+      _ <- service.add(sampleAlbum)
+      _ <- service.addGenre(sampleAlbum.id, "Progressive Rock")
+      album <- service.getById(sampleAlbum.id)
+    } yield {
+      assertEquals(album.isDefined, true)
+      assertEquals(album.get.genre, Some(NonEmptySet.one("Progressive Rock")))
+    }
+  }
+
+  test("removeGenre removes genre from existing album") {
+    val service = createService()
+    for {
+      _ <- service.add(sampleAlbum)
+      _ <- service.addGenre(sampleAlbum.id, "Progressive Rock")
+      _ <- service.addGenre(sampleAlbum.id, "Classic Rock")
+      _ <- service.removeGenre(sampleAlbum.id, "Progressive Rock")
+      album <- service.getById(sampleAlbum.id)
+    } yield {
+      assertEquals(album.isDefined, true)
+      assertEquals(album.get.genre, Some(NonEmptySet.one("Classic Rock")))
     }
   }
 

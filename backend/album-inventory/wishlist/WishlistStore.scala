@@ -52,7 +52,8 @@ object WishlistStore {
   private class FileBackedWishlistStore(
       folderPath: String,
       internalStore: WishlistStore
-  )(using GitCommitter) extends WishlistStore {
+  )(using GitCommitter)
+      extends WishlistStore {
 
     override def list: IO[List[WishlistAlbum]] = internalStore.list
 

@@ -14,13 +14,18 @@ object App extends ResourceApp.Forever {
   override def run(args: List[String]): Resource[IO, Unit] =
     for {
       dispatcher <- Dispatcher.parallel[IO]
-      basePath <- Resource.eval(Env[IO].get("DB_BASE_PATH").map(_.getOrElse("data")))
+      basePath <- Resource.eval(
+        Env[IO].get("DB_BASE_PATH").map(_.getOrElse("data"))
+      )
       given GitCommitter <- Resource.eval(GitCommitter.create(basePath))
       eventBus <- Resource.eval(
         eventbus.EventBus.create[wishlist.WishlistAlbum]
       )
       wishlists <- Resource.eval(
-        WishlistService.fileBacked(s"$basePath/music-inventory/wishlist", eventBus)
+        WishlistService.fileBacked(
+          s"$basePath/music-inventory/wishlist",
+          eventBus
+        )
       )
       albums <- Resource.eval(
         album.AlbumService.fileBacked(s"$basePath/music-inventory/albums")
@@ -31,12 +36,14 @@ object App extends ResourceApp.Forever {
       guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(basePath))
       server = NettyCatsServer[IO](
         NettyCatsServerOptions
-        .customiseInterceptors[IO](dispatcher)
-        .exceptionHandler(JsonExceptionHandler[IO])
-        .corsInterceptor(CORSInterceptor.customOrThrow(
+          .customiseInterceptors[IO](dispatcher)
+          .exceptionHandler(JsonExceptionHandler[IO])
+          .corsInterceptor(
+            CORSInterceptor.customOrThrow(
               CORSConfig.default.allowAllHeaders.allowAllMethods.allowAllOrigins
-            ))
-            .options
+            )
+          )
+          .options
       )
       _ <-
         Resource.make {

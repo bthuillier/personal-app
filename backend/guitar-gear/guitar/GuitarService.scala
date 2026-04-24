@@ -26,14 +26,20 @@ class GuitarService(
         case None => IO.pure(state -> Left(s"Guitar $id not found"))
         case Some((guitar, filePath)) =>
           val (event, updated) = guitar.handle(command)
-          val withEvent = updated.copy(events = Some(guitar.events.getOrElse(List.empty) :+ event))
+          val withEvent = updated.copy(events =
+            Some(guitar.events.getOrElse(List.empty) :+ event)
+          )
           persistGuitar(withEvent, filePath, command).map { _ =>
             state.updated(id, (withEvent, filePath)) -> Right(withEvent)
           }
       }
     }
 
-  private def persistGuitar(guitar: Guitar, filePath: String, command: GuitarCommand): IO[Unit] =
+  private def persistGuitar(
+      guitar: Guitar,
+      filePath: String,
+      command: GuitarCommand
+  ): IO[Unit] =
     IO.blocking {
       Using(new PrintWriter(new File(filePath))) { pw =>
         pw.write(guitar.asJson.spaces2)

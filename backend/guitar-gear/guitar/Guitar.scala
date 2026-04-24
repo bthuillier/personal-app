@@ -232,7 +232,8 @@ object PickupBrand {
 }
 
 enum GuitarBrand {
-  case Dunable, Aristides, Ltd, Epiphone, Schecter, Ibanez, Jackson, Charvel, PRS
+  case Dunable, Aristides, Ltd, Epiphone, Schecter, Ibanez, Jackson, Charvel,
+    PRS
 }
 
 object GuitarBrand {
