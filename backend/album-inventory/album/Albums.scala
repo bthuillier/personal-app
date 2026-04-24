@@ -72,7 +72,10 @@ object Albums {
 
   val endpointDefininitions = List(
     listAlbums,
-    createAlbum
+    createAlbum,
+    getAlbumById,
+    addGenreToAlbum,
+    removeGenreFromAlbum
   )
 
   private def listAlbumsLogic(

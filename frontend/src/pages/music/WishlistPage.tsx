@@ -1,7 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
 import { wishlistQuery } from "@/api/queries";
+import {
+  useAddToWishlist,
+  useOrderWishlistAlbum,
+  useReceiveWishlistAlbum,
+} from "@/api/mutations";
 import { DataTable, type Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
@@ -25,34 +29,11 @@ const formFields: FieldDefinition[] = [
 ];
 
 export function WishlistPage() {
-  const queryClient = useQueryClient();
-
   const { data: albums = [], isLoading } = useQuery(wishlistQuery);
 
-  const addMutation = useMutation({
-    mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {
-      await api.POST("/wishlist/albums", { body });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
-
-  const orderMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.POST("/wishlist/albums/{id}/order", {
-        params: { path: { id } },
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
-
-  const receivedMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.POST("/wishlist/albums/{id}/received", {
-        params: { path: { id } },
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
+  const addMutation = useAddToWishlist();
+  const orderMutation = useOrderWishlistAlbum();
+  const receivedMutation = useReceiveWishlistAlbum();
 
   async function handleAdd(values: Record<string, string>) {
     await addMutation.mutateAsync(

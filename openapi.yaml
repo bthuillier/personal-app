@@ -85,6 +85,97 @@ paths:
             text/plain:
               schema:
                 type: string
+  /albums/{albumId}:
+    get:
+      operationId: Get Album By ID
+      parameters:
+      - name: albumId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAlbum'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+  /albums/{albumId}/genres:
+    post:
+      operationId: Add Genre To Album
+      parameters:
+      - name: albumId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: genre
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: query parameter genre'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+    delete:
+      operationId: Remove Genre From Album
+      parameters:
+      - name: albumId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: genre
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: query parameter genre'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
   /guitars:
     get:
       operationId: List Guitars
@@ -465,6 +556,22 @@ components:
           uniqueItems: true
           items:
             $ref: '#/components/schemas/Note'
+    InternalServerError:
+      title: InternalServerError
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    NotFound:
+      title: NotFound
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
     Note:
       title: Note
       type: object

@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
 import { albumsQuery } from "@/api/queries";
+import { useCreateAlbum } from "@/api/mutations";
 import { DataTable, type Column } from "@/components/DataTable";
 import { FilterBar, type FilterOption } from "@/components/FilterBar";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
+import { GenreCell } from "@/components/GenreCell";
 
 type PartialAlbum = components["schemas"]["PartialAlbum"];
 
@@ -18,23 +19,36 @@ const formFields: FieldDefinition[] = [
   { name: "releaseDate", label: "Release Date", type: "date" },
 ];
 
-const columns: Column<PartialAlbum>[] = [
-  { header: "Album", accessor: "name" },
-  { header: "Artist", accessor: "artist" },
-  { header: "Format", accessor: "format" },
-  { header: "Release Date", accessor: "releaseDate" },
-];
-
 export function AlbumListPage() {
-  const queryClient = useQueryClient();
   const { data: albums = [], isLoading } = useQuery(albumsQuery);
+  const createMutation = useCreateAlbum();
 
-  const createMutation = useMutation({
-    mutationFn: async (body: components["schemas"]["CreateAlbum"]) => {
-      await api.POST("/albums", { body });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
-  });
+  const knownGenres = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of albums) for (const g of a.genre ?? []) set.add(g);
+    return [...set].sort();
+  }, [albums]);
+
+  const columns = useMemo<Column<PartialAlbum>[]>(
+    () => [
+      { header: "Album", accessor: "name" },
+      { header: "Artist", accessor: "artist" },
+      { header: "Format", accessor: "format" },
+      { header: "Release Date", accessor: "releaseDate" },
+      {
+        header: "Genres",
+        sortable: false,
+        render: (row) => (
+          <GenreCell
+            albumId={row.id}
+            genres={row.genre}
+            knownGenres={knownGenres}
+          />
+        ),
+      },
+    ],
+    [knownGenres],
+  );
 
   async function handleCreate(values: Record<string, string>) {
     await createMutation.mutateAsync(

@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useParams, Link } from "react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
-import { api } from "@/api/client";
 import { guitarsQuery, guitarEventsQuery } from "@/api/queries";
+import { useChangeGuitarStrings } from "@/api/mutations";
 import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { DataTable, type Column } from "@/components/DataTable";
 import { TuningBadge } from "@/components/TuningBadge";
@@ -34,7 +34,6 @@ const changeStringsFields: FieldDefinition[] = [
 
 export function GuitarDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const queryClient = useQueryClient();
 
   const { data: guitars = [] } = useQuery(guitarsQuery);
 
@@ -45,18 +44,7 @@ export function GuitarDetailPage() {
 
   const { data: events = [] } = useQuery(guitarEventsQuery(id!));
 
-  const changeStringsMutation = useMutation({
-    mutationFn: async (body: components["schemas"]["ChangeStrings"]) => {
-      await api.POST("/guitars/{id}/commands", {
-        params: { path: { id: id! } },
-        body,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["guitars"] });
-      queryClient.invalidateQueries({ queryKey: ["guitar-events", id] });
-    },
-  });
+  const changeStringsMutation = useChangeGuitarStrings(id!);
 
   async function handleChangeStrings(values: Record<string, string>) {
     const gauge = values.stringGauge
