@@ -1,6 +1,9 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { albumsQuery, wishlistQuery } from "@/api/queries";
+
+const TOP_GENRES_LIMIT = 5;
 
 export function MusicHomePage() {
   const { data: albums = [] } = useQuery(albumsQuery);
@@ -17,6 +20,24 @@ export function MusicHomePage() {
     {} as Record<string, number>,
   );
 
+  const topGenres = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const album of albums) {
+      for (const g of album.genre ?? []) {
+        counts.set(g, (counts.get(g) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, TOP_GENRES_LIMIT)
+      .map(([name, count]) => ({ name, count }));
+  }, [albums]);
+
+  const maxGenreCount = topGenres[0]?.count ?? 0;
+  const albumsWithoutGenre = albums.filter(
+    (a) => !a.genre || a.genre.length === 0,
+  ).length;
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -24,7 +45,7 @@ export function MusicHomePage() {
         <p className="text-muted-foreground">Your music collection at a glance</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Link
           to="/music/albums"
           className="rounded-lg border border-border p-5 transition-colors hover:bg-muted/50"
@@ -49,6 +70,49 @@ export function MusicHomePage() {
             {wanted.length} wanted · {ordered.length} ordered
           </p>
         </Link>
+        <div className="rounded-lg border border-border p-5">
+          <p className="text-sm text-muted-foreground">Uncategorized</p>
+          <p className="mt-1 text-3xl font-bold">{albumsWithoutGenre}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {albumsWithoutGenre === 1 ? "album needs" : "albums need"} a genre
+          </p>
+        </div>
+        <div className="rounded-lg border border-border p-5">
+          <h2 className="text-lg font-semibold">Top Genres</h2>
+          {topGenres.length === 0 ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              No genres assigned yet.
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-2">
+              {topGenres.map((g) => (
+                <li key={g.name}>
+                  <Link
+                    to={`/music/albums?genre=${encodeURIComponent(g.name)}`}
+                    className="group flex flex-col gap-1"
+                  >
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span className="text-foreground transition-colors group-hover:text-primary">
+                        {g.name}
+                      </span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {g.count}
+                      </span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-foreground/70 transition-colors group-hover:bg-primary"
+                        style={{
+                          width: `${(g.count / maxGenreCount) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {ordered.length > 0 && (

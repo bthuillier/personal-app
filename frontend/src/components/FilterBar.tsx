@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
+import { useSearchParams } from "react-router";
 import { cn, formatEnum } from "@/lib/utils";
 import { SearchInput } from "@/components/SearchInput";
 import {
@@ -46,11 +47,15 @@ export function FilterBar<T>({
   filters = [],
   children,
 }: FilterBarProps<T>) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
-    () => Object.fromEntries(filters.map((f) => [f.name, allValue(f)])),
+    () =>
+      Object.fromEntries(
+        filters.map((f) => [f.name, searchParams.get(f.name) ?? allValue(f)]),
+      ),
   );
 
   useEffect(() => {
@@ -124,6 +129,19 @@ export function FilterBar<T>({
 
   function updateFilter(name: string, value: string) {
     setActiveFilters((prev) => ({ ...prev, [name]: value }));
+    const filter = filters.find((f) => f.name === name);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (filter && value === allValue(filter)) {
+          next.delete(name);
+        } else {
+          next.set(name, value);
+        }
+        return next;
+      },
+      { replace: true },
+    );
   }
 
   return (
