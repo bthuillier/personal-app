@@ -36,6 +36,19 @@ export function useRemoveAlbumGenre(albumId: string) {
   });
 }
 
+export function useReviewAlbum(albumId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: components["schemas"]["Review"]) => {
+      await api.POST("/albums/{albumId}/review", {
+        params: { path: { albumId } },
+        body,
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
+  });
+}
+
 export function useAddToWishlist() {
   const queryClient = useQueryClient();
   return useMutation({

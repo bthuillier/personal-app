@@ -34,6 +34,7 @@ final case class InvalidRating(value: Int)
     )
 
 final case class Review(
+    title: String,
     rating: Rating,
     description: String
 ) derives Codec.AsObject,

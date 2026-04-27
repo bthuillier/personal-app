@@ -379,6 +379,7 @@ export interface components {
         PickupType: "Humbucker" | "P90" | "SingleCoil";
         /** Review */
         Review: {
+            title: string;
             /** Format: int32 */
             rating: number;
             description: string;

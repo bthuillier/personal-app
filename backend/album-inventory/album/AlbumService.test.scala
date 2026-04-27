@@ -163,7 +163,11 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
 
   test("setReview attaches review to existing album") {
     val service = createService()
-    val review = Review(rating = Rating.unsafe(8), description = "Great album")
+    val review = Review(
+      title = "A masterpiece",
+      rating = Rating.unsafe(8),
+      description = "Great album"
+    )
     for {
       _ <- service.add(sampleAlbum)
       _ <- service.setReview(sampleAlbum.id, review)
@@ -175,8 +179,13 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
 
   test("setReview overwrites the previous review") {
     val service = createService()
-    val initial = Review(rating = Rating.unsafe(4), description = "Meh")
-    val updated = Review(rating = Rating.unsafe(9), description = "Grew on me")
+    val initial =
+      Review(title = "Initial", rating = Rating.unsafe(4), description = "Meh")
+    val updated = Review(
+      title = "Updated",
+      rating = Rating.unsafe(9),
+      description = "Grew on me"
+    )
     for {
       _ <- service.add(sampleAlbum)
       _ <- service.setReview(sampleAlbum.id, initial)
@@ -189,7 +198,11 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
 
   test("setReview fails when album does not exist") {
     val service = createService()
-    val review = Review(rating = Rating.unsafe(7), description = "Solid")
+    val review = Review(
+      title = "Solid",
+      rating = Rating.unsafe(7),
+      description = "Solid"
+    )
     service
       .setReview("missing-id", review)
       .attempt
@@ -212,9 +225,9 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
 
   test("Review JSON decoder rejects ratings outside [0, 10]") {
     import io.circe.parser.decode
-    assert(decode[Review]("""{"rating": 11, "description": "x"}""").isLeft)
-    assert(decode[Review]("""{"rating": -1, "description": "x"}""").isLeft)
-    assert(decode[Review]("""{"rating": 7, "description": "x"}""").isRight)
+    assert(decode[Review]("""{"title": "t", "rating": 11, "description": "x"}""").isLeft)
+    assert(decode[Review]("""{"title": "t", "rating": -1, "description": "x"}""").isLeft)
+    assert(decode[Review]("""{"title": "t", "rating": 7, "description": "x"}""").isRight)
   }
 
   test("removeGenre removes genre from existing album") {

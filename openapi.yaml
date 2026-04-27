@@ -722,9 +722,12 @@ components:
       title: Review
       type: object
       required:
+      - title
       - rating
       - description
       properties:
+        title:
+          type: string
         rating:
           type: integer
           format: int32
