@@ -83,7 +83,13 @@ Navigate to `http://localhost:5173`.
 All endpoints are documented in `openapi.yaml`. To regenerate it after changing backend endpoints:
 
 ```bash
-scala-cli run generateOpenApi.scala
+scala-cli run . --main-class generateOpenApi
+```
+
+Or via [just](https://github.com/casey/just):
+
+```bash
+just generate-openapi
 ```
 
 To regenerate the frontend TypeScript types from the spec:
