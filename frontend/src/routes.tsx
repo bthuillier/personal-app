@@ -9,6 +9,7 @@ import { PedalListPage } from "@/pages/gear/PedalListPage";
 import { MusicHomePage } from "@/pages/music/MusicHomePage";
 import { WishlistPage } from "@/pages/music/WishlistPage";
 import { AlbumListPage } from "@/pages/music/AlbumListPage";
+import { AlbumDetailPage } from "@/pages/music/AlbumDetailPage";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: "music", element: <MusicHomePage /> },
       { path: "music/wishlist", element: <WishlistPage /> },
       { path: "music/albums", element: <AlbumListPage /> },
+      { path: "music/albums/:id", element: <AlbumDetailPage /> },
     ],
   },
 ]);

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { albumsQuery } from "@/api/queries";
@@ -20,6 +21,7 @@ const formFields: FieldDefinition[] = [
 ];
 
 export function AlbumListPage() {
+  const navigate = useNavigate();
   const { data: albums = [], isLoading } = useQuery(albumsQuery);
   const createMutation = useCreateAlbum();
 
@@ -100,6 +102,7 @@ export function AlbumListPage() {
               data={filtered}
               rowKey={(a) => a.id}
               emptyMessage="No albums found."
+              onRowClick={(a) => navigate(`/music/albums/${a.id}`)}
             />
           )}
         </FilterBar>

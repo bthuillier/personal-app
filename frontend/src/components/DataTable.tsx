@@ -32,6 +32,7 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   pageSize?: number;
   pageSizeOptions?: number[];
+  onRowClick?: (row: T) => void;
 }
 
 function defaultCompare<T>(a: T, b: T, accessor: keyof T & string): number {
@@ -99,6 +100,7 @@ export function DataTable<T>({
   emptyMessage = "No data found.",
   pageSize: initialPageSize = 25,
   pageSizeOptions,
+  onRowClick,
 }: DataTableProps<T>) {
   const { sortedData, toggleSort, sortIndicator } = useSortedData(
     data,
@@ -145,7 +147,13 @@ export function DataTable<T>({
             </TableRow>
           ) : (
             pagination.pagedData.map((row) => (
-              <TableRow key={rowKey(row)}>
+              <TableRow
+                key={rowKey(row)}
+                className={cn(
+                  onRowClick && "cursor-pointer hover:bg-muted/50",
+                )}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+              >
                 {columns.map((col) => (
                   <TableCell key={col.header}>{renderCell(col, row)}</TableCell>
                 ))}

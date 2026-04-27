@@ -93,7 +93,11 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   }
 
   return (
-    <div ref={containerRef} className="relative flex flex-wrap items-center gap-1">
+    <div
+      ref={containerRef}
+      className="relative flex flex-wrap items-center gap-1"
+      onClick={(e) => e.stopPropagation()}
+    >
       {current.map((g) => (
         <Badge key={g} variant="secondary" className="group/genre gap-1 pr-1">
           <span>{g}</span>
