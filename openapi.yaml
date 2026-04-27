@@ -176,6 +176,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerError'
+  /albums/{albumId}/review:
+    post:
+      operationId: Review Album
+      parameters:
+      - name: albumId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
   /guitars:
     get:
       operationId: List Guitars
@@ -626,6 +656,8 @@ components:
           minItems: 1
           items:
             type: string
+        review:
+          $ref: '#/components/schemas/Review'
     PedalType:
       title: PedalType
       type: string
@@ -686,6 +718,20 @@ components:
       - Humbucker
       - P90
       - SingleCoil
+    Review:
+      title: Review
+      type: object
+      required:
+      - rating
+      - description
+      properties:
+        rating:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 10
+        description:
+          type: string
     StringsChanged:
       title: StringsChanged
       type: object

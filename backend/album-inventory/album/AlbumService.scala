@@ -17,6 +17,8 @@ class AlbumService(store: AlbumStore) {
     store.addGenre(albumId, genre)
   def removeGenre(albumId: String, genre: String): IO[Unit] =
     store.removeGenre(albumId, genre)
+  def setReview(albumId: String, review: Review): IO[Unit] =
+    store.setReview(albumId, review)
   def getById(albumId: String): IO[Option[PartialAlbum]] =
     store.getById(albumId)
 
@@ -41,6 +43,7 @@ object AlbumService {
         artist,
         format,
         releaseDate,
+        None,
         None
       )
   }

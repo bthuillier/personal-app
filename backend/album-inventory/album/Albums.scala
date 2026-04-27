@@ -70,12 +70,21 @@ object Albums {
         )
       )
 
+  val reviewAlbum =
+    endpoint.post
+      .name("Review Album")
+      .in("albums" / path[String]("albumId") / "review")
+      .in(jsonBody[album.Review])
+      .out(emptyOutput)
+      .errorOut(statusCode(StatusCode.NotFound).and(jsonBody[NotFound]))
+
   val endpointDefininitions = List(
     listAlbums,
     createAlbum,
     getAlbumById,
     addGenreToAlbum,
-    removeGenreFromAlbum
+    removeGenreFromAlbum,
+    reviewAlbum
   )
 
   private def listAlbumsLogic(
@@ -128,13 +137,28 @@ object Albums {
         }
     }
 
+  private def reviewAlbumLogic(
+      service: album.AlbumService
+  ): ServerEndpoint[Any, IO] =
+    reviewAlbum.serverLogic { case (albumId, review) =>
+      service
+        .setReview(albumId, review)
+        .attemptNarrow[AlbumNotFoundException]
+        .map {
+          _.leftMap({ case AlbumNotFoundException(_) =>
+            NotFound(s"Album with id $albumId not found")
+          })
+        }
+    }
+
   def endpoints(service: album.AlbumService): List[ServerEndpoint[Any, IO]] =
     List(
       listAlbumsLogic(service),
       createAlbumLogic(service),
       getAlbumByIdLogic(service),
       addGenreToAlbumLogic(service),
-      removeGenreFromAlbumLogic(service)
+      removeGenreFromAlbumLogic(service),
+      reviewAlbumLogic(service)
     )
 
 }

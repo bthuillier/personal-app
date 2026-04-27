@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/albums/{albumId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Review Album"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/guitars": {
         parameters: {
             query?: never;
@@ -332,6 +348,7 @@ export interface components {
             /** Format: date */
             releaseDate: string;
             genre?: string[];
+            review?: components["schemas"]["Review"];
         };
         /**
          * PedalType
@@ -360,6 +377,12 @@ export interface components {
          * @enum {string}
          */
         PickupType: "Humbucker" | "P90" | "SingleCoil";
+        /** Review */
+        Review: {
+            /** Format: int32 */
+            rating: number;
+            description: string;
+        };
         /** StringsChanged */
         StringsChanged: {
             /** Format: date */
@@ -645,6 +668,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InternalServerError"];
+                };
+            };
+        };
+    };
+    "Review Album": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                albumId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Review"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid value for: body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFound"];
                 };
             };
         };

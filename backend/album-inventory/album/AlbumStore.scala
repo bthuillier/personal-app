@@ -9,6 +9,7 @@ trait AlbumStore {
   def add(partialAlbum: PartialAlbum): IO[Unit]
   def addGenre(albumId: String, genre: String): IO[Unit]
   def removeGenre(albumId: String, genre: String): IO[Unit]
+  def setReview(albumId: String, review: Review): IO[Unit]
   def getById(albumId: String): IO[Option[PartialAlbum]]
 }
 
@@ -32,6 +33,12 @@ object AlbumStore {
       IO.fromOption(albums.get(albumId))(
         Errors.albumNotFound(albumId)
       ).map(_.addGenre(genre))
+        .flatMap(updatedAlbum => add(updatedAlbum))
+
+    override def setReview(albumId: String, review: Review): IO[Unit] =
+      IO.fromOption(albums.get(albumId))(
+        Errors.albumNotFound(albumId)
+      ).map(_.setReview(review))
         .flatMap(updatedAlbum => add(updatedAlbum))
 
     override def getById(albumId: String): IO[Option[PartialAlbum]] = IO {
@@ -84,6 +91,17 @@ object AlbumStore {
         internalStore.getById(albumId).flatMap {
           case Some(album) =>
             saveAlbum(album, s"Add genre '$genre' to album '${album.name}'")
+          case None => IO.unit
+        }
+
+    override def setReview(albumId: String, review: Review): IO[Unit] =
+      internalStore.setReview(albumId, review) *>
+        internalStore.getById(albumId).flatMap {
+          case Some(album) =>
+            saveAlbum(
+              album,
+              s"Set review (rating ${review.rating}) on album '${album.name}'"
+            )
           case None => IO.unit
         }
 

@@ -20,7 +20,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     artist = "Pink Floyd",
     format = AlbumFormat.Vinyl,
     releaseDate = LocalDate.of(1973, 3, 1),
-    genre = None
+    genre = None,
+    review = None
   )
 
   val anotherAlbum = PartialAlbum(
@@ -29,7 +30,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     artist = "The Beatles",
     format = AlbumFormat.CD,
     releaseDate = LocalDate.of(1969, 9, 26),
-    genre = None
+    genre = None,
+    review = None
   )
 
   val vinylVersionAlbum = PartialAlbum(
@@ -38,7 +40,8 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
     artist = "The Beatles",
     format = AlbumFormat.Vinyl,
     releaseDate = LocalDate.of(1969, 9, 26),
-    genre = None
+    genre = None,
+    review = None
   )
 
   test("list returns empty list initially") {
@@ -156,6 +159,62 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
       assertEquals(album.isDefined, true)
       assertEquals(album.get.genre, Some(NonEmptySet.one("Progressive Rock")))
     }
+  }
+
+  test("setReview attaches review to existing album") {
+    val service = createService()
+    val review = Review(rating = Rating.unsafe(8), description = "Great album")
+    for {
+      _ <- service.add(sampleAlbum)
+      _ <- service.setReview(sampleAlbum.id, review)
+      album <- service.getById(sampleAlbum.id)
+    } yield {
+      assertEquals(album.flatMap(_.review), Some(review))
+    }
+  }
+
+  test("setReview overwrites the previous review") {
+    val service = createService()
+    val initial = Review(rating = Rating.unsafe(4), description = "Meh")
+    val updated = Review(rating = Rating.unsafe(9), description = "Grew on me")
+    for {
+      _ <- service.add(sampleAlbum)
+      _ <- service.setReview(sampleAlbum.id, initial)
+      _ <- service.setReview(sampleAlbum.id, updated)
+      album <- service.getById(sampleAlbum.id)
+    } yield {
+      assertEquals(album.flatMap(_.review), Some(updated))
+    }
+  }
+
+  test("setReview fails when album does not exist") {
+    val service = createService()
+    val review = Review(rating = Rating.unsafe(7), description = "Solid")
+    service
+      .setReview("missing-id", review)
+      .attempt
+      .map {
+        case Left(_: AlbumNotFoundException) => ()
+        case other => fail(s"expected AlbumNotFoundException, got $other")
+      }
+  }
+
+  test("Rating.from accepts values within [0, 10]") {
+    assert(Rating.from(0).isRight)
+    assert(Rating.from(10).isRight)
+    assert(Rating.from(5).isRight)
+  }
+
+  test("Rating.from rejects values outside [0, 10]") {
+    assert(Rating.from(-1).isLeft)
+    assert(Rating.from(11).isLeft)
+  }
+
+  test("Review JSON decoder rejects ratings outside [0, 10]") {
+    import io.circe.parser.decode
+    assert(decode[Review]("""{"rating": 11, "description": "x"}""").isLeft)
+    assert(decode[Review]("""{"rating": -1, "description": "x"}""").isLeft)
+    assert(decode[Review]("""{"rating": 7, "description": "x"}""").isRight)
   }
 
   test("removeGenre removes genre from existing album") {
