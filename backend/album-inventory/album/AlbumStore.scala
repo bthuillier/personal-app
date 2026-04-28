@@ -2,7 +2,7 @@ package album
 
 import cats.effect.*
 import scala.collection.mutable
-import json.{JsonLoader, GitCommitter}
+import json.{GitCommitter, JsonLoader}
 
 trait AlbumStore {
   def list: IO[List[PartialAlbum]]
@@ -113,12 +113,11 @@ object AlbumStore {
   def inMemory(initialState: List[PartialAlbum] = List.empty): AlbumStore =
     InMemoryAlbumStore(initialState)
 
-  def fileBacked(filepath: String)(using GitCommitter): IO[AlbumStore] = {
+  def fileBacked(filepath: String)(using GitCommitter): IO[AlbumStore] =
     JsonLoader
       .loadJsonFolder[PartialAlbum](filepath)
       .map(initialAlbums =>
         FilebackedAlbumStore(filepath, inMemory(initialAlbums))
       )
-  }
 
 }

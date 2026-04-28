@@ -172,9 +172,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
       _ <- service.add(sampleAlbum)
       _ <- service.setReview(sampleAlbum.id, review)
       album <- service.getById(sampleAlbum.id)
-    } yield {
-      assertEquals(album.flatMap(_.review), Some(review))
-    }
+    } yield assertEquals(album.flatMap(_.review), Some(review))
   }
 
   test("setReview overwrites the previous review") {
@@ -191,9 +189,7 @@ class AlbumServiceTest extends munit.CatsEffectSuite {
       _ <- service.setReview(sampleAlbum.id, initial)
       _ <- service.setReview(sampleAlbum.id, updated)
       album <- service.getById(sampleAlbum.id)
-    } yield {
-      assertEquals(album.flatMap(_.review), Some(updated))
-    }
+    } yield assertEquals(album.flatMap(_.review), Some(updated))
   }
 
   test("setReview fails when album does not exist") {

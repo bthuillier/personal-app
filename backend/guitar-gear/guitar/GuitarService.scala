@@ -1,6 +1,6 @@
 package guitargear.guitar
 
-import json.{JsonLoader, GitCommitter}
+import json.{GitCommitter, JsonLoader}
 import cats.effect.*
 import cats.effect.std.AtomicCell
 import io.circe.syntax.*

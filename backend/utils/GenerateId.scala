@@ -12,7 +12,7 @@ object GenerateId {
       MessageDigest.getInstance("SHA-256").digest(key.getBytes("UTF-8"))
     digest
       .take(length)
-      .map(b => Letters(((b & 0xff) % 52)))
+      .map(b => Letters((b & 0xff) % 52))
       .mkString
   }
 

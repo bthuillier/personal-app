@@ -90,9 +90,7 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.confirmAlbumReceived(sampleAlbumId)
       albums <- service.list
-    } yield {
-      assertEquals(albums.length, 0)
-    }
+    } yield assertEquals(albums.length, 0)
   }
 
   test("confirmAlbumReceived raises error for non-existent album") {

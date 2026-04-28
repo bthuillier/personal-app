@@ -251,18 +251,18 @@ object NoteName {
   given Codec[NoteName] = ConfiguredEnumCodec.derived
   given Schema[NoteName] = Schema.derivedEnumeration[NoteName]()
   given Ordering[NoteName] = Ordering.by {
-    case C  => 0
+    case C => 0
     case Cs => 1
-    case D  => 2
+    case D => 2
     case Ds => 3
-    case E  => 4
-    case F  => 5
+    case E => 4
+    case F => 5
     case Fs => 6
-    case G  => 7
+    case G => 7
     case Gs => 8
-    case A  => 9
+    case A => 9
     case As => 10
-    case B  => 11
+    case B => 11
   }
 }
 

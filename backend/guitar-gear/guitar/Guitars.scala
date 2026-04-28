@@ -32,7 +32,7 @@ object Guitars {
       guitarService: GuitarService
   ) = getGuitarEventsEndpoint.serverLogic { id =>
     guitarService.find(id).map {
-      case None         => Left(())
+      case None => Left(())
       case Some(guitar) => Right(guitar.events.getOrElse(List.empty))
     }
   }
@@ -49,7 +49,7 @@ object Guitars {
       guitarService: GuitarService
   ) = handleGuitarCommandEndpoint.serverLogic { case (id, command) =>
     guitarService.handle(id, command).map {
-      case Left(_)       => Left(())
+      case Left(_) => Left(())
       case Right(guitar) => Right(guitar)
     }
   }

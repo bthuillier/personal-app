@@ -14,9 +14,8 @@ class AmplifierService(initialAmplifiers: List[Amplifier]) {
 }
 
 object AmplifierService {
-  def fromFile(basePath: String): IO[AmplifierService] = {
+  def fromFile(basePath: String): IO[AmplifierService] =
     JsonLoader.loadJsonFolder[Amplifier](s"$basePath/guitar-amp").map { data =>
       AmplifierService(data)
     }
-  }
 }

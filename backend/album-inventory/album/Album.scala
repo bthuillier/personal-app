@@ -51,23 +51,21 @@ final case class PartialAlbum(
 ) derives Codec.AsObject,
       Schema {
 
-  def addGenre(newGenre: String): PartialAlbum = {
+  def addGenre(newGenre: String): PartialAlbum =
     genre match {
       case Some(genres) => this.copy(genre = Some(genres.add(newGenre)))
-      case None         => this.copy(genre = Some(NonEmptySet.one(newGenre)))
+      case None => this.copy(genre = Some(NonEmptySet.one(newGenre)))
     }
-  }
 
   def setReview(newReview: Review): PartialAlbum =
     this.copy(review = Some(newReview))
 
-  def removeGenre(genreToRemove: String): PartialAlbum = {
+  def removeGenre(genreToRemove: String): PartialAlbum =
     genre match {
       case Some(genres) =>
         this.copy(genre = NonEmptySet.fromSet(genres - genreToRemove))
       case None => this
     }
-  }
 
 }
 
@@ -91,7 +89,7 @@ enum AlbumFormat {
 }
 
 object AlbumFormat {
-  import io.circe.derivation.{ConfiguredEnumCodec, Configuration}
+  import io.circe.derivation.{Configuration, ConfiguredEnumCodec}
   import io.circe.Codec
   import sttp.tapir.Schema
 

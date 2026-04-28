@@ -2,15 +2,9 @@ import io.circe.Codec
 import sttp.capabilities.StreamMaxLengthExceededException
 import sttp.model.StatusCode
 import sttp.monad.MonadError
-import sttp.tapir.server.model.{
-  InvalidMultipartBodyException,
-  ValuedEndpointOutput
-}
+import sttp.tapir.server.model.{InvalidMultipartBodyException, ValuedEndpointOutput}
 import sttp.tapir.*
-import sttp.tapir.server.interceptor.exception.{
-  ExceptionContext,
-  ExceptionHandler
-}
+import sttp.tapir.server.interceptor.exception.{ExceptionContext, ExceptionHandler}
 import io.circe.syntax.*
 
 case class ErrorResponse(error: String, message: String) derives Codec.AsObject

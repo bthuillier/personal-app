@@ -16,9 +16,10 @@ class GitCommitter private (
     logger: Logger[IO]
 ) {
 
-  /** Commits a specific file with the given message. Operations are serialized
-    * via a semaphore to prevent concurrent git index access.
-    */
+  /**
+   * Commits a specific file with the given message. Operations are serialized
+   * via a semaphore to prevent concurrent git index access.
+   */
   def commitFile(filePath: String, message: String): IO[Unit] =
     lock.permit.use { _ =>
       IO.blocking {
@@ -68,7 +69,7 @@ object GitCommitter {
         (git, repoRoot)
       }
       (git, repoRoot) = result
-      _ <- logger.info(s"Initialized for repo: ${repoRoot}")
+      _ <- logger.info(s"Initialized for repo: $repoRoot")
       lock <- Semaphore[IO](1)
     } yield new GitCommitter(git, repoRoot, lock, logger)
 }

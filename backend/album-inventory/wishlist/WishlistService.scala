@@ -66,11 +66,10 @@ object WishlistService {
   def fileBacked(
       folderPath: String,
       eventBus: EventBus[WishlistAlbum]
-  )(using GitCommitter): IO[WishlistService] = {
+  )(using GitCommitter): IO[WishlistService] =
     for {
       logger <- Slf4jLogger.create[IO]
       store <- WishlistStore.fileBacked(folderPath)
     } yield WishlistService(store, eventBus, logger)
-  }
 
 }

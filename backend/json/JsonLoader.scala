@@ -50,9 +50,8 @@ object JsonLoader {
     }
   }
 
-  def loadJsonFileUnsafe[A: Decoder](filePath: String)(using IORuntime): A = {
+  def loadJsonFileUnsafe[A: Decoder](filePath: String)(using IORuntime): A =
     loadJsonFile[A](filePath).unsafeRunSync()
-  }
 
   def loadJsonFolder[A: Decoder](folderPath: String): IO[List[A]] = {
     val folder = new File(folderPath)
@@ -81,9 +80,8 @@ object JsonLoader {
 
   def loadJsonFolderUnsafe[A: Decoder](
       folderPath: String
-  )(using IORuntime): List[A] = {
+  )(using IORuntime): List[A] =
     loadJsonFolder[A](folderPath).unsafeRunSync()
-  }
 
   def loadJsonFolderWithPaths[A: Decoder](
       folderPath: String

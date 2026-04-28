@@ -105,7 +105,7 @@ object Albums {
     getAlbumById.serverLogic { albumId =>
       service.getById(albumId).map {
         case Some(album) => Right(album)
-        case None        => Left(NotFound(s"Album with id $albumId not found"))
+        case None => Left(NotFound(s"Album with id $albumId not found"))
       }
     }
 
@@ -117,9 +117,9 @@ object Albums {
         .addGenre(albumId, genre)
         .attemptNarrow[AlbumNotFoundException]
         .map {
-          _.leftMap({ case AlbumNotFoundException(_) =>
+          _.leftMap { case AlbumNotFoundException(_) =>
             NotFound(s"Album with id $albumId not found")
-          })
+          }
         }
     }
 
@@ -131,9 +131,9 @@ object Albums {
         .removeGenre(albumId, genre)
         .attemptNarrow[AlbumNotFoundException]
         .map {
-          _.leftMap({ case AlbumNotFoundException(_) =>
+          _.leftMap { case AlbumNotFoundException(_) =>
             NotFound(s"Album with id $albumId not found")
-          })
+          }
         }
     }
 
@@ -145,9 +145,9 @@ object Albums {
         .setReview(albumId, review)
         .attemptNarrow[AlbumNotFoundException]
         .map {
-          _.leftMap({ case AlbumNotFoundException(_) =>
+          _.leftMap { case AlbumNotFoundException(_) =>
             NotFound(s"Album with id $albumId not found")
-          })
+          }
         }
     }
 

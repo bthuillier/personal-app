@@ -2,7 +2,7 @@ package wishlist
 
 import cats.effect.IO
 import scala.collection.mutable
-import json.{JsonLoader, GitCommitter}
+import json.{GitCommitter, JsonLoader}
 
 trait WishlistStore {
   def list: IO[List[WishlistAlbum]]
@@ -103,7 +103,7 @@ object WishlistStore {
 
   def fileBacked(
       folderPath: String
-  )(using GitCommitter): IO[WishlistStore] = {
+  )(using GitCommitter): IO[WishlistStore] =
     JsonLoader
       .loadJsonFolder[WishlistAlbum](folderPath)
       .recover { case _: Throwable =>
@@ -112,7 +112,6 @@ object WishlistStore {
       .map { initialAlbums =>
         FileBackedWishlistStore(folderPath, inMemory(initialAlbums.toSet))
       }
-  }
 
   def inMemory(initialState: Set[WishlistAlbum] = Set.empty): WishlistStore =
     InMemoryWishlistStore(initialState)
