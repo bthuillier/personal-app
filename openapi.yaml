@@ -268,6 +268,40 @@ paths:
                 type: string
         '404':
           description: ''
+  /guitars/{id}/string-recommendation:
+    post:
+      operationId: Recommend Strings
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StringRecommendationRequest'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringRecommendationResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
   /amplifiers:
     get:
       operationId: List Amplifiers
@@ -361,6 +395,14 @@ components:
       enum:
       - Revv
       - Victory
+    BadRequest:
+      title: BadRequest
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
     ChangeStrings:
       title: ChangeStrings
       type: object
@@ -735,6 +777,67 @@ components:
           maximum: 10
         description:
           type: string
+    StringConstruction:
+      title: StringConstruction
+      type: string
+      enum:
+      - Plain
+      - Wound
+    StringRecommendation:
+      title: StringRecommendation
+      type: object
+      required:
+      - note
+      - spec
+      - tensionLbs
+      - referenceTensionLbs
+      - deltaLbs
+      properties:
+        note:
+          $ref: '#/components/schemas/Note'
+        spec:
+          $ref: '#/components/schemas/StringSpec'
+        tensionLbs:
+          type: number
+          format: double
+        referenceTensionLbs:
+          type: number
+          format: double
+        deltaLbs:
+          type: number
+          format: double
+    StringRecommendationRequest:
+      title: StringRecommendationRequest
+      type: object
+      required:
+      - targetTuning
+      properties:
+        targetTuning:
+          $ref: '#/components/schemas/GuitarTuning'
+    StringRecommendationResponse:
+      title: StringRecommendationResponse
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/StringRecommendation'
+    StringSpec:
+      title: StringSpec
+      type: object
+      required:
+      - gauge
+      - unitWeight
+      - construction
+      properties:
+        gauge:
+          type: number
+          format: double
+        unitWeight:
+          type: number
+          format: double
+        construction:
+          $ref: '#/components/schemas/StringConstruction'
     StringsChanged:
       title: StringsChanged
       type: object

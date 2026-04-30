@@ -2,6 +2,8 @@ package guitargear.strings
 
 import cats.syntax.traverse.*
 import guitargear.guitar.Note
+import io.circe.Codec
+import sttp.tapir.Schema
 
 final case class StringRecommendation(
     note: Note,
@@ -9,7 +11,8 @@ final case class StringRecommendation(
     tensionLbs: Double,
     referenceTensionLbs: Double,
     deltaLbs: Double
-)
+) derives Codec.AsObject,
+      Schema
 
 object Recommender {
 

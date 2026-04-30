@@ -3,6 +3,7 @@ package guitargear.guitar
 import json.{GitCommitter, JsonLoader}
 import cats.effect.*
 import cats.effect.std.AtomicCell
+import guitargear.strings.{NyxlCatalog, Recommender, StringRecommendation}
 import io.circe.syntax.*
 import java.io.{File, PrintWriter}
 import scala.util.Using
@@ -19,6 +20,26 @@ class GuitarService(
 
   def find(id: String): IO[Option[Guitar]] =
     cell.get.map(_.get(id).map(_._1))
+
+  def recommendStrings(
+      id: String,
+      targetTuning: GuitarTuning
+  ): IO[List[StringRecommendation]] =
+    find(id).flatMap {
+      case None => IO.raiseError(Errors.guitarNotFound(id))
+      case Some(guitar) =>
+        Recommender.recommend(
+          referenceGauges = guitar.setup.stringGauge,
+          referenceTuning = guitar.setup.tuning.notes.toList,
+          targetTuning = targetTuning.notes.toList,
+          scaleLengthInches = guitar.specifications.scaleLengthInInches,
+          catalog = NyxlCatalog
+        ) match {
+          case Right(result) => IO.pure(result)
+          case Left(message) =>
+            IO.raiseError(Errors.stringRecommendationFailure(message))
+        }
+    }
 
   def handle(id: String, command: GuitarCommand): IO[Either[String, Guitar]] =
     cell.evalModify { state =>

@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/guitars/{id}/string-recommendation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Recommend Strings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/amplifiers": {
         parameters: {
             query?: never;
@@ -236,6 +252,10 @@ export interface components {
          * @enum {string}
          */
         AmplifierBrand: "Revv" | "Victory";
+        /** BadRequest */
+        BadRequest: {
+            message: string;
+        };
         /** ChangeStrings */
         ChangeStrings: {
             /** Format: date */
@@ -383,6 +403,38 @@ export interface components {
             /** Format: int32 */
             rating: number;
             description: string;
+        };
+        /**
+         * StringConstruction
+         * @enum {string}
+         */
+        StringConstruction: "Plain" | "Wound";
+        /** StringRecommendation */
+        StringRecommendation: {
+            note: components["schemas"]["Note"];
+            spec: components["schemas"]["StringSpec"];
+            /** Format: double */
+            tensionLbs: number;
+            /** Format: double */
+            referenceTensionLbs: number;
+            /** Format: double */
+            deltaLbs: number;
+        };
+        /** StringRecommendationRequest */
+        StringRecommendationRequest: {
+            targetTuning: components["schemas"]["GuitarTuning"];
+        };
+        /** StringRecommendationResponse */
+        StringRecommendationResponse: {
+            recommendations?: components["schemas"]["StringRecommendation"][];
+        };
+        /** StringSpec */
+        StringSpec: {
+            /** Format: double */
+            gauge: number;
+            /** Format: double */
+            unitWeight: number;
+            construction: components["schemas"]["StringConstruction"];
         };
         /** StringsChanged */
         StringsChanged: {
@@ -796,6 +848,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    "Recommend Strings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StringRecommendationRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StringRecommendationResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BadRequest"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFound"];
+                };
             };
         };
     };

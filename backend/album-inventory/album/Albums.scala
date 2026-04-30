@@ -3,20 +3,13 @@ package album
 import cats.effect.IO
 import sttp.tapir.*
 import cats.syntax.all.*
+import http.ErrorResponse
+import http.ErrorResponse.NotFound
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import io.circe.Codec
 import sttp.model.StatusCode
 
 object Albums {
-
-  sealed trait ErrorResponse
-  case class NotFound(message: String) extends ErrorResponse
-      derives Codec.AsObject,
-        Schema
-  case class InternalServerError(message: String) extends ErrorResponse
-      derives Codec.AsObject,
-        Schema
 
   val listAlbums =
     endpoint.get
@@ -46,11 +39,8 @@ object Albums {
       .out(emptyOutput)
       .errorOut(
         oneOf[ErrorResponse](
-          oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-          oneOfVariant(
-            statusCode(StatusCode.InternalServerError)
-              .and(jsonBody[InternalServerError])
-          )
+          ErrorResponse.notFoundVariant,
+          ErrorResponse.internalServerErrorVariant
         )
       )
 
@@ -62,11 +52,8 @@ object Albums {
       .out(emptyOutput)
       .errorOut(
         oneOf[ErrorResponse](
-          oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
-          oneOfVariant(
-            statusCode(StatusCode.InternalServerError)
-              .and(jsonBody[InternalServerError])
-          )
+          ErrorResponse.notFoundVariant,
+          ErrorResponse.internalServerErrorVariant
         )
       )
 

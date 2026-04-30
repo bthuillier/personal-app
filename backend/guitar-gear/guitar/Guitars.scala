@@ -1,13 +1,27 @@
 package guitargear.guitar
 
 import cats.effect.IO
+import cats.syntax.all.*
+import guitargear.strings.StringRecommendation
+import http.ErrorResponse
+import http.ErrorResponse.{BadRequest, NotFound}
+import io.circe.Codec
 import sttp.model.StatusCode
+import sttp.tapir.*
+import sttp.tapir.json.circe.*
+import sttp.tapir.server.ServerEndpoint
+
+final case class StringRecommendationRequest(
+    targetTuning: GuitarTuning
+) derives Codec.AsObject,
+      Schema
+
+final case class StringRecommendationResponse(
+    recommendations: List[StringRecommendation]
+) derives Codec.AsObject,
+      Schema
 
 object Guitars {
-
-  import sttp.tapir.*
-  import sttp.tapir.json.circe.*
-  import sttp.tapir.server.ServerEndpoint
 
   val listGuitarsEndpoint =
     endpoint.get
@@ -54,10 +68,44 @@ object Guitars {
     }
   }
 
+  val recommendStringsEndpoint =
+    endpoint.post
+      .name("Recommend Strings")
+      .in("guitars" / path[String]("id") / "string-recommendation")
+      .in(jsonBody[StringRecommendationRequest])
+      .out(jsonBody[StringRecommendationResponse])
+      .errorOut(
+        oneOf[ErrorResponse](
+          ErrorResponse.notFoundVariant,
+          ErrorResponse.badRequestVariant
+        )
+      )
+
+  private def recommendStringsEndpointImpl(
+      guitarService: GuitarService
+  ) = recommendStringsEndpoint.serverLogic { case (id, request) =>
+    guitarService
+      .recommendStrings(id, request.targetTuning)
+      .attemptNarrow[Throwable]
+      .map {
+        _.bimap(
+          {
+            case GuitarNotFoundException(_) =>
+              NotFound(s"Guitar with id $id not found")
+            case StringRecommendationException(message) =>
+              BadRequest(message)
+            case e => BadRequest(e.getMessage)
+          },
+          recs => StringRecommendationResponse(recs)
+        )
+      }
+  }
+
   val endpointDefinitions = List(
     listGuitarsEndpoint,
     getGuitarEventsEndpoint,
-    handleGuitarCommandEndpoint
+    handleGuitarCommandEndpoint,
+    recommendStringsEndpoint
   )
 
   def endpoints(
@@ -65,7 +113,8 @@ object Guitars {
   ): List[ServerEndpoint[Any, IO]] = List(
     listGuitarsEndpointImpl(guitarService),
     getGuitarEventsEndpointImpl(guitarService),
-    handleGuitarCommandEndpointImpl(guitarService)
+    handleGuitarCommandEndpointImpl(guitarService),
+    recommendStringsEndpointImpl(guitarService)
   )
 
 }
