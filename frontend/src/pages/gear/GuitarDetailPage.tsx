@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
@@ -11,6 +11,13 @@ import { formatEnum } from "@/lib/utils";
 import { StringRecommendationPanel } from "./StringRecommendationPanel";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
+type GuitarTuning = components["schemas"]["GuitarTuning"];
+
+export interface AppliedRecommendation {
+  brand: string;
+  gauges: number[];
+  tuning: GuitarTuning;
+}
 
 function formatGauge(gauge?: number[]): string {
   if (!gauge || gauge.length === 0) return "-";
@@ -47,18 +54,45 @@ export function GuitarDetailPage() {
 
   const changeStringsMutation = useChangeGuitarStrings(id!);
 
+  // `version` increments each time the panel pushes a new recommendation, so
+  // the form's `key` changes and ItemForm remounts even when the user clicks
+  // Apply twice in a row without submitting in between.
+  const [pendingApply, setPendingApply] = useState<
+    (AppliedRecommendation & { version: number }) | null
+  >(null);
+
+  function applyRecommendation(rec: AppliedRecommendation) {
+    setPendingApply((prev) => ({ ...rec, version: (prev?.version ?? 0) + 1 }));
+  }
+
   async function handleChangeStrings(values: Record<string, string>) {
     const gauge = values.stringGauge
       ? values.stringGauge.split(/[-,\s]+/).map(Number).filter((n) => !isNaN(n))
       : undefined;
 
+    // If the user opened this form via "Apply recommendation", the target
+    // tuning was set on `pendingApply` — submit with that. Otherwise the
+    // tuning stays the same as the current setup.
+    const tuning =
+      pendingApply?.tuning ?? guitar?.setup.tuning ?? { notes: [] };
+
     await changeStringsMutation.mutateAsync({
       date: values.date,
       stringBrand: values.stringBrand,
       stringGauge: gauge,
-      tuning: guitar?.setup.tuning ?? { notes: [] },
+      tuning,
     });
+    setPendingApply(null);
   }
+
+  const initialFormValues = useMemo(() => {
+    if (!pendingApply) return undefined;
+    return {
+      date: new Date().toISOString().slice(0, 10),
+      stringBrand: pendingApply.brand,
+      stringGauge: pendingApply.gauges.join("-"),
+    };
+  }, [pendingApply]);
 
   if (!guitar) {
     return (
@@ -157,10 +191,12 @@ export function GuitarDetailPage() {
               Current Setup
             </h3>
             <ItemForm
+              key={pendingApply ? `applied-${pendingApply.version}` : "default"}
               fields={changeStringsFields}
               onSubmit={handleChangeStrings}
               buttonLabel="Change Strings"
               submitLabel="Save"
+              initialValues={initialFormValues}
             />
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
@@ -178,7 +214,10 @@ export function GuitarDetailPage() {
         </section>
       </div>
 
-      <StringRecommendationPanel guitar={guitar} />
+      <StringRecommendationPanel
+        guitar={guitar}
+        onApply={applyRecommendation}
+      />
 
       {/* Event History */}
       <section>

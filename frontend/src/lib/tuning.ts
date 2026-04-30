@@ -172,8 +172,12 @@ const TUNINGS: NamedTuning[] = [
   },
 ];
 
+function fingerprint(notes: Note[]): string {
+  return notes.map((n) => `${n.name}${n.octave}`).join(",");
+}
+
 const TUNING_BY_FINGERPRINT: Record<string, string> = Object.fromEntries(
-  TUNINGS.map((t) => [t.notes.map((n) => n.name).join(","), t.name]),
+  TUNINGS.map((t) => [fingerprint(t.notes), t.name]),
 );
 
 function formatNoteName(name: NoteName): string {
@@ -188,8 +192,7 @@ export function formatNotes(notes: Note[]): string {
 /** Returns a friendly tuning name if known, or null */
 export function getTuningName(notes: Note[]): string | null {
   if (!notes || notes.length === 0) return null;
-  const key = notes.map((n) => n.name).join(",");
-  return TUNING_BY_FINGERPRINT[key] ?? null;
+  return TUNING_BY_FINGERPRINT[fingerprint(notes)] ?? null;
 }
 
 /** Returns the display label: tuning name if known, otherwise note names */
@@ -203,8 +206,13 @@ export function tuningsForStringCount(count: number): NamedTuning[] {
   return TUNINGS.filter((t) => t.notes.length === count);
 }
 
-export function findTuningByName(name: string): NamedTuning | undefined {
-  return TUNINGS.find((t) => t.name === name);
+export function findTuningByName(
+  name: string,
+  stringCount: number,
+): NamedTuning | undefined {
+  return TUNINGS.find(
+    (t) => t.name === name && t.notes.length === stringCount,
+  );
 }
 
 /** Format a single note for display, e.g. {E, 2} → "E2" */

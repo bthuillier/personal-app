@@ -39,6 +39,19 @@ interface ItemFormProps {
   onSubmit: (values: Record<string, string>) => void;
   submitLabel?: string;
   buttonLabel?: string;
+  /**
+   * Optional prefilled values. When provided, the form opens prefilled with
+   * these values; subsequent changes to `initialValues` re-prefill the form
+   * (useful when an external action — e.g. "Apply recommendation" — wants to
+   * push new values into an already-open form).
+   */
+  initialValues?: Record<string, string>;
+}
+
+function defaultValues(fields: FieldDefinition[]): Record<string, string> {
+  return Object.fromEntries(
+    fields.map((f) => [f.name, f.type === "select" ? f.options[0] : ""]),
+  );
 }
 
 export function ItemForm({
@@ -46,28 +59,18 @@ export function ItemForm({
   onSubmit,
   submitLabel = "Save",
   buttonLabel = "+ Add",
+  initialValues,
 }: ItemFormProps) {
-  const [open, setOpen] = useState(false);
-  const [values, setValues] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      fields.map((f) => [
-        f.name,
-        f.type === "select" ? f.options[0] : "",
-      ]),
-    ),
-  );
+  const [open, setOpen] = useState(!!initialValues);
+  const [values, setValues] = useState<Record<string, string>>(() => ({
+    ...defaultValues(fields),
+    ...initialValues,
+  }));
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     onSubmit(values);
-    setValues(
-      Object.fromEntries(
-        fields.map((f) => [
-          f.name,
-          f.type === "select" ? f.options[0] : "",
-        ]),
-      ),
-    );
+    setValues(defaultValues(fields));
     setOpen(false);
   }
 
