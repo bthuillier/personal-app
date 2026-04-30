@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { components } from "@/api/schema";
 import { useStringRecommendation } from "@/api/mutations";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,10 @@ import {
 import {
   findTuningByName,
   formatNote,
+  getTuningName,
   tuningsForStringCount,
 } from "@/lib/tuning";
+import { formatStringSpec } from "@/lib/strings";
 import { cn } from "@/lib/utils";
 import type { AppliedRecommendation } from "./GuitarDetailPage";
 
@@ -32,15 +34,6 @@ const NYXL_BRAND = "D'Addario NYXL";
 
 const WARNING_DELTA_LBS = 1.0;
 const ALERT_DELTA_LBS = 2.0;
-
-function formatGauge(spec: components["schemas"]["StringSpec"]): string {
-  const isFractional = spec.gauge % 1 !== 0;
-  const padded = isFractional
-    ? spec.gauge.toFixed(1).replace(".", "").padStart(3, "0")
-    : spec.gauge.toFixed(0).padStart(2, "0");
-  const suffix = spec.construction === "Plain" ? "p" : "w";
-  return `.${padded}${suffix}`;
-}
 
 function deltaClassName(deltaLbs: number): string {
   const abs = Math.abs(deltaLbs);
@@ -69,10 +62,14 @@ export function StringRecommendationPanel({
     [stringCount],
   );
   const [selectedName, setSelectedName] = useState<string>(
-    () => availableTunings[0]?.name ?? "",
+    () =>
+      getTuningName(guitar.setup.tuning.notes ?? []) ??
+      availableTunings[0]?.name ??
+      "",
   );
 
   const mutation = useStringRecommendation(guitar.id);
+  const { mutateAsync } = mutation;
 
   // Hold the most recent successful response locally — TanStack `useMutation`
   // clears `data` while a new request is pending, but we want the previous
@@ -81,19 +78,25 @@ export function StringRecommendationPanel({
     [],
   );
 
-  async function handleSubmit() {
+  // Auto-fetch whenever the user picks a different tuning (and once on mount
+  // for the guitar's current tuning). `mutateAsync` is referentially stable
+  // across renders so this only re-runs when `selectedName` changes.
+  useEffect(() => {
     const tuning = findTuningByName(selectedName, stringCount);
     if (!tuning) return;
-    const result = await mutation.mutateAsync({
-      targetTuning: { notes: tuning.notes },
+    let cancelled = false;
+    mutateAsync({ targetTuning: { notes: tuning.notes } }).then((result) => {
+      if (!cancelled) setRecommendations(result.recommendations ?? []);
     });
-    setRecommendations(result.recommendations ?? []);
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedName, stringCount, mutateAsync]);
 
   // Display thickest (low pitch) first, matching how guitarists read a string set.
   const orderedRecs = [...recommendations].reverse();
   // Only show loading placeholders when there's nothing to display yet — on
-  // subsequent submits, the previous result stays visible until the new one
+  // subsequent fetches, the previous result stays visible until the new one
   // arrives, so values just update in place.
   const showLoadingRows = mutation.isPending && recommendations.length === 0;
 
@@ -143,12 +146,9 @@ export function StringRecommendationPanel({
             </SelectContent>
           </Select>
         </div>
-        <Button
-          onClick={handleSubmit}
-          disabled={!selectedName || mutation.isPending}
-        >
-          {mutation.isPending ? "Computing…" : "Recommend"}
-        </Button>
+        {mutation.isPending && (
+          <span className="text-xs text-muted-foreground pb-2">Computing…</span>
+        )}
       </div>
 
       {availableTunings.length === 0 && (
@@ -192,7 +192,7 @@ export function StringRecommendationPanel({
                     {r ? formatNote(r.note) : " "}
                   </TableCell>
                   <TableCell className="font-mono">
-                    {r ? formatGauge(r.spec) : " "}
+                    {r ? formatStringSpec(r.spec) : " "}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {r ? r.tensionLbs.toFixed(2) : " "}

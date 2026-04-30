@@ -46,6 +46,8 @@ interface ItemFormProps {
    * push new values into an already-open form).
    */
   initialValues?: Record<string, string>;
+  /** Called when the user clicks Cancel. */
+  onCancel?: () => void;
 }
 
 function defaultValues(fields: FieldDefinition[]): Record<string, string> {
@@ -60,6 +62,7 @@ export function ItemForm({
   submitLabel = "Save",
   buttonLabel = "+ Add",
   initialValues,
+  onCancel,
 }: ItemFormProps) {
   const [open, setOpen] = useState(!!initialValues);
   const [values, setValues] = useState<Record<string, string>>(() => ({
@@ -132,7 +135,15 @@ export function ItemForm({
       ))}
       <div className="flex gap-2">
         <Button type="submit">{submitLabel}</Button>
-        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setValues(defaultValues(fields));
+            setOpen(false);
+            onCancel?.();
+          }}
+        >
           Cancel
         </Button>
       </div>

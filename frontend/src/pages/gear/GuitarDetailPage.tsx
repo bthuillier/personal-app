@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
@@ -8,6 +8,8 @@ import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { DataTable, type Column } from "@/components/DataTable";
 import { TuningBadge } from "@/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
+import { formatGaugeList } from "@/lib/strings";
+import { usePendingApply } from "@/hooks/usePendingApply";
 import { StringRecommendationPanel } from "./StringRecommendationPanel";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
@@ -17,11 +19,6 @@ export interface AppliedRecommendation {
   brand: string;
   gauges: number[];
   tuning: GuitarTuning;
-}
-
-function formatGauge(gauge?: number[]): string {
-  if (!gauge || gauge.length === 0) return "-";
-  return gauge.join("-");
 }
 
 function formatPickup(pickup?: components["schemas"]["Pickup"]) {
@@ -54,16 +51,7 @@ export function GuitarDetailPage() {
 
   const changeStringsMutation = useChangeGuitarStrings(id!);
 
-  // `version` increments each time the panel pushes a new recommendation, so
-  // the form's `key` changes and ItemForm remounts even when the user clicks
-  // Apply twice in a row without submitting in between.
-  const [pendingApply, setPendingApply] = useState<
-    (AppliedRecommendation & { version: number }) | null
-  >(null);
-
-  function applyRecommendation(rec: AppliedRecommendation) {
-    setPendingApply((prev) => ({ ...rec, version: (prev?.version ?? 0) + 1 }));
-  }
+  const pendingApply = usePendingApply();
 
   async function handleChangeStrings(values: Record<string, string>) {
     const gauge = values.stringGauge
@@ -74,7 +62,7 @@ export function GuitarDetailPage() {
     // tuning was set on `pendingApply` — submit with that. Otherwise the
     // tuning stays the same as the current setup.
     const tuning =
-      pendingApply?.tuning ?? guitar?.setup.tuning ?? { notes: [] };
+      pendingApply.pending?.tuning ?? guitar?.setup.tuning ?? { notes: [] };
 
     await changeStringsMutation.mutateAsync({
       date: values.date,
@@ -82,17 +70,8 @@ export function GuitarDetailPage() {
       stringGauge: gauge,
       tuning,
     });
-    setPendingApply(null);
+    pendingApply.clear();
   }
-
-  const initialFormValues = useMemo(() => {
-    if (!pendingApply) return undefined;
-    return {
-      date: new Date().toISOString().slice(0, 10),
-      stringBrand: pendingApply.brand,
-      stringGauge: pendingApply.gauges.join("-"),
-    };
-  }, [pendingApply]);
 
   if (!guitar) {
     return (
@@ -112,7 +91,7 @@ export function GuitarDetailPage() {
     { header: "Strings", accessor: "stringBrand" },
     {
       header: "Gauge",
-      render: (row) => formatGauge(row.stringGauge),
+      render: (row) => formatGaugeList(row.stringGauge),
       sortable: false,
     },
     {
@@ -191,19 +170,20 @@ export function GuitarDetailPage() {
               Current Setup
             </h3>
             <ItemForm
-              key={pendingApply ? `applied-${pendingApply.version}` : "default"}
+              key={pendingApply.formKey}
               fields={changeStringsFields}
               onSubmit={handleChangeStrings}
               buttonLabel="Change Strings"
               submitLabel="Save"
-              initialValues={initialFormValues}
+              initialValues={pendingApply.initialFormValues}
+              onCancel={pendingApply.clear}
             />
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Strings</dt>
             <dd>{setup.stringBrand}</dd>
             <dt className="text-muted-foreground">Gauge</dt>
-            <dd>{formatGauge(setup.stringGauge)}</dd>
+            <dd>{formatGaugeList(setup.stringGauge)}</dd>
             <dt className="text-muted-foreground">Tuning</dt>
             <dd>
               <TuningBadge tuning={setup.tuning} />
@@ -216,7 +196,7 @@ export function GuitarDetailPage() {
 
       <StringRecommendationPanel
         guitar={guitar}
-        onApply={applyRecommendation}
+        onApply={pendingApply.apply}
       />
 
       {/* Event History */}
