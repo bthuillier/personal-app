@@ -86,6 +86,20 @@ export function useReceiveWishlistAlbum() {
   });
 }
 
+export function useStringRecommendation(id: string) {
+  return useMutation({
+    mutationFn: async (
+      body: components["schemas"]["StringRecommendationRequest"],
+    ) => {
+      const { data } = await api.POST("/guitars/{id}/string-recommendation", {
+        params: { path: { id } },
+        body,
+      });
+      return data!;
+    },
+  });
+}
+
 export function useChangeGuitarStrings(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

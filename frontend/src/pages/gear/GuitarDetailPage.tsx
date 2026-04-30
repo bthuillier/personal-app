@@ -8,6 +8,7 @@ import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
 import { DataTable, type Column } from "@/components/DataTable";
 import { TuningBadge } from "@/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
+import { StringRecommendationPanel } from "./StringRecommendationPanel";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
 
@@ -176,6 +177,8 @@ export function GuitarDetailPage() {
           </dl>
         </section>
       </div>
+
+      <StringRecommendationPanel guitar={guitar} />
 
       {/* Event History */}
       <section>

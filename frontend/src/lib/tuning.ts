@@ -3,19 +3,178 @@ import type { components } from "@/api/schema";
 type Note = components["schemas"]["Note"];
 type NoteName = components["schemas"]["NoteName"];
 
-/** Map of known tuning fingerprints (note names only, low→high) to display names */
-const KNOWN_TUNINGS: Record<string, string> = {
+export interface NamedTuning {
+  name: string;
+  notes: Note[];
+}
+
+// Registry of known tunings, low-pitch → high-pitch (matches the backend's
+// SortedSet[Note] ascending iteration).
+const TUNINGS: NamedTuning[] = [
   // 6-string
-  "E,A,D,G,B,E": "E Standard",
-  "D,A,D,G,B,E": "Drop D",
-  "D,G,C,F,A,D": "D Standard",
-  "C,F,As,Ds,G,C": "C Standard",
-  "C,G,C,F,A,D": "Drop C",
+  {
+    name: "E Standard",
+    notes: [
+      { name: "E", octave: 2 },
+      { name: "A", octave: 2 },
+      { name: "D", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "B", octave: 3 },
+      { name: "E", octave: 4 },
+    ],
+  },
+  {
+    name: "Eb Standard",
+    notes: [
+      { name: "Ds", octave: 2 },
+      { name: "Gs", octave: 2 },
+      { name: "Cs", octave: 3 },
+      { name: "Fs", octave: 3 },
+      { name: "As", octave: 3 },
+      { name: "Ds", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop D",
+    notes: [
+      { name: "D", octave: 2 },
+      { name: "A", octave: 2 },
+      { name: "D", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "B", octave: 3 },
+      { name: "E", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop C#",
+    notes: [
+      { name: "Cs", octave: 2 },
+      { name: "Gs", octave: 2 },
+      { name: "Cs", octave: 3 },
+      { name: "Fs", octave: 3 },
+      { name: "As", octave: 3 },
+      { name: "Ds", octave: 4 },
+    ],
+  },
+  {
+    name: "D Standard",
+    notes: [
+      { name: "D", octave: 2 },
+      { name: "G", octave: 2 },
+      { name: "C", octave: 3 },
+      { name: "F", octave: 3 },
+      { name: "A", octave: 3 },
+      { name: "D", octave: 4 },
+    ],
+  },
+  {
+    name: "C# Standard",
+    notes: [
+      { name: "Cs", octave: 2 },
+      { name: "Fs", octave: 2 },
+      { name: "B", octave: 2 },
+      { name: "E", octave: 3 },
+      { name: "Gs", octave: 3 },
+      { name: "Cs", octave: 4 },
+    ],
+  },
+  {
+    name: "C Standard",
+    notes: [
+      { name: "C", octave: 2 },
+      { name: "F", octave: 2 },
+      { name: "As", octave: 2 },
+      { name: "Ds", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "C", octave: 4 },
+    ],
+  },
+  {
+    name: "B Standard",
+    notes: [
+      { name: "B", octave: 1 },
+      { name: "E", octave: 2 },
+      { name: "A", octave: 2 },
+      { name: "D", octave: 3 },
+      { name: "Fs", octave: 3 },
+      { name: "B", octave: 3 },
+    ],
+  },
+  {
+    name: "Drop C",
+    notes: [
+      { name: "C", octave: 2 },
+      { name: "G", octave: 2 },
+      { name: "C", octave: 3 },
+      { name: "F", octave: 3 },
+      { name: "A", octave: 3 },
+      { name: "D", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop B",
+    notes: [
+      { name: "B", octave: 1 },
+      { name: "Fs", octave: 2 },
+      { name: "B", octave: 2 },
+      { name: "E", octave: 3 },
+      { name: "Gs", octave: 3 },
+      { name: "Cs", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop A#",
+    notes: [
+      { name: "As", octave: 1 },
+      { name: "F", octave: 2 },
+      { name: "As", octave: 2 },
+      { name: "Ds", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "C", octave: 4 },
+    ],
+  },
   // 7-string
-  "B,E,A,D,G,B,E": "B Standard",
-  "A,E,A,D,G,B,E": "Drop A",
-  "G,D,G,C,F,A,D": "Drop G",
-};
+  {
+    name: "B Standard",
+    notes: [
+      { name: "B", octave: 1 },
+      { name: "E", octave: 2 },
+      { name: "A", octave: 2 },
+      { name: "D", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "B", octave: 3 },
+      { name: "E", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop A",
+    notes: [
+      { name: "A", octave: 1 },
+      { name: "E", octave: 2 },
+      { name: "A", octave: 2 },
+      { name: "D", octave: 3 },
+      { name: "G", octave: 3 },
+      { name: "B", octave: 3 },
+      { name: "E", octave: 4 },
+    ],
+  },
+  {
+    name: "Drop G",
+    notes: [
+      { name: "G", octave: 1 },
+      { name: "D", octave: 2 },
+      { name: "G", octave: 2 },
+      { name: "C", octave: 3 },
+      { name: "F", octave: 3 },
+      { name: "A", octave: 3 },
+      { name: "D", octave: 4 },
+    ],
+  },
+];
+
+const TUNING_BY_FINGERPRINT: Record<string, string> = Object.fromEntries(
+  TUNINGS.map((t) => [t.notes.map((n) => n.name).join(","), t.name]),
+);
 
 function formatNoteName(name: NoteName): string {
   return name.replace("s", "#");
@@ -30,11 +189,25 @@ export function formatNotes(notes: Note[]): string {
 export function getTuningName(notes: Note[]): string | null {
   if (!notes || notes.length === 0) return null;
   const key = notes.map((n) => n.name).join(",");
-  return KNOWN_TUNINGS[key] ?? null;
+  return TUNING_BY_FINGERPRINT[key] ?? null;
 }
 
 /** Returns the display label: tuning name if known, otherwise note names */
 export function formatTuningLabel(notes: Note[]): string {
   if (!notes || notes.length === 0) return "-";
   return getTuningName(notes) ?? formatNotes(notes);
+}
+
+/** Tunings available for a given string count */
+export function tuningsForStringCount(count: number): NamedTuning[] {
+  return TUNINGS.filter((t) => t.notes.length === count);
+}
+
+export function findTuningByName(name: string): NamedTuning | undefined {
+  return TUNINGS.find((t) => t.name === name);
+}
+
+/** Format a single note for display, e.g. {E, 2} → "E2" */
+export function formatNote(note: Note): string {
+  return `${formatNoteName(note.name)}${note.octave}`;
 }

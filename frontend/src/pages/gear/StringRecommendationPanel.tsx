@@ -1,0 +1,167 @@
+import { useMemo, useState } from "react";
+import type { components } from "@/api/schema";
+import { useStringRecommendation } from "@/api/mutations";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  findTuningByName,
+  formatNote,
+  tuningsForStringCount,
+} from "@/lib/tuning";
+import { cn } from "@/lib/utils";
+
+type Guitar = components["schemas"]["Guitar"];
+type StringRecommendation = components["schemas"]["StringRecommendation"];
+
+const WARNING_DELTA_LBS = 1.0;
+const ALERT_DELTA_LBS = 2.0;
+
+function formatGauge(spec: components["schemas"]["StringSpec"]): string {
+  const isFractional = spec.gauge % 1 !== 0;
+  const padded = isFractional
+    ? spec.gauge.toFixed(1).replace(".", "").padStart(3, "0")
+    : spec.gauge.toFixed(0).padStart(2, "0");
+  const suffix = spec.construction === "Plain" ? "p" : "w";
+  return `.${padded}${suffix}`;
+}
+
+function deltaClassName(deltaLbs: number): string {
+  const abs = Math.abs(deltaLbs);
+  if (abs > ALERT_DELTA_LBS) return "text-destructive font-medium";
+  if (abs > WARNING_DELTA_LBS) return "text-amber-600 dark:text-amber-500";
+  return "text-muted-foreground";
+}
+
+function formatDelta(deltaLbs: number): string {
+  const sign = deltaLbs >= 0 ? "+" : "";
+  return `${sign}${deltaLbs.toFixed(2)}`;
+}
+
+export function StringRecommendationPanel({ guitar }: { guitar: Guitar }) {
+  const stringCount = guitar.specifications.numberOfStrings;
+  const availableTunings = useMemo(
+    () => tuningsForStringCount(stringCount),
+    [stringCount],
+  );
+  const [selectedName, setSelectedName] = useState<string>(
+    () => availableTunings[0]?.name ?? "",
+  );
+
+  const mutation = useStringRecommendation(guitar.id);
+
+  async function handleSubmit() {
+    const tuning = findTuningByName(selectedName);
+    if (!tuning) return;
+    await mutation.mutateAsync({
+      targetTuning: { notes: tuning.notes },
+    });
+  }
+
+  const recommendations: StringRecommendation[] =
+    mutation.data?.recommendations ?? [];
+  // Display thickest (low pitch) first, matching how guitarists read a string set.
+  const orderedRecs = [...recommendations].reverse();
+
+  return (
+    <section className="rounded-lg border border-border p-5">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+            Try Another Tuning
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Find NYXL gauges that match the current setup&apos;s tension on a different tuning.
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-4 flex items-end gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs text-muted-foreground" htmlFor="target-tuning">
+            Target tuning
+          </label>
+          <Select value={selectedName} onValueChange={(v) => v && setSelectedName(v)}>
+            <SelectTrigger id="target-tuning" className="min-w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableTunings.map((t) => (
+                <SelectItem key={t.name} value={t.name}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          onClick={handleSubmit}
+          disabled={!selectedName || mutation.isPending}
+        >
+          {mutation.isPending ? "Computing…" : "Recommend"}
+        </Button>
+      </div>
+
+      {availableTunings.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No preset tunings available for {stringCount}-string guitars.
+        </p>
+      )}
+
+      {mutation.isError && (
+        <p className="text-sm text-destructive">
+          Failed to compute a recommendation. Check the guitar&apos;s current setup.
+        </p>
+      )}
+
+      {orderedRecs.length > 0 && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Note</TableHead>
+              <TableHead>Gauge</TableHead>
+              <TableHead className="text-right">Tension (lbs)</TableHead>
+              <TableHead className="text-right">Reference (lbs)</TableHead>
+              <TableHead className="text-right">Δ</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orderedRecs.map((r, idx) => (
+              <TableRow key={`${r.note.name}-${r.note.octave}-${idx}`}>
+                <TableCell className="font-mono">{formatNote(r.note)}</TableCell>
+                <TableCell className="font-mono">{formatGauge(r.spec)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {r.tensionLbs.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right tabular-nums text-muted-foreground">
+                  {r.referenceTensionLbs.toFixed(2)}
+                </TableCell>
+                <TableCell
+                  className={cn(
+                    "text-right tabular-nums",
+                    deltaClassName(r.deltaLbs),
+                  )}
+                >
+                  {formatDelta(r.deltaLbs)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </section>
+  );
+}
