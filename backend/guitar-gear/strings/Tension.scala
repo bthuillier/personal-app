@@ -23,17 +23,23 @@ object Tension {
 
   def forGauge(
       gauge: Double,
+      construction: StringConstruction,
       note: Note,
       scaleLengthInches: Double,
       catalog: StringCatalog
   ): Either[String, Double] =
-    resolveSpec(gauge, catalog).map(forSpec(_, note, scaleLengthInches))
+    catalog
+      .find(gauge, construction)
+      .toRight(s"Gauge $gauge ($construction) not found in ${catalog.brand} catalog")
+      .map(forSpec(_, note, scaleLengthInches))
 
   /**
    * Per-string tensions for a setup, ordered low-pitch → high-pitch.
    *
    * `gauges` is the user-stored list (thin → thick, high → low pitch); it is
-   * reversed to align with the tuning's ascending ordering.
+   * reversed to align with the tuning's ascending ordering. Plain-vs-wound is
+   * inferred by position: the 3 thinnest strings are plain, the rest are
+   * wound — the standard D'Addario electric guitar set convention.
    */
   def forSetup(
       gauges: List[Double],
@@ -46,30 +52,35 @@ object Tension {
         s"Gauge count (${gauges.length}) does not match tuning size (${tuning.length})"
       )
     else {
-      tuning.zip(gauges.reverse).traverse { case (note, gauge) =>
-        resolveSpec(gauge, catalog).map { spec =>
+      val n = gauges.length
+      tuning.zip(gauges.reverse).zipWithIndex.traverse { case ((note, gauge), idx) =>
+        val construction = inferConstruction(idx, n)
+        resolveSpec(gauge, construction, catalog).map { spec =>
           StringTension(note, spec, forSpec(spec, note, scaleLengthInches))
         }
       }
     }
 
+  /**
+   * Aligned with the tuning's low-pitch-first ordering: the last 3 entries
+   * (the thinnest strings) are plain; everything thicker is wound.
+   */
+  private def inferConstruction(
+      indexLowPitchFirst: Int,
+      totalStrings: Int
+  ): StringConstruction =
+    if (indexLowPitchFirst >= totalStrings - 3) StringConstruction.Plain
+    else StringConstruction.Wound
+
   private def resolveSpec(
       gauge: Double,
+      construction: StringConstruction,
       catalog: StringCatalog
-  ): Either[String, StringSpec] = {
-    val matches = catalog.all.filter(_.gauge == gauge)
-    matches match {
-      case Nil =>
-        Left(s"Gauge $gauge not found in ${catalog.brand} catalog")
-      case single :: Nil => Right(single)
-      case many =>
-        // Prefer wound when both exist (typical guitar set convention for .020+).
-        many
-          .find(_.construction == StringConstruction.Wound)
-          .orElse(many.headOption)
-          .toRight(s"Gauge $gauge not found in ${catalog.brand} catalog")
-    }
-  }
+  ): Either[String, StringSpec] =
+    catalog
+      .find(gauge, construction)
+      .orElse(catalog.all.find(_.gauge == gauge))
+      .toRight(s"Gauge $gauge not found in ${catalog.brand} catalog")
 
   private def semitoneOffset(name: NoteName): Int = name match {
     case NoteName.C => 0

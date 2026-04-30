@@ -56,42 +56,61 @@ class TensionTest extends munit.FunSuite {
   }
 
   test("forGauge: returns Right with tension when gauge exists in catalog") {
-    val result = Tension.forGauge(10.0, Note(NoteName.E, 4), 25.5, NyxlCatalog)
+    val result = Tension.forGauge(
+      10.0,
+      StringConstruction.Plain,
+      Note(NoteName.E, 4),
+      25.5,
+      NyxlCatalog
+    )
     assert(result.isRight)
   }
 
   test("forGauge: returns Left when gauge is not in catalog") {
-    val result = Tension.forGauge(99.5, Note(NoteName.E, 4), 25.5, NyxlCatalog)
+    val result = Tension.forGauge(
+      99.5,
+      StringConstruction.Plain,
+      Note(NoteName.E, 4),
+      25.5,
+      NyxlCatalog
+    )
     assert(result.isLeft)
   }
 
-  test("forGauge: ambiguous gauge .020 resolves to wound (low note context)") {
-    val tWound = Tension.forSpec(
-      NyxlCatalog.find(20.0, StringConstruction.Wound).get,
-      Note(NoteName.D, 3),
-      25.5
+  test("forGauge: returns Left when construction is wrong for that gauge") {
+    val result = Tension.forGauge(
+      80.0,
+      StringConstruction.Plain,
+      Note(NoteName.E, 1),
+      25.5,
+      NyxlCatalog
     )
-    val tFromGauge =
-      Tension.forGauge(20.0, Note(NoteName.D, 3), 25.5, NyxlCatalog).toOption.get
-    assertEqualsDouble(tFromGauge, tWound, Tolerance)
+    assert(result.isLeft)
   }
 
   // Sanity-checks against D'Addario's published tension chart, for a 25.5"
   // scale. If any of these fail, the catalog unit weights have drifted from
   // the source.
   test("catalog: PL010 at E4 / 25.5\" ≈ 16.2 lbs (D'Addario published)") {
-    val t = Tension.forGauge(10.0, Note(NoteName.E, 4), 25.5, NyxlCatalog)
+    val t = Tension.forGauge(
+      10.0,
+      StringConstruction.Plain,
+      Note(NoteName.E, 4),
+      25.5,
+      NyxlCatalog
+    )
     assertEqualsDouble(t.toOption.get, 16.2, 0.1)
   }
 
   test("catalog: NW046 at E2 / 25.5\" ≈ 17.5 lbs (D'Addario published)") {
-    val t = Tension.forGauge(46.0, Note(NoteName.E, 2), 25.5, NyxlCatalog)
+    val t = Tension.forGauge(
+      46.0,
+      StringConstruction.Wound,
+      Note(NoteName.E, 2),
+      25.5,
+      NyxlCatalog
+    )
     assertEqualsDouble(t.toOption.get, 17.5, 0.1)
-  }
-
-  test("catalog: NW052 at A1 / 25.5\" wound resolves and produces a tension") {
-    val t = Tension.forGauge(52.0, Note(NoteName.A, 1), 25.5, NyxlCatalog)
-    assert(t.isRight)
   }
 
   test("forSetup: Standard E with .010-.046 returns 6 tensions, low-pitch first") {
@@ -104,11 +123,39 @@ class TensionTest extends munit.FunSuite {
       Note(NoteName.E, 4)
     )
     val gauges = List(10.0, 13.0, 17.0, 26.0, 36.0, 46.0)
-    val Right(result) = Tension.forSetup(gauges, tuning, 25.5, NyxlCatalog): @unchecked
+    val result = Tension
+      .forSetup(gauges, tuning, 25.5, NyxlCatalog)
+      .fold(err => fail(s"forSetup returned Left: $err"), identity)
     assertEquals(result.length, 6)
     assertEquals(result.map(_.note), tuning)
     assertEquals(result.head.spec.gauge, 46.0) // .046 is the low-E (thickest) string
     assertEquals(result.last.spec.gauge, 10.0) // .010 is the high-E string
+  }
+
+  test("forSetup: 6-string standard set has 3 wound (low) + 3 plain (high)") {
+    val tuning = List(
+      Note(NoteName.E, 2),
+      Note(NoteName.A, 2),
+      Note(NoteName.D, 3),
+      Note(NoteName.G, 3),
+      Note(NoteName.B, 3),
+      Note(NoteName.E, 4)
+    )
+    val gauges = List(10.0, 13.0, 17.0, 26.0, 36.0, 46.0)
+    val result = Tension
+      .forSetup(gauges, tuning, 25.5, NyxlCatalog)
+      .fold(err => fail(s"forSetup returned Left: $err"), identity)
+    assertEquals(
+      result.map(_.spec.construction),
+      List(
+        StringConstruction.Wound,
+        StringConstruction.Wound,
+        StringConstruction.Wound,
+        StringConstruction.Plain,
+        StringConstruction.Plain,
+        StringConstruction.Plain
+      )
+    )
   }
 
   test("forSetup: returns Left when gauge count mismatches tuning length") {
