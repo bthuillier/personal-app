@@ -244,6 +244,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/guitar-pedals/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Get Guitar Pedal Events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guitar-pedals/{id}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Handle Guitar Pedal Command"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -320,6 +352,11 @@ export interface components {
             /** Format: date */
             date: string;
         };
+        /** DescriptionRemoved */
+        DescriptionRemoved2: {
+            /** Format: date */
+            date: string;
+        };
         /** DescriptionUpdated */
         DescriptionUpdated: {
             /** Format: date */
@@ -328,6 +365,12 @@ export interface components {
         };
         /** DescriptionUpdated */
         DescriptionUpdated1: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
+        };
+        /** DescriptionUpdated */
+        DescriptionUpdated2: {
             /** Format: date */
             date: string;
             newDescription: string;
@@ -368,12 +411,18 @@ export interface components {
             /** Format: int32 */
             year: number;
             type: components["schemas"]["PedalType"];
+            description?: string;
+            events?: components["schemas"]["GuitarPedalEvent"][];
         };
         /**
          * GuitarPedalBrand
          * @enum {string}
          */
         GuitarPedalBrand: "Boss" | "Digitech" | "EarthQuakerDevices" | "Fortin" | "GroundFx" | "Hologram" | "JHS" | "JPTRFX" | "KMAMachines" | "Klirrton" | "LichtlaermAudio" | "OldBloodNoiseEndeavors" | "Revv" | "ScienceAmplification" | "SeymourDuncan" | "StoneDeaf" | "TcElectronic" | "WalrusAudio" | "WayHuge";
+        /** GuitarPedalCommand */
+        GuitarPedalCommand: components["schemas"]["RemoveDescription2"] | components["schemas"]["UpdateDescription2"];
+        /** GuitarPedalEvent */
+        GuitarPedalEvent: components["schemas"]["DescriptionRemoved2"] | components["schemas"]["DescriptionUpdated2"];
         /** GuitarSetup */
         GuitarSetup: {
             stringGauge?: number[];
@@ -468,6 +517,11 @@ export interface components {
             /** Format: date */
             date: string;
         };
+        /** RemoveDescription */
+        RemoveDescription2: {
+            /** Format: date */
+            date: string;
+        };
         /** Review */
         Review: {
             title: string;
@@ -523,6 +577,12 @@ export interface components {
         };
         /** UpdateDescription */
         UpdateDescription1: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
+        };
+        /** UpdateDescription */
+        UpdateDescription2: {
             /** Format: date */
             date: string;
             newDescription: string;
@@ -1077,6 +1137,73 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GuitarPedal"][];
                 };
+            };
+        };
+    };
+    "Get Guitar Pedal Events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuitarPedalEvent"][];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "Handle Guitar Pedal Command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuitarPedalCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuitarPedal"];
+                };
+            };
+            /** @description Invalid value for: body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

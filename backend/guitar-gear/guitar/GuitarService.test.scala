@@ -3,31 +3,17 @@ package guitargear.guitar
 import cats.effect.IO
 import cats.effect.std.AtomicCell
 import io.circe.syntax.*
-import json.GitCommitter
+import json.{GitCommitter, GitRepoFixture}
 import munit.CatsEffectSuite
-import org.eclipse.jgit.api.Git
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import java.io.{File, PrintWriter}
-import java.nio.file.{Files, Path}
+import java.io.PrintWriter
+import java.nio.file.Path
 import java.time.LocalDate
 import scala.util.Using
 
-class GuitarServiceTest extends CatsEffectSuite {
-  private val tempRepo = FunFixture[Path](
-    setup = { _ =>
-      val dir = Files.createTempDirectory("guitar-service-test")
-      Git.init().setDirectory(dir.toFile).call().close()
-      dir
-    },
-    teardown = { dir =>
-      def deleteRecursively(f: File): Unit = {
-        if (f.isDirectory) Option(f.listFiles).toList.flatten.foreach(deleteRecursively)
-        f.delete()
-      }
-      deleteRecursively(dir.toFile)
-    }
-  )
+class GuitarServiceTest extends CatsEffectSuite with GitRepoFixture {
+  override protected def tempRepoPrefix: String = "guitar-service-test"
 
   private def sampleGuitar(id: String = "test-guitar-1"): Guitar =
     Guitar(

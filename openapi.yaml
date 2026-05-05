@@ -376,6 +376,56 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GuitarPedal'
+  /guitar-pedals/{id}/events:
+    get:
+      operationId: Get Guitar Pedal Events
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuitarPedalEvent'
+        '404':
+          description: ''
+  /guitar-pedals/{id}/commands:
+    post:
+      operationId: Handle Guitar Pedal Command
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuitarPedalCommand'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuitarPedal'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
 components:
   schemas:
     AddAlbumToWishlist:
@@ -525,6 +575,15 @@ components:
         date:
           type: string
           format: date
+    DescriptionRemoved2:
+      title: DescriptionRemoved
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
     DescriptionUpdated:
       title: DescriptionUpdated
       type: object
@@ -538,6 +597,18 @@ components:
         newDescription:
           type: string
     DescriptionUpdated1:
+      title: DescriptionUpdated
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
+    DescriptionUpdated2:
       title: DescriptionUpdated
       type: object
       required:
@@ -655,6 +726,12 @@ components:
           format: int32
         type:
           $ref: '#/components/schemas/PedalType'
+        description:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuitarPedalEvent'
     GuitarPedalBrand:
       title: GuitarPedalBrand
       type: string
@@ -678,6 +755,16 @@ components:
       - TcElectronic
       - WalrusAudio
       - WayHuge
+    GuitarPedalCommand:
+      title: GuitarPedalCommand
+      oneOf:
+      - $ref: '#/components/schemas/RemoveDescription2'
+      - $ref: '#/components/schemas/UpdateDescription2'
+    GuitarPedalEvent:
+      title: GuitarPedalEvent
+      oneOf:
+      - $ref: '#/components/schemas/DescriptionRemoved2'
+      - $ref: '#/components/schemas/DescriptionUpdated2'
     GuitarSetup:
       title: GuitarSetup
       type: object
@@ -892,6 +979,15 @@ components:
         date:
           type: string
           format: date
+    RemoveDescription2:
+      title: RemoveDescription
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
     Review:
       title: Review
       type: object
@@ -1003,6 +1099,18 @@ components:
         newDescription:
           type: string
     UpdateDescription1:
+      title: UpdateDescription
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
+    UpdateDescription2:
       title: UpdateDescription
       type: object
       required:
