@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/api/mutations";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,10 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const addMutation = useAddAlbumGenre(albumId);
   const removeMutation = useRemoveAlbumGenre(albumId);
@@ -26,16 +28,28 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
 
   const suggestions = useMemo(() => {
     const query = value.toLowerCase().trim();
+    if (!query) return [];
     const pool = knownGenres.filter((g) => !current.includes(g));
-    const matches = query
-      ? pool.filter((g) => g.toLowerCase().includes(query))
-      : pool;
-    return matches.slice(0, MAX_SUGGESTIONS);
+    return pool
+      .filter((g) => g.toLowerCase().includes(query))
+      .slice(0, MAX_SUGGESTIONS);
   }, [value, knownGenres, current]);
 
   useEffect(() => {
     setHighlightIndex(-1);
   }, [value]);
+
+  useLayoutEffect(() => {
+    if (!editing || suggestions.length === 0) return;
+    const input = inputRef.current;
+    const list = listRef.current;
+    if (!input || !list) return;
+    const inputRect = input.getBoundingClientRect();
+    const listHeight = list.offsetHeight;
+    const spaceBelow = window.innerHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+    setDropUp(spaceBelow < listHeight + 8 && spaceAbove > spaceBelow);
+  }, [editing, suggestions]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -122,7 +136,13 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
             className="h-6 w-32 px-2 py-0 text-xs"
           />
           {suggestions.length > 0 && (
-            <ul className="absolute left-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md">
+            <ul
+              ref={listRef}
+              className={cn(
+                "absolute left-0 z-50 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md",
+                dropUp ? "bottom-full mb-1" : "top-full mt-1",
+              )}
+            >
               {suggestions.map((s, i) => (
                 <li
                   key={s}
