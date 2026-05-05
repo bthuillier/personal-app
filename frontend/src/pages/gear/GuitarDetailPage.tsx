@@ -1,16 +1,20 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { guitarsQuery, guitarEventsQuery } from "@/api/queries";
 import { useChangeGuitarStrings } from "@/api/mutations";
-import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
+import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/DataTable";
 import { TuningBadge } from "@/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
 import { formatGaugeList } from "@/lib/strings";
 import { usePendingApply } from "@/hooks/usePendingApply";
 import { StringRecommendationPanel } from "./StringRecommendationPanel";
+import {
+  ChangeStringsDrawer,
+  type ChangeStringsFormValues,
+} from "./ChangeStringsDrawer";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
 type GuitarTuning = components["schemas"]["GuitarTuning"];
@@ -31,12 +35,6 @@ function formatMaterials(materials?: components["schemas"]["GuitarMaterial"][]):
   return materials.map(formatEnum).join(" | ");
 }
 
-const changeStringsFields: FieldDefinition[] = [
-  { name: "date", label: "Date", type: "date" },
-  { name: "stringBrand", label: "String Brand", type: "text" },
-  { name: "stringGauge", label: "Gauge (e.g. 10-46)", type: "text" },
-];
-
 export function GuitarDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -52,23 +50,31 @@ export function GuitarDetailPage() {
   const changeStringsMutation = useChangeGuitarStrings(id!);
 
   const pendingApply = usePendingApply();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  async function handleChangeStrings(values: Record<string, string>) {
+  // When a recommendation is applied, open the drawer to confirm.
+  useEffect(() => {
+    if (pendingApply.pending) setDrawerOpen(true);
+  }, [pendingApply.pending]);
+
+  function handleDrawerOpenChange(open: boolean) {
+    setDrawerOpen(open);
+    if (!open) pendingApply.clear();
+  }
+
+  async function handleChangeStrings(values: ChangeStringsFormValues) {
     const gauge = values.stringGauge
-      ? values.stringGauge.split(/[-,\s]+/).map(Number).filter((n) => !isNaN(n))
+      ? values.stringGauge
+          .split(/[-,\s]+/)
+          .map(Number)
+          .filter((n: number) => !isNaN(n))
       : undefined;
-
-    // If the user opened this form via "Apply recommendation", the target
-    // tuning was set on `pendingApply` — submit with that. Otherwise the
-    // tuning stays the same as the current setup.
-    const tuning =
-      pendingApply.pending?.tuning ?? guitar?.setup.tuning ?? { notes: [] };
 
     await changeStringsMutation.mutateAsync({
       date: values.date,
       stringBrand: values.stringBrand,
       stringGauge: gauge,
-      tuning,
+      tuning: values.tuning,
     });
     pendingApply.clear();
   }
@@ -169,15 +175,7 @@ export function GuitarDetailPage() {
             <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
               Current Setup
             </h3>
-            <ItemForm
-              key={pendingApply.formKey}
-              fields={changeStringsFields}
-              onSubmit={handleChangeStrings}
-              buttonLabel="Change Strings"
-              submitLabel="Save"
-              initialValues={pendingApply.initialFormValues}
-              onCancel={pendingApply.clear}
-            />
+            <Button onClick={() => setDrawerOpen(true)}>Change Strings</Button>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Strings</dt>
@@ -197,6 +195,26 @@ export function GuitarDetailPage() {
       <StringRecommendationPanel
         guitar={guitar}
         onApply={pendingApply.apply}
+      />
+
+      <ChangeStringsDrawer
+        open={drawerOpen}
+        onOpenChange={handleDrawerOpenChange}
+        onSubmit={handleChangeStrings}
+        stringCount={specs.numberOfStrings}
+        currentTuning={setup.tuning}
+        initialValues={
+          pendingApply.initialFormValues
+            ? {
+                ...(pendingApply.initialFormValues as {
+                  date: string;
+                  stringBrand: string;
+                  stringGauge: string;
+                }),
+                tuning: pendingApply.pending?.tuning,
+              }
+            : undefined
+        }
       />
 
       {/* Event History */}

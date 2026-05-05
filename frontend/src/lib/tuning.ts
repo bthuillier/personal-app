@@ -219,3 +219,50 @@ export function findTuningByName(
 export function formatNote(note: Note): string {
   return `${formatNoteName(note.name)}${note.octave}`;
 }
+
+const NOTE_NAMES_DISPLAY_TO_INTERNAL: Record<string, NoteName> = {
+  A: "A", "A#": "As", Bb: "As",
+  B: "B", Cb: "B",
+  C: "C", "B#": "C",
+  "C#": "Cs", Db: "Cs",
+  D: "D",
+  "D#": "Ds", Eb: "Ds",
+  E: "E", Fb: "E",
+  F: "F", "E#": "F",
+  "F#": "Fs", Gb: "Fs",
+  G: "G",
+  "G#": "Gs", Ab: "Gs",
+};
+
+/**
+ * Parse a free-text tuning string like "E2 A2 D3 G3 B3 E4" into Note[].
+ * Accepts spaces, commas, dashes as separators; sharps as `#` or `s`; flats as `b`.
+ * Returns null if any token is unparseable.
+ */
+export function parseTuningText(text: string): Note[] | null {
+  const tokens = text
+    .trim()
+    .split(/[\s,\-]+/)
+    .filter((t) => t.length > 0);
+  if (tokens.length === 0) return null;
+
+  const notes: Note[] = [];
+  for (const token of tokens) {
+    const match = token.match(/^([A-Ga-g])([#sb]?)(-?\d+)$/);
+    if (!match) return null;
+    const letter = match[1].toUpperCase();
+    const accidental = match[2] === "s" ? "#" : match[2];
+    const display = `${letter}${accidental}`;
+    const internal = NOTE_NAMES_DISPLAY_TO_INTERNAL[display];
+    if (!internal) return null;
+    const octave = parseInt(match[3], 10);
+    if (Number.isNaN(octave)) return null;
+    notes.push({ name: internal, octave });
+  }
+  return notes;
+}
+
+/** Format Note[] as a parser-friendly string, e.g. "E2 A2 D3 G3 B3 E4" */
+export function formatTuningText(notes: Note[]): string {
+  return notes.map(formatNote).join(" ");
+}
