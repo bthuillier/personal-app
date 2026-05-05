@@ -441,6 +441,27 @@ components:
         releaseDate:
           type: string
           format: date
+    DescriptionRemoved:
+      title: DescriptionRemoved
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
+    DescriptionUpdated:
+      title: DescriptionUpdated
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
     Guitar:
       title: Guitar
       type: object
@@ -468,6 +489,8 @@ components:
           $ref: '#/components/schemas/GuitarSpecifications'
         setup:
           $ref: '#/components/schemas/GuitarSetup'
+        description:
+          type: string
         events:
           type: array
           items:
@@ -489,9 +512,13 @@ components:
       title: GuitarCommand
       oneOf:
       - $ref: '#/components/schemas/ChangeStrings'
+      - $ref: '#/components/schemas/RemoveDescription'
+      - $ref: '#/components/schemas/UpdateDescription'
     GuitarEvent:
       title: GuitarEvent
       oneOf:
+      - $ref: '#/components/schemas/DescriptionRemoved'
+      - $ref: '#/components/schemas/DescriptionUpdated'
       - $ref: '#/components/schemas/StringsChanged'
     GuitarMaterial:
       title: GuitarMaterial
@@ -760,6 +787,15 @@ components:
       - Humbucker
       - P90
       - SingleCoil
+    RemoveDescription:
+      title: RemoveDescription
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
     Review:
       title: Review
       type: object
@@ -858,6 +894,18 @@ components:
             format: double
         tuning:
           $ref: '#/components/schemas/GuitarTuning'
+    UpdateDescription:
+      title: UpdateDescription
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
     WishlistAlbum:
       title: WishlistAlbum
       type: object

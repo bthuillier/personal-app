@@ -15,6 +15,19 @@ enum GuitarCommand {
       stringGauge: List[Double],
       tuning: GuitarTuning
   )
+  case UpdateDescription(
+      date: LocalDate,
+      newDescription: String
+  )
+  case RemoveDescription(
+      date: LocalDate
+  )
+
+  def dateOfEvent = this match {
+    case ChangeStrings(date, _, _, _) => date
+    case UpdateDescription(date, _) => date
+    case RemoveDescription(date) => date
+  }
 }
 
 object GuitarCommand {
@@ -32,6 +45,13 @@ enum GuitarEvent {
       stringGauge: List[Double],
       tuning: GuitarTuning
   )
+  case DescriptionUpdated(
+    date: LocalDate,
+    newDescription: String
+  )
+  case DescriptionRemoved(
+    date: LocalDate
+  )
 }
 
 object GuitarEvent {
@@ -48,6 +68,7 @@ final case class Guitar(
     serialNumber: String,
     specifications: GuitarSpecifications,
     setup: GuitarSetup,
+    description: Option[String],
     events: Option[List[GuitarEvent]]
 ) derives Codec.AsObject,
       Schema
@@ -63,6 +84,18 @@ extension (guitar: Guitar) {
           tuning = tuning,
           lastStringChange = date
         )
+      )
+      (event, updated)
+    case GuitarCommand.UpdateDescription(date, newDescription) =>
+      val event = GuitarEvent.DescriptionUpdated(date, newDescription)
+      val updated = guitar.copy(
+        description = Some(newDescription)
+      )
+      (event, updated)
+    case GuitarCommand.RemoveDescription(date) =>
+      val event = GuitarEvent.DescriptionRemoved(date)
+      val updated = guitar.copy(
+        description = None
       )
       (event, updated)
   }
