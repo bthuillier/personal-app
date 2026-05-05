@@ -16,6 +16,7 @@ export interface Column<T> {
   render?: (row: T) => ReactNode;
   sortable?: boolean;
   sortFn?: (a: T, b: T) => number;
+  truncate?: boolean;
 }
 
 type SortDirection = "asc" | "desc";
@@ -155,7 +156,13 @@ export function DataTable<T>({
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.header}>{renderCell(col, row)}</TableCell>
+                  <TableCell key={col.header}>
+                    {col.truncate ? (
+                      <div className="truncate">{renderCell(col, row)}</div>
+                    ) : (
+                      renderCell(col, row)
+                    )}
+                  </TableCell>
                 ))}
               </TableRow>
             ))

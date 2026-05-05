@@ -35,14 +35,19 @@ export function GuitarListPage() {
     {
       header: "Guitar",
       accessor: "model",
-      render: (row) => (
-        <Link
-          to={`/gear/guitars/${encodeURIComponent(row.id)}`}
-          className="text-primary underline-offset-4 hover:underline"
-        >
-          {formatEnum(row.brand)} {row.model}
-        </Link>
-      ),
+      truncate: true,
+      render: (row) => {
+        const label = `${formatEnum(row.brand)} ${row.model}`;
+        return (
+          <Link
+            to={`/gear/guitars/${encodeURIComponent(row.id)}`}
+            title={label}
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            {label}
+          </Link>
+        );
+      },
     },
     { header: "Year", accessor: "year" },
     {
