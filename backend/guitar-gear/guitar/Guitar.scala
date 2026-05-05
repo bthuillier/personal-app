@@ -46,11 +46,11 @@ enum GuitarEvent {
       tuning: GuitarTuning
   )
   case DescriptionUpdated(
-    date: LocalDate,
-    newDescription: String
+      date: LocalDate,
+      newDescription: String
   )
   case DescriptionRemoved(
-    date: LocalDate
+      date: LocalDate
   )
 }
 

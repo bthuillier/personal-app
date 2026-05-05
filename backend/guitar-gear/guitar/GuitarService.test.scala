@@ -71,16 +71,17 @@ class GuitarServiceTest extends CatsEffectSuite {
     file.getAbsolutePath
   }
 
-  /** Builds a service seeded with the given guitars, using a real GitCommitter
-    * pointed at a fresh temporary repo.
-    */
+  /**
+   * Builds a service seeded with the given guitars, using a real GitCommitter
+   * pointed at a fresh temporary repo.
+   */
   private def makeService(
       repoDir: Path,
       guitars: List[Guitar]
   ): IO[GuitarService] =
     for {
       gitCommitter <- GitCommitter.create(repoDir.toString)
-      logger       <- Slf4jLogger.create[IO]
+      logger <- Slf4jLogger.create[IO]
       stateMap = guitars.map { g =>
         val path = writeGuitarJson(repoDir, g)
         g.id -> (g, path)
@@ -96,16 +97,14 @@ class GuitarServiceTest extends CatsEffectSuite {
     val g2 = sampleGuitar("id-2")
     for {
       service <- makeService(repoDir, List(g1, g2))
-      result  <- service.list
-    } yield {
-      assertEquals(result.map(_.id).toSet, Set("id-1", "id-2"))
-    }
+      result <- service.list
+    } yield assertEquals(result.map(_.id).toSet, Set("id-1", "id-2"))
   }
 
   tempRepo.test("list returns empty when no guitars present") { repoDir =>
     for {
       service <- makeService(repoDir, Nil)
-      result  <- service.list
+      result <- service.list
     } yield assertEquals(result, Nil)
   }
 
@@ -113,14 +112,14 @@ class GuitarServiceTest extends CatsEffectSuite {
     val g = sampleGuitar("known-id")
     for {
       service <- makeService(repoDir, List(g))
-      result  <- service.find("known-id")
+      result <- service.find("known-id")
     } yield assertEquals(result.map(_.id), Some("known-id"))
   }
 
   tempRepo.test("find returns None for an unknown id") { repoDir =>
     for {
       service <- makeService(repoDir, List(sampleGuitar()))
-      result  <- service.find("does-not-exist")
+      result <- service.find("does-not-exist")
     } yield assertEquals(result, None)
   }
 
@@ -129,10 +128,8 @@ class GuitarServiceTest extends CatsEffectSuite {
     val targetTuning = GuitarTuning.sixStringTunings("D Standard")
     for {
       service <- makeService(repoDir, List(g))
-      result  <- service.recommendStrings(g.id, targetTuning)
-    } yield {
-      assertEquals(result.length, g.setup.stringGauge.length)
-    }
+      result <- service.recommendStrings(g.id, targetTuning)
+    } yield assertEquals(result.length, g.setup.stringGauge.length)
   }
 
   tempRepo.test("recommendStrings raises GuitarNotFoundException for unknown id") {
@@ -140,7 +137,7 @@ class GuitarServiceTest extends CatsEffectSuite {
       val targetTuning = GuitarTuning.sixStringTunings("D Standard")
       for {
         service <- makeService(repoDir, Nil)
-        err     <- service.recommendStrings("missing", targetTuning).attempt
+        err <- service.recommendStrings("missing", targetTuning).attempt
       } yield assert(
         err.left.exists(_.isInstanceOf[GuitarNotFoundException]),
         s"expected GuitarNotFoundException, got: $err"
@@ -156,7 +153,7 @@ class GuitarServiceTest extends CatsEffectSuite {
     )
     for {
       service <- makeService(repoDir, List(g))
-      err     <- service.recommendStrings(g.id, sevenString).attempt
+      err <- service.recommendStrings(g.id, sevenString).attempt
     } yield assert(
       err.left.exists(_.isInstanceOf[StringRecommendationException]),
       s"expected StringRecommendationException, got: $err"
@@ -174,8 +171,8 @@ class GuitarServiceTest extends CatsEffectSuite {
     )
     for {
       service <- makeService(repoDir, List(g))
-      result  <- service.handle(g.id, command)
-      after   <- service.find(g.id)
+      result <- service.handle(g.id, command)
+      after <- service.find(g.id)
     } yield {
       assertEquals(result.toOption.map(_.setup.stringBrand), Some("Ernie Ball"))
       assertEquals(result.toOption.map(_.setup.tuning), Some(newTuning))
@@ -194,10 +191,8 @@ class GuitarServiceTest extends CatsEffectSuite {
       GuitarCommand.UpdateDescription(LocalDate.of(2026, 2, 1), "new desc")
     for {
       service <- makeService(repoDir, List(g))
-      result  <- service.handle(g.id, command)
-    } yield {
-      assertEquals(result.toOption.flatMap(_.description), Some("new desc"))
-    }
+      result <- service.handle(g.id, command)
+    } yield assertEquals(result.toOption.flatMap(_.description), Some("new desc"))
   }
 
   tempRepo.test("handle RemoveDescription clears the description") { repoDir =>
@@ -205,17 +200,15 @@ class GuitarServiceTest extends CatsEffectSuite {
     val command = GuitarCommand.RemoveDescription(LocalDate.of(2026, 2, 1))
     for {
       service <- makeService(repoDir, List(g))
-      result  <- service.handle(g.id, command)
-    } yield {
-      assertEquals(result.toOption.flatMap(_.description), None)
-    }
+      result <- service.handle(g.id, command)
+    } yield assertEquals(result.toOption.flatMap(_.description), None)
   }
 
   tempRepo.test("handle returns Left when guitar id is unknown") { repoDir =>
     val command = GuitarCommand.RemoveDescription(LocalDate.of(2026, 2, 1))
     for {
       service <- makeService(repoDir, Nil)
-      result  <- service.handle("missing", command)
+      result <- service.handle("missing", command)
     } yield assert(result.isLeft, s"expected Left, got: $result")
   }
 
@@ -225,7 +218,7 @@ class GuitarServiceTest extends CatsEffectSuite {
       GuitarCommand.UpdateDescription(LocalDate.of(2026, 2, 1), "persisted")
     for {
       service <- makeService(repoDir, List(g))
-      _       <- service.handle(g.id, command)
+      _ <- service.handle(g.id, command)
       onDisk = scala.io.Source
         .fromFile(repoDir.resolve(s"${g.id}.json").toFile)
         .mkString
@@ -243,9 +236,9 @@ class GuitarServiceTest extends CatsEffectSuite {
       GuitarCommand.UpdateDescription(LocalDate.of(2026, 2, 2), "v2")
     for {
       service <- makeService(repoDir, List(g))
-      _       <- service.handle(g.id, cmd1)
-      _       <- service.handle(g.id, cmd2)
-      after   <- service.find(g.id)
+      _ <- service.handle(g.id, cmd1)
+      _ <- service.handle(g.id, cmd2)
+      after <- service.find(g.id)
     } yield {
       assertEquals(after.flatMap(_.events.map(_.length)), Some(2))
       assertEquals(after.flatMap(_.description), Some("v2"))
