@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +103,45 @@ export function ChangeStringsDrawer({
   currentTuning,
   initialValues,
 }: ChangeStringsDrawerProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Change Strings</SheetTitle>
+          <SheetDescription>
+            Record a new set of strings for this guitar.
+          </SheetDescription>
+        </SheetHeader>
+
+        {open && (
+          <ChangeStringsForm
+            onSubmit={onSubmit}
+            onClose={() => onOpenChange(false)}
+            stringCount={stringCount}
+            currentTuning={currentTuning}
+            initialValues={initialValues}
+          />
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+interface ChangeStringsFormProps {
+  onSubmit: (values: ChangeStringsFormValues) => void | Promise<void>;
+  onClose: () => void;
+  stringCount: number;
+  currentTuning: GuitarTuning;
+  initialValues?: ChangeStringsInitialValues;
+}
+
+function ChangeStringsForm({
+  onSubmit,
+  onClose,
+  stringCount,
+  currentTuning,
+  initialValues,
+}: ChangeStringsFormProps) {
   const presets = useMemo(
     () => tuningsForStringCount(stringCount),
     [stringCount],
@@ -114,17 +153,6 @@ export function ChangeStringsDrawer({
       : emptyState(currentTuning),
   );
   const [tuningError, setTuningError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setState(
-        initialValues
-          ? stateFromInitial(initialValues, currentTuning)
-          : emptyState(currentTuning),
-      );
-      setTuningError(null);
-    }
-  }, [open, initialValues, currentTuning]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -164,94 +192,81 @@ export function ChangeStringsDrawer({
       stringGauge: state.stringGauge,
       tuning,
     });
-    onOpenChange(false);
+    onClose();
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Change Strings</SheetTitle>
-          <SheetDescription>
-            Record a new set of strings for this guitar.
-          </SheetDescription>
-        </SheetHeader>
-
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-1 flex-col gap-4 px-4"
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-1 flex-col gap-4 px-4"
+    >
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="date">Date</Label>
+        <Input
+          id="date"
+          type="date"
+          required
+          value={state.date}
+          onChange={(e) => update("date", e.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="stringBrand">String Brand</Label>
+        <Input
+          id="stringBrand"
+          required
+          value={state.stringBrand}
+          onChange={(e) => update("stringBrand", e.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="stringGauge">Gauge (e.g. 10-46)</Label>
+        <Input
+          id="stringGauge"
+          required
+          value={state.stringGauge}
+          onChange={(e) => update("stringGauge", e.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="tuning">Tuning</Label>
+        <Select
+          value={state.tuningName}
+          onValueChange={(val) => {
+            if (val != null) update("tuningName", val);
+          }}
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              required
-              value={state.date}
-              onChange={(e) => update("date", e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="stringBrand">String Brand</Label>
-            <Input
-              id="stringBrand"
-              required
-              value={state.stringBrand}
-              onChange={(e) => update("stringBrand", e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="stringGauge">Gauge (e.g. 10-46)</Label>
-            <Input
-              id="stringGauge"
-              required
-              value={state.stringGauge}
-              onChange={(e) => update("stringGauge", e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="tuning">Tuning</Label>
-            <Select
-              value={state.tuningName}
-              onValueChange={(val) => {
-                if (val != null) update("tuningName", val);
-              }}
-            >
-              <SelectTrigger id="tuning" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {presets.map((t) => (
-                  <SelectItem key={t.name} value={t.name}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-                <SelectItem value={CUSTOM}>Custom…</SelectItem>
-              </SelectContent>
-            </Select>
-            {state.tuningName === CUSTOM && (
-              <Input
-                id="tuningText"
-                placeholder="E2 A2 D3 G3 B3 E4"
-                value={state.tuningText}
-                onChange={(e) => update("tuningText", e.target.value)}
-              />
-            )}
-            {tuningError && (
-              <p className="text-xs text-destructive">{tuningError}</p>
-            )}
-          </div>
+          <SelectTrigger id="tuning" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {presets.map((t) => (
+              <SelectItem key={t.name} value={t.name}>
+                {t.name}
+              </SelectItem>
+            ))}
+            <SelectItem value={CUSTOM}>Custom…</SelectItem>
+          </SelectContent>
+        </Select>
+        {state.tuningName === CUSTOM && (
+          <Input
+            id="tuningText"
+            placeholder="E2 A2 D3 G3 B3 E4"
+            value={state.tuningText}
+            onChange={(e) => update("tuningText", e.target.value)}
+          />
+        )}
+        {tuningError && (
+          <p className="text-xs text-destructive">{tuningError}</p>
+        )}
+      </div>
 
-          <SheetFooter className="px-0">
-            <Button type="submit">Save</Button>
-            <SheetClose
-              render={<Button type="button" variant="outline" />}
-            >
-              Cancel
-            </SheetClose>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
+      <SheetFooter className="px-0">
+        <Button type="submit">Save</Button>
+        <SheetClose render={<Button type="button" variant="outline" />}>
+          Cancel
+        </SheetClose>
+      </SheetFooter>
+    </form>
   );
 }

@@ -242,7 +242,7 @@ const NOTE_NAMES_DISPLAY_TO_INTERNAL: Record<string, NoteName> = {
 export function parseTuningText(text: string): Note[] | null {
   const tokens = text
     .trim()
-    .split(/[\s,\-]+/)
+    .split(/[\s,-]+/)
     .filter((t) => t.length > 0);
   if (tokens.length === 0) return null;
 

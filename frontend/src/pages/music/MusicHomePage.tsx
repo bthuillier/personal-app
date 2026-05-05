@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { albumsQuery, wishlistQuery } from "@/api/queries";
@@ -20,18 +19,16 @@ export function MusicHomePage() {
     {} as Record<string, number>,
   );
 
-  const topGenres = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const album of albums) {
-      for (const g of album.genre ?? []) {
-        counts.set(g, (counts.get(g) ?? 0) + 1);
-      }
+  const genreCounts = new Map<string, number>();
+  for (const album of albums) {
+    for (const g of album.genre ?? []) {
+      genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1);
     }
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      .slice(0, TOP_GENRES_LIMIT)
-      .map(([name, count]) => ({ name, count }));
-  }, [albums]);
+  }
+  const topGenres = [...genreCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, TOP_GENRES_LIMIT)
+    .map(([name, count]) => ({ name, count }));
 
   const maxGenreCount = topGenres[0]?.count ?? 0;
   const albumsWithoutGenre = albums.filter(

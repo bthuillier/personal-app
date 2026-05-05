@@ -1,4 +1,10 @@
-import { useState, useMemo, useRef, useEffect, useLayoutEffect } from "react";
+import {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/api/mutations";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,12 +25,17 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
 
   const addMutation = useAddAlbumGenre(albumId);
   const removeMutation = useRemoveAlbumGenre(albumId);
 
-  const current = genres ?? [];
+  const current = useMemo(() => genres ?? [], [genres]);
+
+  const closeEditor = useCallback(() => {
+    setEditing(false);
+    setValue("");
+    setHighlightIndex(-1);
+  }, []);
 
   const suggestions = useMemo(() => {
     const query = value.toLowerCase().trim();
@@ -35,21 +46,16 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
       .slice(0, MAX_SUGGESTIONS);
   }, [value, knownGenres, current]);
 
-  useEffect(() => {
-    setHighlightIndex(-1);
-  }, [value]);
-
-  useLayoutEffect(() => {
-    if (!editing || suggestions.length === 0) return;
+  const measureList = useCallback((list: HTMLUListElement | null) => {
+    if (!list) return;
     const input = inputRef.current;
-    const list = listRef.current;
-    if (!input || !list) return;
+    if (!input) return;
     const inputRect = input.getBoundingClientRect();
     const listHeight = list.offsetHeight;
     const spaceBelow = window.innerHeight - inputRect.bottom;
     const spaceAbove = inputRect.top;
     setDropUp(spaceBelow < listHeight + 8 && spaceAbove > spaceBelow);
-  }, [editing, suggestions]);
+  }, []);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -67,13 +73,7 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [editing]);
-
-  function closeEditor() {
-    setEditing(false);
-    setValue("");
-    setHighlightIndex(-1);
-  }
+  }, [editing, closeEditor]);
 
   function submit(raw: string) {
     const genre = raw.trim();
@@ -130,14 +130,17 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
           <Input
             ref={inputRef}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setHighlightIndex(-1);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Add genre..."
             className="h-6 w-32 px-2 py-0 text-xs"
           />
           {suggestions.length > 0 && (
             <ul
-              ref={listRef}
+              ref={measureList}
               className={cn(
                 "absolute left-0 z-50 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md",
                 dropUp ? "bottom-full mb-1" : "top-full mt-1",

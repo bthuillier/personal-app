@@ -7,7 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls, usePagination } from "@/components/Pagination";
+import { PaginationControls } from "@/components/Pagination";
+import { usePagination } from "@/components/usePagination";
 import { cn } from "@/lib/utils";
 
 export interface Column<T> {

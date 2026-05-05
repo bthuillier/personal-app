@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
@@ -17,7 +17,12 @@ import {
 } from "./ChangeStringsDrawer";
 
 type GuitarEvent = components["schemas"]["GuitarEvent"];
+type StringsChanged = Extract<GuitarEvent, { stringBrand: string }>;
 type GuitarTuning = components["schemas"]["GuitarTuning"];
+
+function isStringsChanged(event: GuitarEvent): event is StringsChanged {
+  return "stringBrand" in event;
+}
 
 export interface AppliedRecommendation {
   brand: string;
@@ -50,15 +55,11 @@ export function GuitarDetailPage() {
   const changeStringsMutation = useChangeGuitarStrings(id!);
 
   const pendingApply = usePendingApply();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // When a recommendation is applied, open the drawer to confirm.
-  useEffect(() => {
-    if (pendingApply.pending) setDrawerOpen(true);
-  }, [pendingApply.pending]);
+  const [manualOpen, setManualOpen] = useState(false);
+  const drawerOpen = manualOpen || !!pendingApply.pending;
 
   function handleDrawerOpenChange(open: boolean) {
-    setDrawerOpen(open);
+    setManualOpen(open);
     if (!open) pendingApply.clear();
   }
 
@@ -92,7 +93,9 @@ export function GuitarDetailPage() {
 
   const { specifications: specs, setup } = guitar;
 
-  const eventColumns: Column<GuitarEvent>[] = [
+  const stringChangeEvents = events.filter(isStringsChanged);
+
+  const eventColumns: Column<StringsChanged>[] = [
     { header: "Date", accessor: "date" },
     { header: "Strings", accessor: "stringBrand" },
     {
@@ -175,7 +178,7 @@ export function GuitarDetailPage() {
             <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
               Current Setup
             </h3>
-            <Button onClick={() => setDrawerOpen(true)}>Change Strings</Button>
+            <Button onClick={() => setManualOpen(true)}>Change Strings</Button>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Strings</dt>
@@ -224,7 +227,7 @@ export function GuitarDetailPage() {
         </h3>
         <DataTable
           columns={eventColumns}
-          data={events}
+          data={stringChangeEvents}
           rowKey={(e) => `${e.date}-${e.stringBrand}`}
           emptyMessage="No string changes recorded."
         />
