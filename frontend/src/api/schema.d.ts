@@ -196,6 +196,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/amplifiers/{id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Get Amplifier Events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/amplifiers/{id}/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Handle Amplifier Command"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/guitar-pedals": {
         parameters: {
             query?: never;
@@ -246,12 +278,18 @@ export interface components {
             /** Format: int32 */
             wattage: number;
             type: components["schemas"]["AmpType"];
+            description?: string;
+            events?: components["schemas"]["AmplifierEvent"][];
         };
         /**
          * AmplifierBrand
          * @enum {string}
          */
         AmplifierBrand: "Revv" | "Victory";
+        /** AmplifierCommand */
+        AmplifierCommand: components["schemas"]["RemoveDescription1"] | components["schemas"]["UpdateDescription1"];
+        /** AmplifierEvent */
+        AmplifierEvent: components["schemas"]["DescriptionRemoved1"] | components["schemas"]["DescriptionUpdated1"];
         /** BadRequest */
         BadRequest: {
             message: string;
@@ -272,6 +310,28 @@ export interface components {
             /** Format: date */
             releaseDate: string;
         };
+        /** DescriptionRemoved */
+        DescriptionRemoved: {
+            /** Format: date */
+            date: string;
+        };
+        /** DescriptionRemoved */
+        DescriptionRemoved1: {
+            /** Format: date */
+            date: string;
+        };
+        /** DescriptionUpdated */
+        DescriptionUpdated: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
+        };
+        /** DescriptionUpdated */
+        DescriptionUpdated1: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
+        };
         /** Guitar */
         Guitar: {
             id: string;
@@ -282,6 +342,7 @@ export interface components {
             serialNumber: string;
             specifications: components["schemas"]["GuitarSpecifications"];
             setup: components["schemas"]["GuitarSetup"];
+            description?: string;
             events?: components["schemas"]["GuitarEvent"][];
         };
         /**
@@ -290,9 +351,9 @@ export interface components {
          */
         GuitarBrand: "Aristides" | "Charvel" | "Dunable" | "Epiphone" | "Ibanez" | "Jackson" | "Ltd" | "PRS" | "Schecter";
         /** GuitarCommand */
-        GuitarCommand: components["schemas"]["ChangeStrings"];
+        GuitarCommand: components["schemas"]["ChangeStrings"] | components["schemas"]["RemoveDescription"] | components["schemas"]["UpdateDescription"];
         /** GuitarEvent */
-        GuitarEvent: components["schemas"]["StringsChanged"];
+        GuitarEvent: components["schemas"]["DescriptionRemoved"] | components["schemas"]["DescriptionUpdated"] | components["schemas"]["StringsChanged"];
         /**
          * GuitarMaterial
          * @enum {string}
@@ -397,6 +458,16 @@ export interface components {
          * @enum {string}
          */
         PickupType: "Humbucker" | "P90" | "SingleCoil";
+        /** RemoveDescription */
+        RemoveDescription: {
+            /** Format: date */
+            date: string;
+        };
+        /** RemoveDescription */
+        RemoveDescription1: {
+            /** Format: date */
+            date: string;
+        };
         /** Review */
         Review: {
             title: string;
@@ -443,6 +514,18 @@ export interface components {
             stringBrand: string;
             stringGauge?: number[];
             tuning: components["schemas"]["GuitarTuning"];
+        };
+        /** UpdateDescription */
+        UpdateDescription: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
+        };
+        /** UpdateDescription */
+        UpdateDescription1: {
+            /** Format: date */
+            date: string;
+            newDescription: string;
         };
         /** WishlistAlbum */
         WishlistAlbum: {
@@ -908,6 +991,73 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Amplifier"][];
                 };
+            };
+        };
+    };
+    "Get Amplifier Events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AmplifierEvent"][];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "Handle Amplifier Command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AmplifierCommand"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Amplifier"];
+                };
+            };
+            /** @description Invalid value for: body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

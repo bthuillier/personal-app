@@ -314,6 +314,56 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Amplifier'
+  /amplifiers/{id}/events:
+    get:
+      operationId: Get Amplifier Events
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AmplifierEvent'
+        '404':
+          description: ''
+  /amplifiers/{id}/commands:
+    post:
+      operationId: Handle Amplifier Command
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmplifierCommand'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Amplifier'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
   /guitar-pedals:
     get:
       operationId: List Guitar Pedals
@@ -389,12 +439,28 @@ components:
           format: int32
         type:
           $ref: '#/components/schemas/AmpType'
+        description:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AmplifierEvent'
     AmplifierBrand:
       title: AmplifierBrand
       type: string
       enum:
       - Revv
       - Victory
+    AmplifierCommand:
+      title: AmplifierCommand
+      oneOf:
+      - $ref: '#/components/schemas/RemoveDescription1'
+      - $ref: '#/components/schemas/UpdateDescription1'
+    AmplifierEvent:
+      title: AmplifierEvent
+      oneOf:
+      - $ref: '#/components/schemas/DescriptionRemoved1'
+      - $ref: '#/components/schemas/DescriptionUpdated1'
     BadRequest:
       title: BadRequest
       type: object
@@ -450,7 +516,28 @@ components:
         date:
           type: string
           format: date
+    DescriptionRemoved1:
+      title: DescriptionRemoved
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
     DescriptionUpdated:
+      title: DescriptionUpdated
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
+    DescriptionUpdated1:
       title: DescriptionUpdated
       type: object
       required:
@@ -796,6 +883,15 @@ components:
         date:
           type: string
           format: date
+    RemoveDescription1:
+      title: RemoveDescription
+      type: object
+      required:
+      - date
+      properties:
+        date:
+          type: string
+          format: date
     Review:
       title: Review
       type: object
@@ -895,6 +991,18 @@ components:
         tuning:
           $ref: '#/components/schemas/GuitarTuning'
     UpdateDescription:
+      title: UpdateDescription
+      type: object
+      required:
+      - date
+      - newDescription
+      properties:
+        date:
+          type: string
+          format: date
+        newDescription:
+          type: string
+    UpdateDescription1:
       title: UpdateDescription
       type: object
       required:
