@@ -1,14 +1,13 @@
 package guitargear.amplifier
 
 import cats.effect.IO
-import cats.effect.std.AtomicCell
+import filedb.FileDBEngine
 import io.circe.syntax.*
 import json.{GitCommitter, GitRepoFixture}
 import munit.CatsEffectSuite
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.io.PrintWriter
-import java.nio.file.Path
+import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDate
 import scala.util.Using
 
@@ -28,28 +27,28 @@ class AmplifierServiceTest extends CatsEffectSuite with GitRepoFixture {
       events = None
     )
 
-  private def writeAmplifierJson(dir: Path, amplifier: Amplifier): String = {
-    val file = dir.resolve(s"${amplifier.id}.json").toFile
+  private def seedAmplifier(tableDir: Path, amplifier: Amplifier): Unit = {
+    Files.createDirectories(tableDir)
+    val file = tableDir.resolve(s"${amplifier.id}.json").toFile
     Using.resource(new PrintWriter(file))(_.write(amplifier.asJson.spaces2))
-    file.getAbsolutePath
   }
 
   private def makeService(
       repoDir: Path,
       amplifiers: List[Amplifier]
-  ): IO[AmplifierService] =
+  ): IO[AmplifierService] = {
+    val tableDir = repoDir.resolve("guitar-gear").resolve("guitar-amp")
+    amplifiers.foreach(seedAmplifier(tableDir, _))
     for {
       gitCommitter <- GitCommitter.create(repoDir.toString)
-      logger <- Slf4jLogger.create[IO]
-      stateMap = amplifiers.map { a =>
-        val path = writeAmplifierJson(repoDir, a)
-        a.id -> (a, path)
-      }.toMap
-      cell <- AtomicCell[IO].of(stateMap)
-    } yield {
-      given GitCommitter = gitCommitter
-      new AmplifierService(cell, logger)
-    }
+      engine <- FileDBEngine[IO](repoDir, Paths.get("."))
+      db <- engine.db("guitar-gear")
+      service <- {
+        given GitCommitter = gitCommitter
+        AmplifierService.fromDB(db)
+      }
+    } yield service
+  }
 
   tempRepo.test("list returns all amplifiers in state") { repoDir =>
     val a1 = sampleAmplifier("id-1")
@@ -113,12 +112,12 @@ class AmplifierServiceTest extends CatsEffectSuite with GitRepoFixture {
     val a = sampleAmplifier()
     val command =
       AmplifierCommand.UpdateDescription(LocalDate.of(2026, 2, 1), "persisted")
+    val expectedFile =
+      repoDir.resolve("guitar-gear").resolve("guitar-amp").resolve(s"${a.id}.json")
     for {
       service <- makeService(repoDir, List(a))
       _ <- service.handle(a.id, command)
-      onDisk = scala.io.Source
-        .fromFile(repoDir.resolve(s"${a.id}.json").toFile)
-        .mkString
+      onDisk = scala.io.Source.fromFile(expectedFile.toFile).mkString
     } yield assert(
       onDisk.contains("persisted"),
       s"expected new description on disk, got: $onDisk"

@@ -4,18 +4,32 @@ import cats.effect.IO
 import album.AlbumFormat
 import java.time.LocalDate
 import eventbus.EventBus
-import org.typelevel.log4cats.noop.NoOpLogger
+import filedb.FileDBEngine
+import json.{GitCommitter, GitRepoFixture}
+import munit.CatsEffectSuite
 import utils.GenerateId
 
-class WishlistServiceTest extends munit.CatsEffectSuite {
+import java.nio.file.{Path, Paths}
 
-  given logger: org.typelevel.log4cats.Logger[IO] = NoOpLogger[IO]
+class WishlistServiceTest extends CatsEffectSuite with GitRepoFixture {
+  override protected def tempRepoPrefix: String = "wishlist-service-test"
 
-  def createService(): IO[WishlistService] =
-    EventBus.create[WishlistAlbum].map { eventBus =>
-      val store = WishlistStore.inMemory()
-      WishlistService(store, eventBus, logger)
-    }
+  private def createService(
+      repoDir: Path,
+      eventBus: EventBus[WishlistAlbum]
+  ): IO[WishlistService] =
+    for {
+      gitCommitter <- GitCommitter.create(repoDir.toString)
+      engine <- FileDBEngine[IO](repoDir, Paths.get("."))
+      db <- engine.db("music-inventory")
+      service <- {
+        given GitCommitter = gitCommitter
+        WishlistService.fileBacked(db, eventBus)
+      }
+    } yield service
+
+  private def createService(repoDir: Path): IO[WishlistService] =
+    EventBus.create[WishlistAlbum].flatMap(createService(repoDir, _))
 
   val sampleAlbum = WishlistService.AddAlbumToWishlist(
     name = "Dark Side of the Moon",
@@ -37,16 +51,16 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
 
   val anotherAlbumId = GenerateId.makeId("Abbey Road", "The Beatles")()
 
-  test("list returns empty list initially") {
+  tempRepo.test("list returns empty list initially") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       albums <- service.list
     } yield assertEquals(albums, List.empty[WishlistAlbum])
   }
 
-  test("addAlbumToWishlist adds an album to the wishlist") {
+  tempRepo.test("addAlbumToWishlist adds an album to the wishlist") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       _ <- service.addAlbumToWishlist(sampleAlbum)
       albums <- service.list
     } yield {
@@ -59,9 +73,9 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("addAlbumToWishlist adds multiple albums") {
+  tempRepo.test("addAlbumToWishlist adds multiple albums") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.addAlbumToWishlist(anotherAlbum)
       albums <- service.list
@@ -72,9 +86,9 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("orderAlbum updates album status to Ordered") {
+  tempRepo.test("orderAlbum updates album status to Ordered") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.orderAlbum(sampleAlbumId)
       albums <- service.list
@@ -84,21 +98,19 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("confirmAlbumReceived updates album status to Received") {
+  tempRepo.test("confirmAlbumReceived updates album status to Received") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.confirmAlbumReceived(sampleAlbumId)
       albums <- service.list
     } yield assertEquals(albums.length, 0)
   }
 
-  test("confirmAlbumReceived raises error for non-existent album") {
+  tempRepo.test("confirmAlbumReceived raises error for non-existent album") { repoDir =>
     for {
-      service <- createService()
-      result <- service
-        .confirmAlbumReceived("nonexistent-id")
-        .attempt
+      service <- createService(repoDir)
+      result <- service.confirmAlbumReceived("nonexistent-id").attempt
     } yield {
       assert(result.isLeft)
       assert(
@@ -107,11 +119,10 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("confirmAlbumReceived publishes event to event bus") {
+  tempRepo.test("confirmAlbumReceived publishes event to event bus") { repoDir =>
     for {
       eventBus <- EventBus.create[WishlistAlbum]
-      store = WishlistStore.inMemory()
-      service = WishlistService(store, eventBus, logger)
+      service <- createService(repoDir, eventBus)
       publishedEvents <- IO.ref(List.empty[WishlistAlbum])
       _ <- service.addAlbumToWishlist(sampleAlbum)
       fiber <- eventBus
@@ -131,9 +142,9 @@ class WishlistServiceTest extends munit.CatsEffectSuite {
     }
   }
 
-  test("orderAlbum works for multiple albums independently") {
+  tempRepo.test("orderAlbum works for multiple albums independently") { repoDir =>
     for {
-      service <- createService()
+      service <- createService(repoDir)
       _ <- service.addAlbumToWishlist(sampleAlbum)
       _ <- service.addAlbumToWishlist(anotherAlbum)
       _ <- service.orderAlbum(anotherAlbumId)

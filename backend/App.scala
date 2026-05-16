@@ -1,3 +1,4 @@
+import albuminventory.AlbumInventory
 import guitargear.GuitarGear
 import sttp.tapir.server.netty.cats.NettyCatsServer
 import cats.effect.ResourceApp
@@ -6,9 +7,10 @@ import sttp.tapir.server.netty.cats.NettyCatsServerOptions
 import cats.effect.std.Dispatcher
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.interceptor.cors.CORSConfig
-import wishlist.WishlistService
 import cats.effect.std.Env
 import json.GitCommitter
+import filedb.FileDBEngine
+import java.nio.file.Paths
 
 object App extends ResourceApp.Forever {
   override def run(args: List[String]): Resource[IO, Unit] =
@@ -18,22 +20,13 @@ object App extends ResourceApp.Forever {
         Env[IO].get("DB_BASE_PATH").map(_.getOrElse("data"))
       )
       given GitCommitter <- Resource.eval(GitCommitter.create(basePath))
-      eventBus <- Resource.eval(
-        eventbus.EventBus.create[wishlist.WishlistAlbum]
+      engine <- Resource.eval(
+        FileDBEngine[IO](Paths.get(basePath), Paths.get("."))
       )
-      wishlists <- Resource.eval(
-        WishlistService.fileBacked(
-          s"$basePath/music-inventory/wishlist",
-          eventBus
-        )
-      )
-      albums <- Resource.eval(
-        album.AlbumService.fileBacked(s"$basePath/music-inventory/albums")
-      )
-      _ <- Resource.eval(
-        albums.addHandler(eventBus).start
-      )
-      guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(basePath))
+      musicDb <- Resource.eval(engine.db(AlbumInventory.dbName))
+      guitarDb <- Resource.eval(engine.db(GuitarGear.dbName))
+      albumInventoryEndpoints <- AlbumInventory.endpoints(musicDb)
+      guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(guitarDb))
       server = NettyCatsServer[IO](
         NettyCatsServerOptions
           .customiseInterceptors[IO](dispatcher)
@@ -50,11 +43,7 @@ object App extends ResourceApp.Forever {
           server
             .port(8080)
             .host("0.0.0.0")
-            .addEndpoints(
-              wishlist.AlbumWishlists.endpoints(wishlists) ++
-                album.Albums.endpoints(albums) ++
-                guitarGearEndpoints
-            )
+            .addEndpoints(albumInventoryEndpoints ++ guitarGearEndpoints)
             .start()
         } {
           _.stop()
