@@ -7,17 +7,14 @@ import io.circe.parser.decode
 import cats.effect.kernel.{Async, Concurrent}
 import cats.effect.std.Mutex
 import cats.syntax.all.*
-import fs2.io.file.{Files as FsFiles, Path as FsPath}
+import fs2.io.file.{Files as FsFiles, Flag, Flags, Path as FsPath}
+import java.nio.charset.StandardCharsets
 
 class FileTable[F[_]: Async: FsFiles, E: Encoder: Decoder] private (
-    rootPath: Path,
-    name: String,
+    val name: String,
+    fullFsPath: FsPath,
     writeLock: Mutex[F]
 ) {
-
-  def fullPath: Path = rootPath.resolve(name)
-
-  private val fullFsPath: FsPath = FsPath.fromNioPath(fullPath)
 
   private def filePath(id: String): FsPath = fullFsPath / s"$id.json"
 
@@ -26,10 +23,10 @@ class FileTable[F[_]: Async: FsFiles, E: Encoder: Decoder] private (
       Async[F].fromEither(decode[E](s)(using summon[Decoder[E]]))
     }
 
-  private def writeEntity(p: FsPath, entity: E): F[Unit] =
+  private def writeEntity(p: FsPath, entity: E, flags: Flags): F[Unit] =
     fs2.Stream
-      .emit(entity.asJson(using summon[Encoder[E]]).spaces2)
-      .through(FsFiles[F].writeUtf8(p))
+      .chunk(fs2.Chunk.array(entity.asJson(using summon[Encoder[E]]).spaces2.getBytes(StandardCharsets.UTF_8)))
+      .through(FsFiles[F].writeAll(p, flags))
       .compile
       .drain
 
@@ -53,17 +50,20 @@ class FileTable[F[_]: Async: FsFiles, E: Encoder: Decoder] private (
   def delete(id: String): F[Unit] = withLock(FsFiles[F].delete(filePath(id)))
 
   def update(id: String, updateF: E => E): F[Unit] =
-    withLock(get(id).flatMap(e => writeEntity(filePath(id), updateF(e))))
+    withLock(get(id).flatMap(e => writeEntity(filePath(id), updateF(e), Flags.Write)))
 
   def update(id: String, entity: E): F[Unit] = update(id, _ => entity)
 
-  def create(id: String, entity: E): F[Unit] = withLock(writeEntity(filePath(id), entity))
+  def create(id: String, entity: E): F[Unit] =
+    withLock(writeEntity(filePath(id), entity, Flags(Flag.Write, Flag.CreateNew)))
 
 }
 
 object FileTable {
-  def apply[F[_]: Async: FsFiles, E: Encoder: Decoder](rootPath: Path, name: String): F[FileTable[F, E]] =
-    Mutex[F].map(new FileTable[F, E](rootPath, name, _))
+  def apply[F[_]: Async: FsFiles, E: Encoder: Decoder](parentPath: FsPath, name: String): F[FileTable[F, E]] =
+    val tablePath = parentPath / name
+    FsFiles[F].createDirectories(tablePath) *>
+      Mutex[F].map(new FileTable[F, E](name, tablePath, _))
 }
 
 private def listSubdirectoryNames[F[_]: Concurrent: FsFiles](path: FsPath): F[List[String]] =
@@ -74,24 +74,31 @@ private def listSubdirectoryNames[F[_]: Concurrent: FsFiles](path: FsPath): F[Li
     .compile
     .toList
 
-class FileDB[F[_]: Async: FsFiles](rootPath: Path, name: String) {
-  private val dbPath: Path = rootPath.resolve(name)
-  private val dbFsPath: FsPath = FsPath.fromNioPath(dbPath)
+class FileDB[F[_]: Async: FsFiles] private (val name: String, dbFsPath: FsPath) {
 
   def table[E: Encoder: Decoder](name: String): F[FileTable[F, E]] =
-    FileTable[F, E](dbPath, name)
+    FileTable[F, E](dbFsPath, name)
 
   def tables: F[List[String]] = listSubdirectoryNames(dbFsPath)
 }
 
-class FileDBEngine[F[_]: Async: FsFiles](rootPath: Path, dbRelativePath: Path) {
+object FileDB {
+  def apply[F[_]: Async: FsFiles](parentPath: FsPath, name: String): F[FileDB[F]] =
+    val dbPath = parentPath / name
+    FsFiles[F].createDirectories(dbPath).as(new FileDB[F](name, dbPath))
+}
 
-  private val fullPath: Path = rootPath.resolve(dbRelativePath)
-  private val fullFsPath: FsPath = FsPath.fromNioPath(fullPath)
+class FileDBEngine[F[_]: Async: FsFiles] private (fullFsPath: FsPath) {
 
-  def db(name: String): FileDB[F] =
-    FileDB[F](fullPath, name)
+  def db(name: String): F[FileDB[F]] =
+    FileDB[F](fullFsPath, name)
 
   def dbs: F[List[String]] = listSubdirectoryNames(fullFsPath)
 
+}
+
+object FileDBEngine {
+  def apply[F[_]: Async: FsFiles](rootPath: Path, dbRelativePath: Path): F[FileDBEngine[F]] =
+    val enginePath = FsPath.fromNioPath(rootPath.resolve(dbRelativePath))
+    FsFiles[F].createDirectories(enginePath).as(new FileDBEngine[F](enginePath))
 }

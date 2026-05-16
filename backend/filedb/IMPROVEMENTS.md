@@ -25,17 +25,25 @@ Because `Mutex[F]` is built effectfully, `FileTable`'s primary constructor is no
 
 A single per-table mutex is good enough for now; per-id locking (via `MapRef`) is an optimization to revisit if contention shows up.
 
-## 3. Create-vs-overwrite semantics
+## 3. Create-vs-overwrite semantics — DONE
 
-`create` currently silently overwrites an existing entity, making it indistinguishable from `update`. This hides bugs (duplicate IDs going unnoticed).
+`create` previously silently overwrote an existing entity, making it indistinguishable from `update`.
 
-**Fix:** use `FsFiles[F].writeAll` with `Flags(Flag.Write, Flag.CreateNew)` so the filesystem rejects the write if the file already exists.
+**Fix applied:** `writeEntity` now takes a `Flags` parameter. `create` passes `Flags(Flag.Write, Flag.CreateNew)` — the filesystem raises `FileAlreadyExistsException` if the file already exists. `update` passes `Flags.Write` (Write + Create + Truncate) which keeps its previous overwrite behavior.
 
-## 4. Ensure the table directory exists
+Side effect: writing went from `FsFiles[F].writeUtf8` (which doesn't take flags) to `writeAll` with an explicit UTF-8 byte encoding via `String.getBytes(StandardCharsets.UTF_8)`.
 
-Nothing in `FileTable` creates `fullPath`. The first call to `create` on a fresh table throws `NoSuchFileException`.
+## 4. Ensure the directories exist — DONE
 
-**Fix:** call `FsFiles[F].createDirectories(fullFsPath)` lazily on the first write (or eagerly inside `FileTable.apply` — the latter avoids a per-write check at the cost of a syscall at table construction).
+Each layer now owns creation of its own directory inside its smart constructor:
+
+- `FileDBEngine.apply` creates the engine root directory.
+- `FileDB.apply` creates its own db directory.
+- `FileTable.apply` creates its own table directory.
+
+All use `FsFiles[F].createDirectories(...)` which is idempotent — re-opening an existing engine/db/table is fine. Each layer can trust its parent already exists when it runs.
+
+Verified end-to-end from a fully empty filesystem: an `engine.db("mydb").flatMap(_.table[Foo]("foos")).flatMap(_.create(...))` chain creates `engine/mydb/foos/a.json` correctly.
 
 ---
 
