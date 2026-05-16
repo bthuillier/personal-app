@@ -19,7 +19,7 @@ class FileDBTest extends CatsEffectSuite {
         f.delete()
       }
       deleteRecursively(dir.toFile)
-    }   
+    }
   )
 
   private def newTable(root: Path): IO[FileTable[IO, Foo]] =
