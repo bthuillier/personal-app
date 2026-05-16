@@ -47,15 +47,19 @@ class FileTable[F[_]: Async: FsFiles, E: Encoder: Decoder] private (
 
   def find(f: E => Boolean): F[Option[E]] = entities.find(f).compile.last
 
-  def delete(id: String): F[Unit] = withLock(FsFiles[F].delete(filePath(id)))
+  def delete(id: String): F[Path] =
+    val p = filePath(id)
+    withLock(FsFiles[F].delete(p)).as(p.toNioPath)
 
-  def update(id: String, updateF: E => E): F[Unit] =
-    withLock(get(id).flatMap(e => writeEntity(filePath(id), updateF(e), Flags.Write)))
+  def update(id: String, updateF: E => E): F[Path] =
+    val p = filePath(id)
+    withLock(get(id).flatMap(e => writeEntity(p, updateF(e), Flags.Write))).as(p.toNioPath)
 
-  def update(id: String, entity: E): F[Unit] = update(id, _ => entity)
+  def update(id: String, entity: E): F[Path] = update(id, _ => entity)
 
-  def create(id: String, entity: E): F[Unit] =
-    withLock(writeEntity(filePath(id), entity, Flags(Flag.Write, Flag.CreateNew)))
+  def create(id: String, entity: E): F[Path] =
+    val p = filePath(id)
+    withLock(writeEntity(p, entity, Flags(Flag.Write, Flag.CreateNew))).as(p.toNioPath)
 
 }
 

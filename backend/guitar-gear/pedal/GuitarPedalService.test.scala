@@ -1,14 +1,13 @@
 package guitargear.pedal
 
 import cats.effect.IO
-import cats.effect.std.AtomicCell
+import filedb.FileDBEngine
 import io.circe.syntax.*
 import json.{GitCommitter, GitRepoFixture}
 import munit.CatsEffectSuite
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.io.PrintWriter
-import java.nio.file.Path
+import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDate
 import scala.util.Using
 
@@ -27,28 +26,28 @@ class GuitarPedalServiceTest extends CatsEffectSuite with GitRepoFixture {
       events = None
     )
 
-  private def writePedalJson(dir: Path, pedal: GuitarPedal): String = {
-    val file = dir.resolve(s"${pedal.id}.json").toFile
+  private def seedPedal(tableDir: Path, pedal: GuitarPedal): Unit = {
+    Files.createDirectories(tableDir)
+    val file = tableDir.resolve(s"${pedal.id}.json").toFile
     Using.resource(new PrintWriter(file))(_.write(pedal.asJson.spaces2))
-    file.getAbsolutePath
   }
 
   private def makeService(
       repoDir: Path,
       pedals: List[GuitarPedal]
-  ): IO[GuitarPedalService] =
+  ): IO[GuitarPedalService] = {
+    val tableDir = repoDir.resolve("guitar-gear").resolve("guitar-pedal")
+    pedals.foreach(seedPedal(tableDir, _))
     for {
       gitCommitter <- GitCommitter.create(repoDir.toString)
-      logger <- Slf4jLogger.create[IO]
-      stateMap = pedals.map { p =>
-        val path = writePedalJson(repoDir, p)
-        p.id -> (p, path)
-      }.toMap
-      cell <- AtomicCell[IO].of(stateMap)
-    } yield {
-      given GitCommitter = gitCommitter
-      new GuitarPedalService(cell, logger)
-    }
+      engine <- FileDBEngine[IO](repoDir, Paths.get("."))
+      db <- engine.db("guitar-gear")
+      service <- {
+        given GitCommitter = gitCommitter
+        GuitarPedalService.fromDB(db)
+      }
+    } yield service
+  }
 
   tempRepo.test("list returns all pedals in state") { repoDir =>
     val p1 = samplePedal("id-1")
@@ -112,12 +111,12 @@ class GuitarPedalServiceTest extends CatsEffectSuite with GitRepoFixture {
     val p = samplePedal()
     val command =
       GuitarPedalCommand.UpdateDescription(LocalDate.of(2026, 2, 1), "persisted")
+    val expectedFile =
+      repoDir.resolve("guitar-gear").resolve("guitar-pedal").resolve(s"${p.id}.json")
     for {
       service <- makeService(repoDir, List(p))
       _ <- service.handle(p.id, command)
-      onDisk = scala.io.Source
-        .fromFile(repoDir.resolve(s"${p.id}.json").toFile)
-        .mkString
+      onDisk = scala.io.Source.fromFile(expectedFile.toFile).mkString
     } yield assert(
       onDisk.contains("persisted"),
       s"expected new description on disk, got: $onDisk"
