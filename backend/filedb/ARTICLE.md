@@ -247,3 +247,202 @@ Crucially, none of these properties were free. Each one came from picking at the
 The shape of the code in version one wasn't *wrong*. It was just first-pass: optimistic about concurrency, optimistic about resource handling, optimistic about disk state. Each round of improvement was a small piece of that optimism replaced with something the runtime can actually rely on.
 
 That's most of what software engineering is, when you strip it back. Not building the thing — *that* part is usually easy. It's noticing what you optimistically assumed, and one by one, deciding whether to fix it or own it.
+
+---
+
+# Part 2: Putting it to work
+
+A library nobody uses doesn't get its rough edges sanded down. Once FileDB was passing its own tests, the next question was the obvious one: drop it into the app that motivated the whole exercise, and see what happens.
+
+The app already had four services persisting JSON to disk — `AmplifierService`, `GuitarService`, `GuitarPedalService`, plus an album/wishlist pair. Each one had the same shape: an `AtomicCell[IO, Map[String, (Entity, String)]]` for in-memory state (the `String` being the on-disk path), inline `PrintWriter` calls to save changes, a `JsonLoader.loadJsonFolderWithPaths` helper to bootstrap from disk on startup, and a `GitCommitter` call after each write to record the change in git history.
+
+A lot of duplicated I/O glue. Exactly the kind of thing FileDB was supposed to replace.
+
+## A small API tweak first
+
+Before migrating anything, one thing about FileDB needed to change. The original `create` / `update` / `delete` signatures returned `F[Unit]`:
+
+```scala
+def create(id: String, entity: E): F[Unit]
+def update(id: String, entity: E): F[Unit]
+def delete(id: String): F[Path]  // …actually, this one started returning Path
+```
+
+The git-commit hook needs the on-disk path so it can stage the right file. Without help from FileTable, the caller had to reconstruct the path itself — typically `s"$tableDir/$id.json"`, duplicating knowledge of FileDB's internal layout. Ugly.
+
+Easy fix: make all three return the path they touched.
+
+```scala
+def create(id: String, entity: E): F[Path]
+def update(id: String, entity: E): F[Path]
+def delete(id: String): F[Path]
+```
+
+Now callers just do `table.create(id, entity).flatMap(path => git.commitFile(path.toString, msg))`. The path is the operation's result, not a query the caller has to make separately. Less API surface, and the path you get back is by definition the path the operation actually touched.
+
+A nice property fell out: the path is only produced after the write succeeds. If `CreateNew` raises `FileAlreadyExistsException`, the `flatMap` never runs and you don't attempt to commit a file that doesn't exist.
+
+## Migration in two waves
+
+The four services migrated in two waves: guitar-gear (amplifier, guitar, pedal) first, then album-inventory (album, wishlist).
+
+**Wave 1: guitar-gear.** These services followed a uniform shape — read-modify-write on an in-memory map, write the changed entity to disk, commit to git. The diff was mechanical:
+
+```scala
+// Before
+class AmplifierService(
+  cell: AtomicCell[IO, Map[String, (Amplifier, String)]],  // (entity, path)
+  logger: Logger[IO]
+)(using git: GitCommitter)
+
+// After
+class AmplifierService(
+  table: FileTable[IO, Amplifier],
+  cache: AtomicCell[IO, Map[String, Amplifier]],
+  logger: Logger[IO]
+)(using git: GitCommitter)
+```
+
+The path tuple disappears from the cache; FileTable knows the path. The `PrintWriter`-based `persistAmplifier` shrinks to:
+
+```scala
+private def persist(amplifier: Amplifier, command: AmplifierCommand): IO[Unit] =
+  table.update(amplifier.id, amplifier).flatMap { path =>
+    git.commitFile(path.toString, s"Update amplifier ${amplifier.id}: ${command.productPrefix}")
+      .handleErrorWith { e =>
+        logger.warn(s"Git commit failed for $path — ${e.getMessage}")
+      }
+  }
+```
+
+The bootstrap step that used to be `JsonLoader.loadJsonFolderWithPaths[Amplifier](path)` becomes `table.list` — already in `F`, already typed, already cleaning up file handles. Each `fromFile(basePath: String)` factory became `fromDB(db: FileDB[IO])`, taking a pre-opened db instead of a path string. That last bit hints at where this is going.
+
+**Wave 2: album-inventory.** This part of the app had grown a bit more architecture. Each service sat behind a `Store` trait with two implementations:
+
+```scala
+trait AlbumStore {
+  def list: IO[List[PartialAlbum]]
+  def add(partialAlbum: PartialAlbum): IO[Unit]
+  def addGenre(albumId: String, genre: String): IO[Unit]
+  // …
+}
+
+object AlbumStore {
+  def inMemory(initialState: List[PartialAlbum] = List.empty): AlbumStore = ???
+  def fileBacked(filepath: String)(using GitCommitter): IO[AlbumStore] = ???
+}
+```
+
+The `inMemory` variant existed to make tests fast and dependency-free. The `fileBacked` variant duplicated every method to add a file-write-and-commit step.
+
+The first pass at migration just replaced the file-backed store's internals — `PrintWriter` calls became `table.update`, `JsonLoader.loadJsonFolder` became `table.list`. The store trait stayed. The in-memory variant stayed.
+
+That worked, but it left the architecture in an awkward middle state: the store abstraction had been justified by the existence of two implementations, and now one of them (the file-backed one) was a one-liner wrapping FileDB. The store was bureaucracy.
+
+So the second pass collapsed the stores into the services entirely. `AlbumStore` and `WishlistStore` got deleted. The services moved to the same `(table, cache, logger)` shape as guitar-gear. The in-memory stub disappeared.
+
+What about the tests, then? They used the in-memory store to avoid disk I/O. The honest answer: drop the in-memory stub, run the tests against a real temp-directory FileDB plus a temp git repo. It costs ~half a second per test suite and produces strictly more realistic tests (real file system, real git, real serialization). The "in-memory store" was always just a quick test stub dressed up as a feature; once FileDB exists, it doesn't earn its keep.
+
+## A semantic question that fell out
+
+Deleting the stores surfaced something interesting. The old `AlbumStore.inMemory().add(album)` silently overwrote on duplicate ids — same as the file-backed version, same as the `update`-style write underneath. The tests had a case for it: "add overwrites existing album with same id".
+
+But `add` is logically a *create*. The new code naturally wanted to use `table.create`, which fails with `FileAlreadyExistsException` on a duplicate. The strict semantics felt right — duplicate ids in `add` calls are almost certainly bugs in the calling code, and they should fail loudly.
+
+So that test got rewritten:
+
+```scala
+tempRepo.test("add fails if an album with the same id already exists") { repoDir =>
+  for {
+    service <- createService(repoDir)
+    _ <- service.add(sampleAlbum)
+    result <- service.add(sampleAlbum).attempt
+  } yield assert(result.isLeft, s"expected failure on duplicate add, got: $result")
+}
+```
+
+The old test was encoding a bug as a feature. The new test pins down the actual desired behavior. This is what happens when you swap out the persistence layer: not just the I/O changes, the semantic edges of the API get sharpened too.
+
+## Plumbing: one engine, many dbs
+
+Originally, each module created its own `FileDBEngine`:
+
+```scala
+// in GuitarGear.scala
+def endpoints(basePath: String) = for {
+  engine <- FileDBEngine[IO](Paths.get(basePath), Paths.get("."))
+  db <- engine.db("guitar-gear")
+  // …services
+}
+```
+
+And album-inventory did the same in `App.scala` directly. Two engines pointing at the same root, doing the same `createDirectories` dance, holding no state worth duplicating.
+
+Easier and more honest: one engine in `App.scala`, derive both dbs from it, inject each db into the module that owns it:
+
+```scala
+engine <- Resource.eval(FileDBEngine[IO](Paths.get(basePath), Paths.get(".")))
+musicDb <- Resource.eval(engine.db(AlbumInventory.dbName))
+guitarDb <- Resource.eval(engine.db(GuitarGear.dbName))
+albumInventoryEndpoints <- AlbumInventory.endpoints(musicDb)
+guitarGearEndpoints <- Resource.eval(GuitarGear.endpoints(guitarDb))
+```
+
+Each module exposes its db name as a public constant so `App.scala` doesn't have to hardcode strings.
+
+## A module shape worth keeping
+
+Originally `App.scala` did the album/wishlist wiring inline — opening the db, building both services, starting a fire-and-forget background fiber to subscribe the album service to the wishlist's event bus. Maybe ten lines of glue.
+
+Symmetric with `GuitarGear`, that glue moved into its own `AlbumInventory` module:
+
+```scala
+object AlbumInventory {
+
+  val dbName = "music-inventory"
+
+  def endpoints(
+      db: FileDB[IO]
+  )(using GitCommitter): Resource[IO, List[ServerEndpoint[Any, IO]]] =
+    for {
+      eventBus <- Resource.eval(EventBus.create[WishlistAlbum])
+      wishlists <- Resource.eval(WishlistService.fileBacked(db, eventBus))
+      albums <- Resource.eval(album.AlbumService.fileBacked(db))
+      _ <- Resource.make(albums.addHandler(eventBus).start)(_.cancel)
+    } yield AlbumWishlists.endpoints(wishlists) ++ album.Albums.endpoints(albums)
+
+}
+```
+
+Two small improvements snuck in:
+
+- **The event bus became internal.** It used to be created in `App.scala` and passed in, which meant `App.scala` had to import `eventbus.EventBus` and know that album-inventory has a publish/subscribe flow. Nothing else in the app cared. Pushed inside `AlbumInventory.endpoints`, it's a module implementation detail again.
+
+- **The background fiber became a `Resource`.** Previously it was `.start` (fire-and-forget), which leaks the fiber on shutdown. With `Resource.make(addHandler.start)(_.cancel)`, it's tied to the app's lifecycle: cancelled cleanly when the server stops. The change is one line; the correctness improvement is meaningful for graceful shutdown.
+
+After this `App.scala` is genuinely small. It opens the engine, derives two dbs, asks each module for its endpoints, starts the server. Each module owns its db name, its services, its background workers, and its routes — and exposes one entry point.
+
+## What the integration taught the library
+
+The library changes that came out of integration were modest:
+
+- `create` / `update` / `delete` returning `Path` instead of `Unit`. Tiny diff, big ergonomic payoff at call sites.
+
+Nothing else needed to change. The four problems the library solved during its initial design — concurrency safety, the fs2 migration, create-vs-overwrite semantics, directory ownership — were all real, and once solved they stayed solved through the integration. The pieces that came out of integration were almost entirely on the *service* side: rethinking the cache state shape, collapsing the store abstraction, tightening `add` to fail-on-duplicate, centralizing engine construction.
+
+That's a decent test of the original design. A library that needs to grow new features every time a real caller arrives is one that anticipated the wrong things. FileDB anticipated the right ones.
+
+## What the application has now
+
+What we have at the end is something neither the library nor the application could have given us alone:
+
+- **One engine in `App.scala`.** Two domain modules, each owning a db. Nothing duplicated.
+- **Services hold `(table, cache, logger)`**, uniformly. Reads hit cache; writes go through table + git commit. Same shape across all five services.
+- **No more inline JSON I/O anywhere.** `PrintWriter`, `JsonLoader`, hand-rolled `loadJsonFolder` helpers — all gone. The few remaining `import java.nio.file._` lines are for `Path` types crossing module boundaries, nothing more.
+- **Strict `add` semantics.** Duplicate ids are errors, not silently-overwritten state.
+- **Background subscriptions managed as `Resource`s.** No leaked fibers on shutdown.
+- **Tests run against real disk and real git.** Faster than expected, more realistic than the in-memory stubs they replaced.
+
+About 200 lines of code disappeared. Two abstractions (`AlbumStore`, `WishlistStore`) and one helper module (`JsonLoader`) got deleted outright. Nothing new got added on the service side that wasn't smaller and clearer than what it replaced.
+
+That's the real reward for spending time on a small library. Not the library itself — those 80 lines were never the point. The reward is what stops being necessary everywhere else once the library exists.
