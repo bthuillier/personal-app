@@ -72,6 +72,7 @@ export function GuitarDetailPage() {
       : undefined;
 
     await changeStringsMutation.mutateAsync({
+      type: "ChangeStrings",
       date: values.date,
       stringBrand: values.stringBrand,
       stringGauge: gauge,

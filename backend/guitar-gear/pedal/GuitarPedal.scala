@@ -24,6 +24,8 @@ enum GuitarPedalCommand {
 object GuitarPedalCommand {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[GuitarPedalCommand] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[GuitarPedalCommand] = Schema.derived
 }
 
@@ -40,6 +42,8 @@ enum GuitarPedalEvent {
 object GuitarPedalEvent {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[GuitarPedalEvent] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[GuitarPedalEvent] = Schema.derived
 }
 

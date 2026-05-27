@@ -33,6 +33,8 @@ enum GuitarCommand {
 object GuitarCommand {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[GuitarCommand] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[GuitarCommand] = Schema.derived
 }
 
@@ -57,6 +59,8 @@ enum GuitarEvent {
 object GuitarEvent {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[GuitarEvent] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[GuitarEvent] = Schema.derived
 }
 

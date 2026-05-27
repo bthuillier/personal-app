@@ -506,11 +506,21 @@ components:
       oneOf:
       - $ref: '#/components/schemas/RemoveDescription1'
       - $ref: '#/components/schemas/UpdateDescription1'
+      discriminator:
+        propertyName: type
+        mapping:
+          RemoveDescription: '#/components/schemas/RemoveDescription1'
+          UpdateDescription: '#/components/schemas/UpdateDescription1'
     AmplifierEvent:
       title: AmplifierEvent
       oneOf:
       - $ref: '#/components/schemas/DescriptionRemoved1'
       - $ref: '#/components/schemas/DescriptionUpdated1'
+      discriminator:
+        propertyName: type
+        mapping:
+          DescriptionRemoved: '#/components/schemas/DescriptionRemoved1'
+          DescriptionUpdated: '#/components/schemas/DescriptionUpdated1'
     BadRequest:
       title: BadRequest
       type: object
@@ -526,6 +536,7 @@ components:
       - date
       - stringBrand
       - tuning
+      - type
       properties:
         date:
           type: string
@@ -539,6 +550,9 @@ components:
             format: double
         tuning:
           $ref: '#/components/schemas/GuitarTuning'
+        type:
+          type: string
+          const: ChangeStrings
     CreateAlbum:
       title: CreateAlbum
       type: object
@@ -562,64 +576,88 @@ components:
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: DescriptionRemoved
     DescriptionRemoved1:
       title: DescriptionRemoved
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: DescriptionRemoved
     DescriptionRemoved2:
       title: DescriptionRemoved
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: DescriptionRemoved
     DescriptionUpdated:
       title: DescriptionUpdated
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: DescriptionUpdated
     DescriptionUpdated1:
       title: DescriptionUpdated
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: DescriptionUpdated
     DescriptionUpdated2:
       title: DescriptionUpdated
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: DescriptionUpdated
     Guitar:
       title: Guitar
       type: object
@@ -672,12 +710,24 @@ components:
       - $ref: '#/components/schemas/ChangeStrings'
       - $ref: '#/components/schemas/RemoveDescription'
       - $ref: '#/components/schemas/UpdateDescription'
+      discriminator:
+        propertyName: type
+        mapping:
+          ChangeStrings: '#/components/schemas/ChangeStrings'
+          RemoveDescription: '#/components/schemas/RemoveDescription'
+          UpdateDescription: '#/components/schemas/UpdateDescription'
     GuitarEvent:
       title: GuitarEvent
       oneOf:
       - $ref: '#/components/schemas/DescriptionRemoved'
       - $ref: '#/components/schemas/DescriptionUpdated'
       - $ref: '#/components/schemas/StringsChanged'
+      discriminator:
+        propertyName: type
+        mapping:
+          DescriptionRemoved: '#/components/schemas/DescriptionRemoved'
+          DescriptionUpdated: '#/components/schemas/DescriptionUpdated'
+          StringsChanged: '#/components/schemas/StringsChanged'
     GuitarMaterial:
       title: GuitarMaterial
       type: string
@@ -760,11 +810,21 @@ components:
       oneOf:
       - $ref: '#/components/schemas/RemoveDescription2'
       - $ref: '#/components/schemas/UpdateDescription2'
+      discriminator:
+        propertyName: type
+        mapping:
+          RemoveDescription: '#/components/schemas/RemoveDescription2'
+          UpdateDescription: '#/components/schemas/UpdateDescription2'
     GuitarPedalEvent:
       title: GuitarPedalEvent
       oneOf:
       - $ref: '#/components/schemas/DescriptionRemoved2'
       - $ref: '#/components/schemas/DescriptionUpdated2'
+      discriminator:
+        propertyName: type
+        mapping:
+          DescriptionRemoved: '#/components/schemas/DescriptionRemoved2'
+          DescriptionUpdated: '#/components/schemas/DescriptionUpdated2'
     GuitarSetup:
       title: GuitarSetup
       type: object
@@ -966,28 +1026,40 @@ components:
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: RemoveDescription
     RemoveDescription1:
       title: RemoveDescription
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: RemoveDescription
     RemoveDescription2:
       title: RemoveDescription
       type: object
       required:
       - date
+      - type
       properties:
         date:
           type: string
           format: date
+        type:
+          type: string
+          const: RemoveDescription
     Review:
       title: Review
       type: object
@@ -1073,6 +1145,7 @@ components:
       - date
       - stringBrand
       - tuning
+      - type
       properties:
         date:
           type: string
@@ -1086,42 +1159,57 @@ components:
             format: double
         tuning:
           $ref: '#/components/schemas/GuitarTuning'
+        type:
+          type: string
+          const: StringsChanged
     UpdateDescription:
       title: UpdateDescription
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: UpdateDescription
     UpdateDescription1:
       title: UpdateDescription
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: UpdateDescription
     UpdateDescription2:
       title: UpdateDescription
       type: object
       required:
       - date
       - newDescription
+      - type
       properties:
         date:
           type: string
           format: date
         newDescription:
           type: string
+        type:
+          type: string
+          const: UpdateDescription
     WishlistAlbum:
       title: WishlistAlbum
       type: object

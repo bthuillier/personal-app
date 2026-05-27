@@ -333,6 +333,11 @@ export interface components {
             stringBrand: string;
             stringGauge?: number[];
             tuning: components["schemas"]["GuitarTuning"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "ChangeStrings";
         };
         /** CreateAlbum */
         CreateAlbum: {
@@ -346,34 +351,64 @@ export interface components {
         DescriptionRemoved: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionRemoved";
         };
         /** DescriptionRemoved */
         DescriptionRemoved1: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionRemoved";
         };
         /** DescriptionRemoved */
         DescriptionRemoved2: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionRemoved";
         };
         /** DescriptionUpdated */
         DescriptionUpdated: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionUpdated";
         };
         /** DescriptionUpdated */
         DescriptionUpdated1: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionUpdated";
         };
         /** DescriptionUpdated */
         DescriptionUpdated2: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "DescriptionUpdated";
         };
         /** Guitar */
         Guitar: {
@@ -511,16 +546,31 @@ export interface components {
         RemoveDescription: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "RemoveDescription";
         };
         /** RemoveDescription */
         RemoveDescription1: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "RemoveDescription";
         };
         /** RemoveDescription */
         RemoveDescription2: {
             /** Format: date */
             date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "RemoveDescription";
         };
         /** Review */
         Review: {
@@ -568,24 +618,44 @@ export interface components {
             stringBrand: string;
             stringGauge?: number[];
             tuning: components["schemas"]["GuitarTuning"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "StringsChanged";
         };
         /** UpdateDescription */
         UpdateDescription: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "UpdateDescription";
         };
         /** UpdateDescription */
         UpdateDescription1: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "UpdateDescription";
         };
         /** UpdateDescription */
         UpdateDescription2: {
             /** Format: date */
             date: string;
             newDescription: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "UpdateDescription";
         };
         /** WishlistAlbum */
         WishlistAlbum: {

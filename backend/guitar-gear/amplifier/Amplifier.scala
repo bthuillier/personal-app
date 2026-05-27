@@ -24,6 +24,8 @@ enum AmplifierCommand {
 object AmplifierCommand {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[AmplifierCommand] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[AmplifierCommand] = Schema.derived
 }
 
@@ -40,6 +42,8 @@ enum AmplifierEvent {
 object AmplifierEvent {
   given Configuration = Configuration.default.withDiscriminator("type")
   given Codec[AmplifierEvent] = Codec.AsObject.derivedConfigured
+  given schemaConfiguration: sttp.tapir.generic.Configuration =
+    sttp.tapir.generic.Configuration.default.withDiscriminator("type")
   given Schema[AmplifierEvent] = Schema.derived
 }
 
