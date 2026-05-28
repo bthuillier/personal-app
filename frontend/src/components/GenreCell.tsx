@@ -3,8 +3,10 @@ import {
   useMemo,
   useRef,
   useEffect,
+  useLayoutEffect,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/api/mutations";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -22,9 +24,14 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
   const [highlightIndex, setHighlightIndex] = useState(-1);
-  const [dropUp, setDropUp] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<{
+    left: number;
+    top: number;
+    placement: "below" | "above";
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
 
   const addMutation = useAddAlbumGenre(albumId);
   const removeMutation = useRemoveAlbumGenre(albumId);
@@ -35,6 +42,7 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
     setEditing(false);
     setValue("");
     setHighlightIndex(-1);
+    setMenuStyle(null);
   }, []);
 
   const suggestions = useMemo(() => {
@@ -46,20 +54,49 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
       .slice(0, MAX_SUGGESTIONS);
   }, [value, knownGenres, current]);
 
-  const measureList = useCallback((list: HTMLUListElement | null) => {
-    if (!list) return;
+  const updateMenuPosition = useCallback(() => {
     const input = inputRef.current;
+    const list = listRef.current;
     if (!input) return;
     const inputRect = input.getBoundingClientRect();
-    const listHeight = list.offsetHeight;
+    const listHeight = list?.offsetHeight ?? 0;
     const spaceBelow = window.innerHeight - inputRect.bottom;
     const spaceAbove = inputRect.top;
-    setDropUp(spaceBelow < listHeight + 8 && spaceAbove > spaceBelow);
+    const placement: "below" | "above" =
+      spaceBelow < listHeight + 8 && spaceAbove > spaceBelow ? "above" : "below";
+    const top =
+      placement === "below" ? inputRect.bottom + 4 : inputRect.top - 4 - listHeight;
+    setMenuStyle((prev) => {
+      if (
+        prev &&
+        prev.left === inputRect.left &&
+        prev.top === top &&
+        prev.placement === placement
+      ) {
+        return prev;
+      }
+      return { left: inputRect.left, top, placement };
+    });
   }, []);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+
+  useLayoutEffect(() => {
+    if (!editing || suggestions.length === 0) return;
+    updateMenuPosition();
+  }, [editing, suggestions, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!editing || suggestions.length === 0) return;
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [editing, suggestions, updateMenuPosition]);
 
   useEffect(() => {
     if (!editing) return;
@@ -109,7 +146,7 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-wrap items-center gap-1"
+      className="flex flex-wrap items-center gap-1"
       onClick={(e) => e.stopPropagation()}
     >
       {current.map((g) => (
@@ -126,7 +163,7 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
         </Badge>
       ))}
       {editing ? (
-        <div className="relative">
+        <>
           <Input
             ref={inputRef}
             value={value}
@@ -138,34 +175,39 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
             placeholder="Add genre..."
             className="h-6 w-32 px-2 py-0 text-xs"
           />
-          {suggestions.length > 0 && (
-            <ul
-              ref={measureList}
-              className={cn(
-                "absolute left-0 z-50 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md",
-                dropUp ? "bottom-full mb-1" : "top-full mt-1",
-              )}
-            >
-              {suggestions.map((s, i) => (
-                <li
-                  key={s}
-                  className={cn(
-                    "cursor-pointer px-2 py-1 text-xs",
-                    i === highlightIndex
-                      ? "bg-accent text-accent-foreground"
-                      : "hover:bg-muted",
-                  )}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    submit(s);
-                  }}
-                >
-                  {s}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+          {suggestions.length > 0 &&
+            createPortal(
+              <ul
+                ref={listRef}
+                style={{
+                  position: "fixed",
+                  left: menuStyle?.left ?? -9999,
+                  top: menuStyle?.top ?? -9999,
+                  visibility: menuStyle ? "visible" : "hidden",
+                }}
+                className="z-50 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md"
+              >
+                {suggestions.map((s, i) => (
+                  <li
+                    key={s}
+                    className={cn(
+                      "cursor-pointer px-2 py-1 text-xs",
+                      i === highlightIndex
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-muted",
+                    )}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      submit(s);
+                    }}
+                  >
+                    {s}
+                  </li>
+                ))}
+              </ul>,
+              document.body,
+            )}
+        </>
       ) : (
         <button
           type="button"
