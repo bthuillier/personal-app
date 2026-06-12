@@ -3,7 +3,7 @@ info:
   title: Personal App API
   version: '1.0'
 paths:
-  /wishlist/albums:
+  /api/wishlist/albums:
     get:
       operationId: List Wishlist Albums
       responses:
@@ -32,7 +32,7 @@ paths:
             text/plain:
               schema:
                 type: string
-  /wishlist/albums/{id}/received:
+  /api/wishlist/albums/{id}/received:
     post:
       operationId: Confirm Album Received
       parameters:
@@ -44,7 +44,7 @@ paths:
       responses:
         '200':
           description: ''
-  /wishlist/albums/{id}/order:
+  /api/wishlist/albums/{id}/order:
     post:
       operationId: Order Album
       parameters:
@@ -56,7 +56,7 @@ paths:
       responses:
         '200':
           description: ''
-  /albums:
+  /api/albums:
     get:
       operationId: List Albums
       responses:
@@ -85,7 +85,7 @@ paths:
             text/plain:
               schema:
                 type: string
-  /albums/{albumId}:
+  /api/albums/{albumId}:
     get:
       operationId: Get Album By ID
       parameters:
@@ -107,7 +107,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFound'
-  /albums/{albumId}/genres:
+  /api/albums/{albumId}/genres:
     post:
       operationId: Add Genre To Album
       parameters:
@@ -176,7 +176,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerError'
-  /albums/{albumId}/review:
+  /api/albums/{albumId}/review:
     post:
       operationId: Review Album
       parameters:
@@ -206,7 +206,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFound'
-  /guitars:
+  /api/guitars:
     get:
       operationId: List Guitars
       responses:
@@ -218,7 +218,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Guitar'
-  /guitars/{id}/events:
+  /api/guitars/{id}/events:
     get:
       operationId: Get Guitar Events
       parameters:
@@ -238,7 +238,7 @@ paths:
                   $ref: '#/components/schemas/GuitarEvent'
         '404':
           description: ''
-  /guitars/{id}/commands:
+  /api/guitars/{id}/commands:
     post:
       operationId: Handle Guitar Command
       parameters:
@@ -268,7 +268,7 @@ paths:
                 type: string
         '404':
           description: ''
-  /guitars/{id}/string-recommendation:
+  /api/guitars/{id}/string-recommendation:
     post:
       operationId: Recommend Strings
       parameters:
@@ -302,7 +302,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFound'
-  /amplifiers:
+  /api/amplifiers:
     get:
       operationId: List Amplifiers
       responses:
@@ -314,7 +314,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Amplifier'
-  /amplifiers/{id}/events:
+  /api/amplifiers/{id}/events:
     get:
       operationId: Get Amplifier Events
       parameters:
@@ -334,7 +334,7 @@ paths:
                   $ref: '#/components/schemas/AmplifierEvent'
         '404':
           description: ''
-  /amplifiers/{id}/commands:
+  /api/amplifiers/{id}/commands:
     post:
       operationId: Handle Amplifier Command
       parameters:
@@ -364,7 +364,7 @@ paths:
                 type: string
         '404':
           description: ''
-  /guitar-pedals:
+  /api/guitar-pedals:
     get:
       operationId: List Guitar Pedals
       responses:
@@ -376,7 +376,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/GuitarPedal'
-  /guitar-pedals/{id}/events:
+  /api/guitar-pedals/{id}/events:
     get:
       operationId: Get Guitar Pedal Events
       parameters:
@@ -396,7 +396,7 @@ paths:
                   $ref: '#/components/schemas/GuitarPedalEvent'
         '404':
           description: ''
-  /guitar-pedals/{id}/commands:
+  /api/guitar-pedals/{id}/commands:
     post:
       operationId: Handle Guitar Pedal Command
       parameters:

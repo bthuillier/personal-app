@@ -1,5 +1,11 @@
+set dotenv-load
+
 default:
     @just --list
+
+# Build the frontend and run the whole app (API + UI) on http://localhost:8080
+run: build-frontend
+    scala-cli run . --main-class App
 
 # Format backend and frontend
 format: format-backend format-frontend

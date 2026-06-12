@@ -20,7 +20,7 @@ const errorMiddleware: Middleware = {
   },
 };
 
-export const api = createClient<paths>({ baseUrl: "/api" });
+export const api = createClient<paths>();
 api.use(errorMiddleware);
 
 function showErrorToast(error: Error) {

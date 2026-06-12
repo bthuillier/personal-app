@@ -5,6 +5,7 @@ import sttp.tapir.*
 import cats.syntax.all.*
 import http.ErrorResponse
 import http.ErrorResponse.NotFound
+import http.apiEndpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.model.StatusCode
@@ -12,27 +13,27 @@ import sttp.model.StatusCode
 object Albums {
 
   val listAlbums =
-    endpoint.get
+    apiEndpoint.get
       .name("List Albums")
       .in("albums")
       .out(jsonBody[List[album.PartialAlbum]])
 
   val createAlbum =
-    endpoint.post
+    apiEndpoint.post
       .name("Create Album")
       .in("albums")
       .in(jsonBody[album.AlbumService.CreateAlbum])
       .out(emptyOutput)
 
   val getAlbumById =
-    endpoint.get
+    apiEndpoint.get
       .name("Get Album By ID")
       .in("albums" / path[String]("albumId"))
       .out(jsonBody[album.PartialAlbum])
       .errorOut(statusCode(StatusCode.NotFound).and(jsonBody[NotFound]))
 
   val addGenreToAlbum =
-    endpoint.post
+    apiEndpoint.post
       .name("Add Genre To Album")
       .in("albums" / path[String]("albumId") / "genres")
       .in(query[String]("genre"))
@@ -45,7 +46,7 @@ object Albums {
       )
 
   val removeGenreFromAlbum =
-    endpoint.delete
+    apiEndpoint.delete
       .name("Remove Genre From Album")
       .in("albums" / path[String]("albumId") / "genres")
       .in(query[String]("genre"))
@@ -58,7 +59,7 @@ object Albums {
       )
 
   val reviewAlbum =
-    endpoint.post
+    apiEndpoint.post
       .name("Review Album")
       .in("albums" / path[String]("albumId") / "review")
       .in(jsonBody[album.Review])

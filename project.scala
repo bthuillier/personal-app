@@ -18,6 +18,7 @@
 //> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.19
 //> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.19
 //> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.19
+//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.19
 
 //> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
 

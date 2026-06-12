@@ -1,6 +1,7 @@
 package guitargear.amplifier
 
 import cats.effect.IO
+import http.apiEndpoint
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.circe.*
@@ -9,7 +10,7 @@ import sttp.tapir.server.ServerEndpoint
 object AmplifierEndpoints {
 
   val listAmplifierEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("List Amplifiers")
       .in("amplifiers")
       .out(jsonBody[List[Amplifier]])
@@ -21,7 +22,7 @@ object AmplifierEndpoints {
   }
 
   val getAmplifierEventsEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("Get Amplifier Events")
       .in("amplifiers" / path[String]("id") / "events")
       .out(jsonBody[List[AmplifierEvent]])
@@ -37,7 +38,7 @@ object AmplifierEndpoints {
   }
 
   val handleAmplifierCommandEndpoint =
-    endpoint.post
+    apiEndpoint.post
       .name("Handle Amplifier Command")
       .in("amplifiers" / path[String]("id") / "commands")
       .in(jsonBody[AmplifierCommand])

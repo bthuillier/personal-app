@@ -7,28 +7,29 @@ object AlbumWishlists {
   import sttp.tapir.*
   import sttp.tapir.json.circe.*
   import sttp.tapir.server.ServerEndpoint
+  import http.apiEndpoint
 
   val listAlbums =
-    endpoint.get
+    apiEndpoint.get
       .name("List Wishlist Albums")
       .in("wishlist" / "albums")
       .out(jsonBody[List[WishlistAlbum]])
 
   val addAlbumToWishlist =
-    endpoint.post
+    apiEndpoint.post
       .name("Add Album to Wishlist")
       .in("wishlist" / "albums")
       .in(jsonBody[WishlistService.AddAlbumToWishlist])
       .out(emptyOutput)
 
   val confirmAlbumReceived =
-    endpoint.post
+    apiEndpoint.post
       .name("Confirm Album Received")
       .in("wishlist" / "albums" / path[String]("id") / "received")
       .out(emptyOutput)
 
   val orderAlbum =
-    endpoint.post
+    apiEndpoint.post
       .name("Order Album")
       .in("wishlist" / "albums" / path[String]("id") / "order")
       .out(emptyOutput)

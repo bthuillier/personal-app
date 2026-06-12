@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-    "/wishlist/albums": {
+    "/api/wishlist/albums": {
         parameters: {
             query?: never;
             header?: never;
@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/{id}/received": {
+    "/api/wishlist/albums/{id}/received": {
         parameters: {
             query?: never;
             header?: never;
@@ -36,7 +36,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wishlist/albums/{id}/order": {
+    "/api/wishlist/albums/{id}/order": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/albums": {
+    "/api/albums": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/albums/{albumId}": {
+    "/api/albums/{albumId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -84,7 +84,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/albums/{albumId}/genres": {
+    "/api/albums/{albumId}/genres": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/albums/{albumId}/review": {
+    "/api/albums/{albumId}/review": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +116,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars": {
+    "/api/guitars": {
         parameters: {
             query?: never;
             header?: never;
@@ -132,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{id}/events": {
+    "/api/guitars/{id}/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -148,7 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{id}/commands": {
+    "/api/guitars/{id}/commands": {
         parameters: {
             query?: never;
             header?: never;
@@ -164,7 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitars/{id}/string-recommendation": {
+    "/api/guitars/{id}/string-recommendation": {
         parameters: {
             query?: never;
             header?: never;
@@ -180,7 +180,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/amplifiers": {
+    "/api/amplifiers": {
         parameters: {
             query?: never;
             header?: never;
@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/amplifiers/{id}/events": {
+    "/api/amplifiers/{id}/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/amplifiers/{id}/commands": {
+    "/api/amplifiers/{id}/commands": {
         parameters: {
             query?: never;
             header?: never;
@@ -228,7 +228,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitar-pedals": {
+    "/api/guitar-pedals": {
         parameters: {
             query?: never;
             header?: never;
@@ -244,7 +244,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitar-pedals/{id}/events": {
+    "/api/guitar-pedals/{id}/events": {
         parameters: {
             query?: never;
             header?: never;
@@ -260,7 +260,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/guitar-pedals/{id}/commands": {
+    "/api/guitar-pedals/{id}/commands": {
         parameters: {
             query?: never;
             header?: never;

@@ -1,6 +1,7 @@
 package guitargear.pedal
 
 import cats.effect.IO
+import http.apiEndpoint
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.circe.*
@@ -9,7 +10,7 @@ import sttp.tapir.server.ServerEndpoint
 object GuitarPedals {
 
   val listGuitarPedalsEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("List Guitar Pedals")
       .in("guitar-pedals")
       .out(jsonBody[List[GuitarPedal]])
@@ -21,7 +22,7 @@ object GuitarPedals {
   }
 
   val getGuitarPedalEventsEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("Get Guitar Pedal Events")
       .in("guitar-pedals" / path[String]("id") / "events")
       .out(jsonBody[List[GuitarPedalEvent]])
@@ -37,7 +38,7 @@ object GuitarPedals {
   }
 
   val handleGuitarPedalCommandEndpoint =
-    endpoint.post
+    apiEndpoint.post
       .name("Handle Guitar Pedal Command")
       .in("guitar-pedals" / path[String]("id") / "commands")
       .in(jsonBody[GuitarPedalCommand])

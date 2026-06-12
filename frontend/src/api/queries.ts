@@ -4,7 +4,7 @@ import { api } from "./client";
 export const guitarsQuery = queryOptions({
   queryKey: ["guitars"],
   queryFn: async () => {
-    const { data } = await api.GET("/guitars");
+    const { data } = await api.GET("/api/guitars");
     return data!;
   },
 });
@@ -12,7 +12,7 @@ export const guitarsQuery = queryOptions({
 export const amplifiersQuery = queryOptions({
   queryKey: ["amplifiers"],
   queryFn: async () => {
-    const { data } = await api.GET("/amplifiers");
+    const { data } = await api.GET("/api/amplifiers");
     return data!;
   },
 });
@@ -20,7 +20,7 @@ export const amplifiersQuery = queryOptions({
 export const pedalsQuery = queryOptions({
   queryKey: ["guitar-pedals"],
   queryFn: async () => {
-    const { data } = await api.GET("/guitar-pedals");
+    const { data } = await api.GET("/api/guitar-pedals");
     return data!;
   },
 });
@@ -28,7 +28,7 @@ export const pedalsQuery = queryOptions({
 export const albumsQuery = queryOptions({
   queryKey: ["albums"],
   queryFn: async () => {
-    const { data } = await api.GET("/albums");
+    const { data } = await api.GET("/api/albums");
     return data!;
   },
 });
@@ -36,7 +36,7 @@ export const albumsQuery = queryOptions({
 export const wishlistQuery = queryOptions({
   queryKey: ["wishlist-albums"],
   queryFn: async () => {
-    const { data } = await api.GET("/wishlist/albums");
+    const { data } = await api.GET("/api/wishlist/albums");
     return data!;
   },
 });
@@ -45,7 +45,7 @@ export function guitarEventsQuery(id: string) {
   return queryOptions({
     queryKey: ["guitar-events", id],
     queryFn: async () => {
-      const { data } = await api.GET("/guitars/{id}/events", {
+      const { data } = await api.GET("/api/guitars/{id}/events", {
         params: { path: { id } },
       });
       return data!;

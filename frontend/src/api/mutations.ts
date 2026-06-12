@@ -6,7 +6,7 @@ export function useCreateAlbum() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (body: components["schemas"]["CreateAlbum"]) => {
-      await api.POST("/albums", { body });
+      await api.POST("/api/albums", { body });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
   });
@@ -16,7 +16,7 @@ export function useAddAlbumGenre(albumId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (genre: string) => {
-      await api.POST("/albums/{albumId}/genres", {
+      await api.POST("/api/albums/{albumId}/genres", {
         params: { path: { albumId }, query: { genre } },
       });
     },
@@ -28,7 +28,7 @@ export function useRemoveAlbumGenre(albumId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (genre: string) => {
-      await api.DELETE("/albums/{albumId}/genres", {
+      await api.DELETE("/api/albums/{albumId}/genres", {
         params: { path: { albumId }, query: { genre } },
       });
     },
@@ -40,7 +40,7 @@ export function useReviewAlbum(albumId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (body: components["schemas"]["Review"]) => {
-      await api.POST("/albums/{albumId}/review", {
+      await api.POST("/api/albums/{albumId}/review", {
         params: { path: { albumId } },
         body,
       });
@@ -53,7 +53,7 @@ export function useAddToWishlist() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {
-      await api.POST("/wishlist/albums", { body });
+      await api.POST("/api/wishlist/albums", { body });
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
@@ -64,7 +64,7 @@ export function useOrderWishlistAlbum() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      await api.POST("/wishlist/albums/{id}/order", {
+      await api.POST("/api/wishlist/albums/{id}/order", {
         params: { path: { id } },
       });
     },
@@ -77,7 +77,7 @@ export function useReceiveWishlistAlbum() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      await api.POST("/wishlist/albums/{id}/received", {
+      await api.POST("/api/wishlist/albums/{id}/received", {
         params: { path: { id } },
       });
     },
@@ -91,7 +91,7 @@ export function useStringRecommendation(id: string) {
     mutationFn: async (
       body: components["schemas"]["StringRecommendationRequest"],
     ) => {
-      const { data } = await api.POST("/guitars/{id}/string-recommendation", {
+      const { data } = await api.POST("/api/guitars/{id}/string-recommendation", {
         params: { path: { id } },
         body,
       });
@@ -104,7 +104,7 @@ export function useChangeGuitarStrings(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (body: components["schemas"]["ChangeStrings"]) => {
-      await api.POST("/guitars/{id}/commands", {
+      await api.POST("/api/guitars/{id}/commands", {
         params: { path: { id } },
         body,
       });

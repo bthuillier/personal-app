@@ -46,6 +46,18 @@ personal-app/
 
 ## Getting Started
 
+### Quick start (one command)
+
+With a `.env` file in place (see below), build the frontend and run everything from the backend:
+
+```bash
+just run
+```
+
+Then open `http://localhost:8080` — the backend serves both the API (under `/api`) and the built frontend (with SPA fallback to `index.html`). The frontend build directory can be overridden with the `FRONTEND_DIST` env var (defaults to `frontend/dist`).
+
+### Development setup (hot reload)
+
 ### 1. Set up environment
 
 Create a `.env` file at the project root:
@@ -59,7 +71,7 @@ The backend stores JSON files in this directory. It will be created if it doesn'
 ### 2. Start the backend
 
 ```bash
-scala-cli run .
+scala-cli run . --main-class App
 ```
 
 The API server starts on `http://localhost:8080`.
@@ -101,18 +113,20 @@ pnpm generate-api
 
 ### Endpoints
 
+All API endpoints are prefixed with `/api`, so the backend can also serve the frontend static files at the root path.
+
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/albums` | List all owned albums |
-| GET | `/wishlist/albums` | List wishlist albums |
-| POST | `/wishlist/albums` | Add album to wishlist |
-| POST | `/wishlist/albums/order` | Mark album as ordered |
-| POST | `/wishlist/albums/received` | Mark album as received (moves to collection) |
-| GET | `/guitars` | List all guitars |
-| GET | `/guitars/{serialNumber}/events` | Guitar event history |
-| POST | `/guitars/{serialNumber}/commands` | Execute command (e.g. ChangeStrings) |
-| GET | `/amplifiers` | List amplifiers |
-| GET | `/guitar-pedals` | List pedals |
+| GET | `/api/albums` | List all owned albums |
+| GET | `/api/wishlist/albums` | List wishlist albums |
+| POST | `/api/wishlist/albums` | Add album to wishlist |
+| POST | `/api/wishlist/albums/order` | Mark album as ordered |
+| POST | `/api/wishlist/albums/received` | Mark album as received (moves to collection) |
+| GET | `/api/guitars` | List all guitars |
+| GET | `/api/guitars/{serialNumber}/events` | Guitar event history |
+| POST | `/api/guitars/{serialNumber}/commands` | Execute command (e.g. ChangeStrings) |
+| GET | `/api/amplifiers` | List amplifiers |
+| GET | `/api/guitar-pedals` | List pedals |
 
 ## Data Storage
 

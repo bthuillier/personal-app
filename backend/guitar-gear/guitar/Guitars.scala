@@ -5,6 +5,7 @@ import cats.syntax.all.*
 import guitargear.strings.StringRecommendation
 import http.ErrorResponse
 import http.ErrorResponse.{BadRequest, NotFound}
+import http.apiEndpoint
 import io.circe.Codec
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -24,7 +25,7 @@ final case class StringRecommendationResponse(
 object Guitars {
 
   val listGuitarsEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("List Guitars")
       .in("guitars")
       .out(jsonBody[List[Guitar]])
@@ -36,7 +37,7 @@ object Guitars {
   }
 
   val getGuitarEventsEndpoint =
-    endpoint.get
+    apiEndpoint.get
       .name("Get Guitar Events")
       .in("guitars" / path[String]("id") / "events")
       .out(jsonBody[List[GuitarEvent]])
@@ -52,7 +53,7 @@ object Guitars {
   }
 
   val handleGuitarCommandEndpoint =
-    endpoint.post
+    apiEndpoint.post
       .name("Handle Guitar Command")
       .in("guitars" / path[String]("id") / "commands")
       .in(jsonBody[GuitarCommand])
@@ -69,7 +70,7 @@ object Guitars {
   }
 
   val recommendStringsEndpoint =
-    endpoint.post
+    apiEndpoint.post
       .name("Recommend Strings")
       .in("guitars" / path[String]("id") / "string-recommendation")
       .in(jsonBody[StringRecommendationRequest])
