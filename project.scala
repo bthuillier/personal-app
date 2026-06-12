@@ -13,12 +13,12 @@
 //> using dependency io.circe::circe-parser:0.14.15
 
 // tapir for api
-//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.13.19
-//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.13.19
-//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.19
-//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.19
-//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.19
-//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.19
+//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.13.20
+//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.13.21
+//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.21
+//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.21
+//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.21
+//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.21
 
 //> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
 
@@ -32,5 +32,5 @@
 //> using dependency org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r
 
 // test
-//> using test.dep org.scalameta::munit::1.3.0
+//> using test.dep org.scalameta::munit::1.3.3
 //> using test.dep org.typelevel::munit-cats-effect:2.2.0
