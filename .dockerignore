@@ -1,0 +1,14 @@
+.git
+.bsp
+.claude
+.metals
+.scala-build
+.vscode
+.env
+.env.*
+**/node_modules
+**/dist
+**/.DS_Store
+*.log
+data
+Dockerfile

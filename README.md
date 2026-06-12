@@ -90,6 +90,24 @@ The dev server starts on `http://localhost:5173` and proxies `/api` requests to 
 
 Navigate to `http://localhost:5173`.
 
+## Docker
+
+Build a self-contained image (builds the frontend and packages the backend as an assembly jar, served together on port 8080):
+
+```bash
+just docker-build        # or: docker build -t personal-app .
+```
+
+Run it with your data repository mounted at `/data`:
+
+```bash
+just docker-run
+# or manually:
+docker run --rm -p 8080:8080 -v /path/to/your/data-repo:/data personal-app
+```
+
+Every data change is committed to git, so `DB_BASE_PATH` must live inside a git repository. The container initializes one at `/data` on first run if none is found. If your data directory is a subdirectory of the repo (e.g. `repo/db`), mount the repo root and point the app at the subdirectory with `-e DB_BASE_PATH=/data/db` — `just docker-run` figures this out automatically from `$DB_BASE_PATH` in `.env`.
+
 ## API
 
 All endpoints are documented in `openapi.yaml`. To regenerate it after changing backend endpoints:

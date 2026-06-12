@@ -34,6 +34,17 @@ build-backend:
 build-frontend:
     cd frontend && pnpm install && pnpm build
 
+# Build the docker image (frontend + backend, served on port 8080)
+docker-build:
+    docker build -t personal-app .
+
+# Run the docker image, mounting the git repo containing $DB_BASE_PATH at /data
+docker-run:
+    docker run --rm -p 8080:8080 \
+      -v "$(git -C "$DB_BASE_PATH" rev-parse --show-toplevel):/data" \
+      -e DB_BASE_PATH="/data/$(git -C "$DB_BASE_PATH" rev-parse --show-prefix)" \
+      personal-app
+
 # Generate OpenAPI spec and frontend types
 generate-openapi: generate-openapi-backend generate-openapi-ui
 
