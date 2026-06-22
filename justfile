@@ -45,6 +45,24 @@ docker-run:
       -e DB_BASE_PATH="/data/$(git -C "$DB_BASE_PATH" rev-parse --show-prefix)" \
       personal-app
 
+# Rebuild the image and (re)start it as a persistent service that comes back
+# whenever Docker is running. Run this whenever you want the latest build live.
+redeploy: docker-build
+    -docker rm -f personal-app
+    docker run -d --name personal-app --restart unless-stopped -p 8080:8080 \
+      -v "$(git -C "$DB_BASE_PATH" rev-parse --show-toplevel):/data" \
+      -e DB_BASE_PATH="/data/$(git -C "$DB_BASE_PATH" rev-parse --show-prefix)" \
+      personal-app
+    @echo "personal-app is running on http://localhost:8080"
+
+# Stop and remove the persistent service
+docker-stop:
+    -docker rm -f personal-app
+
+# Tail logs from the persistent service
+docker-logs:
+    docker logs -f personal-app
+
 # Generate OpenAPI spec and frontend types
 generate-openapi: generate-openapi-backend generate-openapi-ui
 

@@ -108,6 +108,21 @@ docker run --rm -p 8080:8080 -v /path/to/your/data-repo:/data personal-app
 
 Every data change is committed to git, so `DB_BASE_PATH` must live inside a git repository. The container initializes one at `/data` on first run if none is found. If your data directory is a subdirectory of the repo (e.g. `repo/db`), mount the repo root and point the app at the subdirectory with `-e DB_BASE_PATH=/data/db` — `just docker-run` figures this out automatically from `$DB_BASE_PATH` in `.env`.
 
+### Run it as a persistent service
+
+To keep the app running automatically whenever Docker is running (including after a reboot, once Docker Desktop relaunches):
+
+```bash
+just redeploy
+```
+
+This rebuilds the image, removes any previous instance, and starts a detached container named `personal-app` with `--restart unless-stopped`. The container stays up across Docker/host restarts and only stops if you stop it explicitly. Re-run `just redeploy` whenever you want the **latest build** live — a running container keeps using the image it was created with, so it won't pick up code changes on its own.
+
+```bash
+just docker-logs   # tail logs
+just docker-stop   # stop and remove the service
+```
+
 ## API
 
 All endpoints are documented in `openapi.yaml`. To regenerate it after changing backend endpoints:
