@@ -9,16 +9,16 @@
 //> using dependency co.fs2::fs2-core:3.13.0
 
 // json
-//> using dependency io.circe::circe-core:0.14.15
-//> using dependency io.circe::circe-parser:0.14.15
+//> using dependency io.circe::circe-core:0.14.16
+//> using dependency io.circe::circe-parser:0.14.16
 
 // tapir for api
-//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.13.23
-//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.13.23
-//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.23
-//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.23
-//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.23
-//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.23
+//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.13.25
+//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.13.25
+//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.25
+//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.25
+//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.25
+//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.25
 
 //> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
 
