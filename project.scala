@@ -9,24 +9,24 @@
 //> using dependency co.fs2::fs2-core:3.14.0
 
 // json
-//> using dependency io.circe::circe-core:0.14.16
-//> using dependency io.circe::circe-parser:0.14.16
+//> using dependency io.circe::circe-core:0.14.17
+//> using dependency io.circe::circe-parser:0.14.17
 
 // tapir for api
-//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.13.31
-//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.13.31
-//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.13.31
-//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.13.31
-//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.13.31
-//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.13.31
+//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.14.0
 
-//> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.11.10
+//> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.12.0
 
 // logging
 //> using dependency org.typelevel::log4cats-core:2.8.0
 //> using dependency org.typelevel::log4cats-slf4j:2.8.0
-//> using dependency org.slf4j:slf4j-api:2.0.19
-//> using dependency org.slf4j:slf4j-simple:2.0.19
+//> using dependency org.slf4j:slf4j-api:2.0.20
+//> using dependency org.slf4j:slf4j-simple:2.0.20
 
 // git
 //> using dependency org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r
