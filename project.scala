@@ -13,14 +13,14 @@
 //> using dependency io.circe::circe-parser:0.14.17
 
 // tapir for api
-//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.14.0
-//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.14.0
-//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.14.0
-//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.14.0
-//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.14.0
-//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.14.0
+//> using dependency com.softwaremill.sttp.tapir::tapir-core:1.14.1
+//> using dependency com.softwaremill.sttp.tapir::tapir-cats:1.14.1
+//> using dependency com.softwaremill.sttp.tapir::tapir-json-circe:1.14.1
+//> using dependency com.softwaremill.sttp.tapir::tapir-netty-server-cats:1.14.1
+//> using dependency com.softwaremill.sttp.tapir::tapir-openapi-docs:1.14.1
+//> using dependency com.softwaremill.sttp.tapir::tapir-files:1.14.1
 
-//> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.12.0
+//> using dependency com.softwaremill.sttp.apispec::openapi-circe-yaml:0.12.1
 
 // logging
 //> using dependency org.typelevel::log4cats-core:2.8.0
