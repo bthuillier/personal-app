@@ -47,7 +47,7 @@ export function PedalListPage() {
   );
 
   const columns: Column<GuitarPedal>[] = [
-    { header: "Model", accessor: "model" },
+    { header: "Model", accessor: "model", primary: true },
     { header: "Brand", accessor: "brand", render: (row) => formatEnum(row.brand) },
     { header: "Year", accessor: "year" },
     {

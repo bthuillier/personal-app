@@ -37,7 +37,7 @@ export function AmplifierListPage() {
   );
 
   const columns: Column<Amplifier>[] = [
-    { header: "Model", accessor: "model" },
+    { header: "Model", accessor: "model", primary: true },
     { header: "Brand", accessor: "brand", render: (row) => formatEnum(row.brand) },
     { header: "Year", accessor: "year" },
     {

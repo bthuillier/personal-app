@@ -35,7 +35,7 @@ export function GuitarListPage() {
     {
       header: "Guitar",
       accessor: "model",
-      truncate: true,
+      primary: true,
       render: (row) => {
         const label = `${formatEnum(row.brand)} ${row.model}`;
         return (

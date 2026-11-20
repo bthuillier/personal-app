@@ -18,6 +18,10 @@ export interface Column<T> {
   sortable?: boolean;
   sortFn?: (a: T, b: T) => number;
   truncate?: boolean;
+  /** Main column: takes remaining width, emphasized, wraps long text (max 2 lines). */
+  primary?: boolean;
+  /** De-emphasized secondary info (muted color). */
+  muted?: boolean;
 }
 
 type SortDirection = "asc" | "desc";
@@ -116,9 +120,29 @@ export function DataTable<T>({
     return null;
   }
 
+  function renderCellContent(col: Column<T>, row: T): ReactNode {
+    const content = renderCell(col, row);
+    const title = typeof content === "string" ? content : undefined;
+    if (col.primary) {
+      return (
+        <div className="line-clamp-2 break-words font-medium" title={title}>
+          {content}
+        </div>
+      );
+    }
+    if (col.truncate) {
+      return (
+        <div className="max-w-xs truncate" title={title}>
+          {content}
+        </div>
+      );
+    }
+    return content;
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <Table className="table-fixed">
+      <Table>
         <TableHeader>
           <TableRow>
             {columns.map((col) => (
@@ -126,6 +150,7 @@ export function DataTable<T>({
                 key={col.header}
                 className={cn(
                   isColumnSortable(col) && "cursor-pointer select-none",
+                  col.primary && "w-full min-w-48",
                 )}
                 onClick={() => toggleSort(col)}
               >
@@ -157,12 +182,14 @@ export function DataTable<T>({
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.header}>
-                    {col.truncate ? (
-                      <div className="truncate">{renderCell(col, row)}</div>
-                    ) : (
-                      renderCell(col, row)
+                  <TableCell
+                    key={col.header}
+                    className={cn(
+                      col.primary && "whitespace-normal",
+                      col.muted && "text-muted-foreground",
                     )}
+                  >
+                    {renderCellContent(col, row)}
                   </TableCell>
                 ))}
               </TableRow>

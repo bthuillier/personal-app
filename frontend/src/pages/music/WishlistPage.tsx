@@ -42,10 +42,10 @@ export function WishlistPage() {
   }
 
   const columns: Column<WishlistAlbum>[] = [
-    { header: "Album", accessor: "name" },
-    { header: "Artist", accessor: "artist" },
+    { header: "Album", accessor: "name", primary: true },
+    { header: "Artist", accessor: "artist", truncate: true },
     { header: "Format", accessor: "format" },
-    { header: "Release Date", accessor: "releaseDate" },
+    { header: "Release Date", accessor: "releaseDate", muted: true },
     {
       header: "Status",
       render: (row) => (
