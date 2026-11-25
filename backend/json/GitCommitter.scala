@@ -21,12 +21,21 @@ class GitCommitter private (
    * via a semaphore to prevent concurrent git index access.
    */
   def commitFile(filePath: String, message: String): IO[Unit] =
+    commitFiles(List(filePath), message)
+
+  /**
+   * Commits several files in a single commit (deleted files are staged as
+   * removals), so a delete + create — e.g. a renamed entity — lands as one
+   * commit.
+   */
+  def commitFiles(filePaths: List[String], message: String): IO[Unit] =
     lock.permit.use { _ =>
       IO.blocking {
-        val file = new File(filePath).getCanonicalFile
-        val relativePath = repoRoot.relativize(file.toPath).toString
-
-        git.add().addFilepattern(relativePath).call()
+        filePaths.foreach { filePath =>
+          val file = new File(filePath).getCanonicalFile
+          val relativePath = repoRoot.relativize(file.toPath).toString
+          git.add().addFilepattern(relativePath).call()
+        }
 
         val status = git.status().call()
         val hasChanges = !status.getChanged().isEmpty ||
@@ -47,7 +56,7 @@ class GitCommitter private (
         else IO.unit
       }.adaptError { case e =>
         new RuntimeException(
-          s"Failed to commit file: $filePath — ${e.getMessage}",
+          s"Failed to commit files: ${filePaths.mkString(", ")} — ${e.getMessage}",
           e
         )
       }

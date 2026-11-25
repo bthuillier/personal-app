@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/albums/{albumId}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["Update Album Details"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/guitars": {
         parameters: {
             query?: never;
@@ -289,6 +305,12 @@ export interface components {
             releaseDate: string;
             status: components["schemas"]["WishlistStatus"];
         };
+        /** AlbumDetails */
+        AlbumDetails: {
+            format: components["schemas"]["AlbumFormat"];
+            /** Format: date */
+            releaseDate: string;
+        };
         /**
          * AlbumFormat
          * @enum {string}
@@ -338,6 +360,10 @@ export interface components {
              * @enum {string}
              */
             type: "ChangeStrings";
+        };
+        /** Conflict */
+        Conflict: {
+            message: string;
         };
         /** CreateAlbum */
         CreateAlbum: {
@@ -974,6 +1000,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotFound"];
+                };
+            };
+        };
+    };
+    "Update Album Details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                albumId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumDetails"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartialAlbum"];
+                };
+            };
+            /** @description Invalid value for: body */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFound"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conflict"];
                 };
             };
         };

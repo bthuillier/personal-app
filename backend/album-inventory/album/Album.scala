@@ -60,6 +60,9 @@ final case class PartialAlbum(
   def setReview(newReview: Review): PartialAlbum =
     this.copy(review = Some(newReview))
 
+  def updateDetails(details: AlbumDetails): PartialAlbum =
+    this.copy(format = details.format, releaseDate = details.releaseDate)
+
   def removeGenre(genreToRemove: String): PartialAlbum =
     genre match {
       case Some(genres) =>
@@ -68,6 +71,12 @@ final case class PartialAlbum(
     }
 
 }
+
+final case class AlbumDetails(
+    format: AlbumFormat,
+    releaseDate: LocalDate
+) derives Codec.AsObject,
+      Schema
 
 object PartialAlbum {
 

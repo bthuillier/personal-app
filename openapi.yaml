@@ -206,6 +206,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFound'
+  /api/albums/{albumId}/details:
+    put:
+      operationId: Update Album Details
+      parameters:
+      - name: albumId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumDetails'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAlbum'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '409':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conflict'
   /api/guitars:
     get:
       operationId: List Guitars
@@ -449,6 +489,18 @@ components:
           format: date
         status:
           $ref: '#/components/schemas/WishlistStatus'
+    AlbumDetails:
+      title: AlbumDetails
+      type: object
+      required:
+      - format
+      - releaseDate
+      properties:
+        format:
+          $ref: '#/components/schemas/AlbumFormat'
+        releaseDate:
+          type: string
+          format: date
     AlbumFormat:
       title: AlbumFormat
       type: string
@@ -553,6 +605,14 @@ components:
         type:
           type: string
           const: ChangeStrings
+    Conflict:
+      title: Conflict
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
     CreateAlbum:
       title: CreateAlbum
       type: object

@@ -49,6 +49,20 @@ export function useReviewAlbum(albumId: string) {
   });
 }
 
+export function useUpdateAlbumDetails(albumId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: components["schemas"]["AlbumDetails"]) => {
+      const { data } = await api.PUT("/api/albums/{albumId}/details", {
+        params: { path: { albumId } },
+        body,
+      });
+      return data!;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
+  });
+}
+
 export function useAddToWishlist() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -49,6 +49,68 @@ class AlbumService(
       s"Set review (rating ${review.rating}) on album '${updated.name}'"
     }
 
+  /**
+   * Updates format and release date and returns the updated album.
+   *
+   * Changing the format behaves like deleting the album and re-creating it:
+   * the album moves to the id `create` would give it (derived from name,
+   * artist and format), keeping its genres and review. Fails if another entry
+   * already holds the same album in the target format.
+   */
+  def updateDetails(
+      albumId: String,
+      details: AlbumDetails
+  ): IO[PartialAlbum] =
+    cache.evalModify { state =>
+      state.get(albumId) match {
+        case None => IO.raiseError(Errors.albumNotFound(albumId))
+        case Some(album) if album.format == details.format =>
+          val updated = album.updateDetails(details)
+          persist(updated, detailsCommitMessage(album, updated))
+            .as(state.updated(albumId, updated) -> updated)
+        case Some(album) =>
+          val newId = AlbumService.idFor(album.name, album.artist, details.format)
+          val duplicate = state.contains(newId) || state.values.exists { other =>
+            other.id != albumId &&
+            other.name == album.name &&
+            other.artist == album.artist &&
+            other.format == details.format
+          }
+          if (duplicate)
+            IO.raiseError(
+              AlbumAlreadyExistsException(album.name, album.artist, details.format)
+            )
+          else {
+            val updated = album.updateDetails(details).copy(id = newId)
+            val move = for {
+              newPath <- table.create(newId, updated)
+              oldPath <- table.delete(albumId)
+              _ <- commitAll(
+                List(newPath, oldPath),
+                detailsCommitMessage(album, updated)
+              )
+            } yield ()
+            move.as((state - albumId).updated(newId, updated) -> updated)
+          }
+      }
+    }
+
+  private def detailsCommitMessage(
+      before: PartialAlbum,
+      after: PartialAlbum
+  ): String = {
+    val changes = List(
+      Option.when(before.format != after.format)(
+        s"format ${before.format} -> ${after.format}"
+      ),
+      Option.when(before.releaseDate != after.releaseDate)(
+        s"release date ${before.releaseDate} -> ${after.releaseDate}"
+      )
+    ).flatten
+    val summary = if (changes.isEmpty) "no changes" else changes.mkString(", ")
+    s"Update album '${after.name}': $summary"
+  }
+
   def create(request: AlbumService.CreateAlbum): IO[Unit] =
     add(request.toAlbum)
 
@@ -69,15 +131,23 @@ class AlbumService(
     table.update(album.id, album).flatMap(commit(_, msg))
 
   private def commit(path: java.nio.file.Path, msg: String): IO[Unit] =
+    commitAll(List(path), msg)
+
+  private def commitAll(paths: List[java.nio.file.Path], msg: String): IO[Unit] =
     git
-      .commitFile(path.toString, msg)
+      .commitFiles(paths.map(_.toString), msg)
       .handleErrorWith { e =>
-        logger.warn(s"Git commit failed for $path — ${e.getMessage}")
+        logger.warn(
+          s"Git commit failed for ${paths.mkString(", ")} — ${e.getMessage}"
+        )
       }
 
 }
 
 object AlbumService {
+
+  def idFor(name: String, artist: String, format: AlbumFormat): String =
+    GenerateId.makeId(name, artist, format.toString)()
 
   final case class CreateAlbum(
       name: String,
@@ -88,7 +158,7 @@ object AlbumService {
         Schema {
     def toAlbum: PartialAlbum =
       PartialAlbum(
-        GenerateId.makeId(name, artist, format.toString)(),
+        AlbumService.idFor(name, artist, format),
         name,
         artist,
         format,

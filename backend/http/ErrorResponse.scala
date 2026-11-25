@@ -15,6 +15,9 @@ object ErrorResponse {
   case class BadRequest(message: String) extends ErrorResponse
       derives Codec.AsObject,
         Schema
+  case class Conflict(message: String) extends ErrorResponse
+      derives Codec.AsObject,
+        Schema
   case class InternalServerError(message: String) extends ErrorResponse
       derives Codec.AsObject,
         Schema
@@ -24,6 +27,9 @@ object ErrorResponse {
 
   def badRequestVariant =
     oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest]))
+
+  def conflictVariant =
+    oneOfVariant(statusCode(StatusCode.Conflict).and(jsonBody[Conflict]))
 
   def internalServerErrorVariant =
     oneOfVariant(

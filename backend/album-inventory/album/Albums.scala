@@ -66,13 +66,27 @@ object Albums {
       .out(emptyOutput)
       .errorOut(statusCode(StatusCode.NotFound).and(jsonBody[NotFound]))
 
+  val updateAlbumDetails =
+    apiEndpoint.put
+      .name("Update Album Details")
+      .in("albums" / path[String]("albumId") / "details")
+      .in(jsonBody[album.AlbumDetails])
+      .out(jsonBody[album.PartialAlbum])
+      .errorOut(
+        oneOf[ErrorResponse](
+          ErrorResponse.notFoundVariant,
+          ErrorResponse.conflictVariant
+        )
+      )
+
   val endpointDefininitions = List(
     listAlbums,
     createAlbum,
     getAlbumById,
     addGenreToAlbum,
     removeGenreFromAlbum,
-    reviewAlbum
+    reviewAlbum,
+    updateAlbumDetails
   )
 
   private def listAlbumsLogic(
@@ -139,6 +153,21 @@ object Albums {
         }
     }
 
+  private def updateAlbumDetailsLogic(
+      service: album.AlbumService
+  ): ServerEndpoint[Any, IO] =
+    updateAlbumDetails.serverLogic { case (albumId, details) =>
+      service
+        .updateDetails(albumId, details)
+        .map(_.asRight[ErrorResponse])
+        .recover {
+          case AlbumNotFoundException(_) =>
+            Left(NotFound(s"Album with id $albumId not found"))
+          case e: AlbumAlreadyExistsException =>
+            Left(ErrorResponse.Conflict(e.getMessage))
+        }
+    }
+
   def endpoints(service: album.AlbumService): List[ServerEndpoint[Any, IO]] =
     List(
       listAlbumsLogic(service),
@@ -146,7 +175,8 @@ object Albums {
       getAlbumByIdLogic(service),
       addGenreToAlbumLogic(service),
       removeGenreFromAlbumLogic(service),
-      reviewAlbumLogic(service)
+      reviewAlbumLogic(service),
+      updateAlbumDetailsLogic(service)
     )
 
 }

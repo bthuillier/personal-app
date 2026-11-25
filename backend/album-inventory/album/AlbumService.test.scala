@@ -214,6 +214,86 @@ class AlbumServiceTest extends CatsEffectSuite with GitRepoFixture {
     }
   }
 
+  tempRepo.test("updateDetails with a new format moves the album to its new id") {
+    repoDir =>
+      val details = AlbumDetails(AlbumFormat.CD, LocalDate.of(1973, 3, 24))
+      val newId = AlbumService.idFor(sampleAlbum.name, sampleAlbum.artist, AlbumFormat.CD)
+      for {
+        service <- createService(repoDir)
+        _ <- service.add(sampleAlbum.copy(genre = Some(NonEmptySet.one("Rock"))))
+        returned <- service.updateDetails(sampleAlbum.id, details)
+        oldEntry <- service.getById(sampleAlbum.id)
+        album <- service.getById(newId)
+        reloaded <- createService(repoDir).flatMap(_.list)
+        gitClean <- IO.blocking(
+          org.eclipse.jgit.api.Git.open(repoDir.toFile).status().call().isClean
+        )
+      } yield {
+        assertEquals(returned.id, newId)
+        assertEquals(oldEntry, None)
+        assertEquals(album, Some(returned))
+        assertEquals(album.map(_.format), Some(AlbumFormat.CD))
+        assertEquals(album.map(_.releaseDate), Some(LocalDate.of(1973, 3, 24)))
+        assertEquals(album.flatMap(_.genre), Some(NonEmptySet.one("Rock")))
+        assertEquals(reloaded, List(returned))
+        assert(gitClean, "old file deletion and new file should both be committed")
+      }
+  }
+
+  tempRepo.test("updateDetails with the same format keeps the id") { repoDir =>
+    val details = AlbumDetails(AlbumFormat.Vinyl, LocalDate.of(1973, 3, 24))
+    for {
+      service <- createService(repoDir)
+      _ <- service.add(sampleAlbum)
+      returned <- service.updateDetails(sampleAlbum.id, details)
+      album <- service.getById(sampleAlbum.id)
+    } yield {
+      assertEquals(returned.id, sampleAlbum.id)
+      assertEquals(album.map(_.releaseDate), Some(LocalDate.of(1973, 3, 24)))
+    }
+  }
+
+  tempRepo.test("updateDetails fails when album does not exist") { repoDir =>
+    val details = AlbumDetails(AlbumFormat.CD, LocalDate.of(1973, 3, 1))
+    for {
+      service <- createService(repoDir)
+      result <- service.updateDetails("missing-id", details).attempt
+    } yield result match {
+      case Left(_: AlbumNotFoundException) => ()
+      case other => fail(s"expected AlbumNotFoundException, got $other")
+    }
+  }
+
+  tempRepo.test(
+    "updateDetails rejects a format already held by another entry of the same album"
+  ) { repoDir =>
+    val details = AlbumDetails(AlbumFormat.Vinyl, anotherAlbum.releaseDate)
+    for {
+      service <- createService(repoDir)
+      _ <- service.add(anotherAlbum)
+      _ <- service.add(vinylVersionAlbum)
+      result <- service.updateDetails(anotherAlbum.id, details).attempt
+      album <- service.getById(anotherAlbum.id)
+    } yield {
+      result match {
+        case Left(_: AlbumAlreadyExistsException) => ()
+        case other => fail(s"expected AlbumAlreadyExistsException, got $other")
+      }
+      assertEquals(album.map(_.format), Some(AlbumFormat.CD))
+    }
+  }
+
+  tempRepo.test("updateDetails allows changing only the release date") { repoDir =>
+    val details = AlbumDetails(AlbumFormat.CD, LocalDate.of(2019, 9, 27))
+    for {
+      service <- createService(repoDir)
+      _ <- service.add(anotherAlbum)
+      _ <- service.add(vinylVersionAlbum)
+      _ <- service.updateDetails(anotherAlbum.id, details)
+      album <- service.getById(anotherAlbum.id)
+    } yield assertEquals(album.map(_.releaseDate), Some(LocalDate.of(2019, 9, 27)))
+  }
+
   test("Rating.from accepts values within [0, 10]") {
     assert(Rating.from(0).isRight)
     assert(Rating.from(10).isRight)

@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { albumsQuery } from "@/api/queries";
-import { useReviewAlbum } from "@/api/mutations";
+import { useReviewAlbum, useUpdateAlbumDetails } from "@/api/mutations";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/StarRating";
 import { ReviewEditor, MarkdownView } from "@/components/ReviewEditor";
+import { AlbumDetailsEditor } from "./AlbumDetailsEditor";
 
 export function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: albums = [], isLoading } = useQuery(albumsQuery);
   const [editing, setEditing] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
+  const navigate = useNavigate();
 
   const album = useMemo(
     () => albums.find((a) => a.id === id),
@@ -18,6 +21,7 @@ export function AlbumDetailPage() {
   );
 
   const reviewMutation = useReviewAlbum(id ?? "");
+  const detailsMutation = useUpdateAlbumDetails(id ?? "");
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading...</p>;
@@ -47,9 +51,36 @@ export function AlbumDetailPage() {
           &larr; Back to Albums
         </Link>
         <h2 className="text-xl font-semibold">{album.name}</h2>
-        <p className="text-sm text-muted-foreground">
-          {album.artist} &middot; {album.format} &middot; {album.releaseDate}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            {album.artist} &middot; {album.format} &middot; {album.releaseDate}
+          </p>
+          {!editingDetails && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditingDetails(true)}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+        {editingDetails && (
+          <div className="mt-2">
+            <AlbumDetailsEditor
+              initial={{ format: album.format, releaseDate: album.releaseDate }}
+              onCancel={() => setEditingDetails(false)}
+              onSave={async (details) => {
+                const updated = await detailsMutation.mutateAsync(details);
+                setEditingDetails(false);
+                // A format change gives the album a new id.
+                if (updated.id !== album.id) {
+                  navigate(`/music/albums/${updated.id}`, { replace: true });
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
 
       <section className="rounded-lg border border-border p-5">

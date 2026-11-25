@@ -47,27 +47,31 @@ class FileTable[F[_]: Async: FsFiles, E: Encoder: Decoder] private (
 
   def find(f: E => Boolean): F[Option[E]] = entities.find(f).compile.last
 
-  def delete(id: String): F[Path] =
+  def delete(id: String): F[Path] = {
     val p = filePath(id)
     withLock(FsFiles[F].delete(p)).as(p.toNioPath)
+  }
 
-  def update(id: String, updateF: E => E): F[Path] =
+  def update(id: String, updateF: E => E): F[Path] = {
     val p = filePath(id)
     withLock(get(id).flatMap(e => writeEntity(p, updateF(e), Flags.Write))).as(p.toNioPath)
+  }
 
   def update(id: String, entity: E): F[Path] = update(id, _ => entity)
 
-  def create(id: String, entity: E): F[Path] =
+  def create(id: String, entity: E): F[Path] = {
     val p = filePath(id)
     withLock(writeEntity(p, entity, Flags(Flag.Write, Flag.CreateNew))).as(p.toNioPath)
+  }
 
 }
 
 object FileTable {
-  def apply[F[_]: Async: FsFiles, E: Encoder: Decoder](parentPath: FsPath, name: String): F[FileTable[F, E]] =
+  def apply[F[_]: Async: FsFiles, E: Encoder: Decoder](parentPath: FsPath, name: String): F[FileTable[F, E]] = {
     val tablePath = parentPath / name
     FsFiles[F].createDirectories(tablePath) *>
       Mutex[F].map(new FileTable[F, E](name, tablePath, _))
+  }
 }
 
 private def listSubdirectoryNames[F[_]: Concurrent: FsFiles](path: FsPath): F[List[String]] =
@@ -87,9 +91,10 @@ class FileDB[F[_]: Async: FsFiles] private (val name: String, dbFsPath: FsPath) 
 }
 
 object FileDB {
-  def apply[F[_]: Async: FsFiles](parentPath: FsPath, name: String): F[FileDB[F]] =
+  def apply[F[_]: Async: FsFiles](parentPath: FsPath, name: String): F[FileDB[F]] = {
     val dbPath = parentPath / name
     FsFiles[F].createDirectories(dbPath).as(new FileDB[F](name, dbPath))
+  }
 }
 
 class FileDBEngine[F[_]: Async: FsFiles] private (fullFsPath: FsPath) {
@@ -102,7 +107,8 @@ class FileDBEngine[F[_]: Async: FsFiles] private (fullFsPath: FsPath) {
 }
 
 object FileDBEngine {
-  def apply[F[_]: Async: FsFiles](rootPath: Path, dbRelativePath: Path): F[FileDBEngine[F]] =
+  def apply[F[_]: Async: FsFiles](rootPath: Path, dbRelativePath: Path): F[FileDBEngine[F]] = {
     val enginePath = FsPath.fromNioPath(rootPath.resolve(dbRelativePath))
     FsFiles[F].createDirectories(enginePath).as(new FileDBEngine[F](enginePath))
+  }
 }
