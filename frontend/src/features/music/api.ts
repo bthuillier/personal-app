@@ -1,42 +1,36 @@
-import {
-  useMutation,
-  useQueryClient,
-  type QueryKey,
-} from "@tanstack/react-query";
-import { api } from "./client";
-import {
-  albumsQuery,
-  guitarEventsQuery,
-  guitarsQuery,
-  wishlistQuery,
-} from "./queries";
-import type { components } from "./schema";
+import { queryOptions } from "@tanstack/react-query";
+import { api } from "@/api/client";
+import { useInvalidatingMutation } from "@/api/useInvalidatingMutation";
+import type {
+  AddAlbumToWishlist,
+  AlbumDetails,
+  CreateAlbum,
+  Review,
+} from "./types";
 
-type Schemas = components["schemas"];
+// ---------- Queries ----------
 
-/**
- * A mutation that refetches the given queries once it succeeds. Keys come
- * from `queries.ts`, so a renamed key can't silently stop invalidating.
- */
-function useInvalidatingMutation<TVariables, TData = void>(
-  mutationFn: (variables: TVariables) => Promise<TData>,
-  invalidates: QueryKey[],
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn,
-    onSuccess: () =>
-      Promise.all(
-        invalidates.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-      ),
-  });
-}
+export const albumsQuery = queryOptions({
+  queryKey: ["albums"],
+  queryFn: async () => {
+    const { data } = await api.GET("/api/albums");
+    return data!;
+  },
+});
+
+export const wishlistQuery = queryOptions({
+  queryKey: ["wishlist-albums"],
+  queryFn: async () => {
+    const { data } = await api.GET("/api/wishlist/albums");
+    return data!;
+  },
+});
 
 // ---------- Albums ----------
 
 export function useCreateAlbum() {
   return useInvalidatingMutation(
-    async (body: Schemas["CreateAlbum"]) => {
+    async (body: CreateAlbum) => {
       await api.POST("/api/albums", { body });
     },
     [albumsQuery.queryKey],
@@ -67,7 +61,7 @@ export function useRemoveAlbumGenre(albumId: string) {
 
 export function useReviewAlbum(albumId: string) {
   return useInvalidatingMutation(
-    async (body: Schemas["Review"]) => {
+    async (body: Review) => {
       await api.POST("/api/albums/{albumId}/review", {
         params: { path: { albumId } },
         body,
@@ -80,7 +74,7 @@ export function useReviewAlbum(albumId: string) {
 /** Resolves with the updated album: a format change gives it a new id. */
 export function useUpdateAlbumDetails(albumId: string) {
   return useInvalidatingMutation(
-    async (body: Schemas["AlbumDetails"]) => {
+    async (body: AlbumDetails) => {
       const { data } = await api.PUT("/api/albums/{albumId}/details", {
         params: { path: { albumId } },
         body,
@@ -95,7 +89,7 @@ export function useUpdateAlbumDetails(albumId: string) {
 
 export function useAddToWishlist() {
   return useInvalidatingMutation(
-    async (body: Schemas["AddAlbumToWishlist"]) => {
+    async (body: AddAlbumToWishlist) => {
       await api.POST("/api/wishlist/albums", { body });
     },
     [wishlistQuery.queryKey],
@@ -122,32 +116,5 @@ export function useReceiveWishlistAlbum() {
       });
     },
     [wishlistQuery.queryKey, albumsQuery.queryKey],
-  );
-}
-
-// ---------- Guitars ----------
-
-/** Read-only computation: nothing to invalidate. */
-export function useStringRecommendation(id: string) {
-  return useMutation({
-    mutationFn: async (body: Schemas["StringRecommendationRequest"]) => {
-      const { data } = await api.POST("/api/guitars/{id}/string-recommendation", {
-        params: { path: { id } },
-        body,
-      });
-      return data!;
-    },
-  });
-}
-
-export function useChangeGuitarStrings(id: string) {
-  return useInvalidatingMutation(
-    async (body: Schemas["ChangeStrings"]) => {
-      await api.POST("/api/guitars/{id}/commands", {
-        params: { path: { id } },
-        body,
-      });
-    },
-    [guitarsQuery.queryKey, guitarEventsQuery(id).queryKey],
   );
 }

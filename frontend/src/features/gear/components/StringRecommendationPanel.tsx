@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { components } from "@/api/schema";
-import { useStringRecommendation } from "@/api/mutations";
+import { useStringRecommendation } from "@/features/gear/api";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,14 +21,16 @@ import {
   formatNote,
   getTuningName,
   tuningsForStringCount,
-} from "@/lib/tuning";
-import { formatStringSpec } from "@/lib/strings";
+} from "@/features/gear/lib/tuning";
+import { formatStringSpec } from "@/features/gear/lib/strings";
 import { cn } from "@/lib/utils";
-import type { AppliedRecommendation } from "./GuitarDetailPage";
 import { Panel } from "@/components/display/Panel";
+import type {
+  AppliedRecommendation,
+  Guitar,
+  StringRecommendation,
+} from "@/features/gear/types";
 
-type Guitar = components["schemas"]["Guitar"];
-type StringRecommendation = components["schemas"]["StringRecommendation"];
 
 const NYXL_BRAND = "D'Addario NYXL";
 

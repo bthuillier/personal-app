@@ -1354,3 +1354,37 @@ export interface operations {
         };
     };
 }
+type FlattenedDeepRequired<T> = {
+    [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
+};
+type ReadonlyArray<T> = [
+    Exclude<T, undefined>
+] extends [
+    unknown[]
+] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const albumFormatValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AlbumFormat"]> = ["CD", "Vinyl"];
+export const ampTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AmpType"]> = ["SolidState", "Tube"];
+export const amplifierBrandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AmplifierBrand"]> = ["Revv", "Victory"];
+export const changeStringsTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ChangeStrings"]["type"]> = ["ChangeStrings"];
+export const descriptionRemovedTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionRemoved"]["type"]> = ["DescriptionRemoved"];
+export const descriptionRemoved1TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionRemoved1"]["type"]> = ["DescriptionRemoved"];
+export const descriptionRemoved2TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionRemoved2"]["type"]> = ["DescriptionRemoved"];
+export const descriptionUpdatedTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionUpdated"]["type"]> = ["DescriptionUpdated"];
+export const descriptionUpdated1TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionUpdated1"]["type"]> = ["DescriptionUpdated"];
+export const descriptionUpdated2TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["DescriptionUpdated2"]["type"]> = ["DescriptionUpdated"];
+export const guitarBrandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GuitarBrand"]> = ["Aristides", "Charvel", "Dunable", "Epiphone", "Ibanez", "Jackson", "Ltd", "PRS", "Schecter"];
+export const guitarMaterialValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GuitarMaterial"]> = ["Alder", "Arium", "Ash", "Basswood", "Ebony", "FlamedMaple", "MacassarEbony", "Mahogany", "Mango", "Maple", "PauFerro", "PoplarBurl", "PurpleHeart", "QuiltedMaple", "RichLite", "RoastedMaple", "Rosewood", "SwampAsh", "Walnut", "Wenge"];
+export const guitarPedalBrandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GuitarPedalBrand"]> = ["Boss", "Digitech", "EarthQuakerDevices", "Fortin", "GroundFx", "Hologram", "JHS", "JPTRFX", "KMAMachines", "Klirrton", "LichtlaermAudio", "OldBloodNoiseEndeavors", "Revv", "ScienceAmplification", "SeymourDuncan", "StoneDeaf", "TcElectronic", "WalrusAudio", "WayHuge"];
+export const noteNameValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NoteName"]> = ["A", "As", "B", "C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs"];
+export const pedalTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PedalType"]> = ["Boost", "Chorus", "Delay", "Distortion", "Fuzz", "NoiseGate", "Overdrive", "PowerAmplifier", "Preamp", "Reverb", "Splitter", "Tuner"];
+export const pickupBrandValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PickupBrand"]> = ["BareKnuckle", "DiMarzio", "Dunable", "EMG", "Fishman", "Lundgren", "SeymourDuncan"];
+export const pickupTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PickupType"]> = ["Humbucker", "P90", "SingleCoil"];
+export const removeDescriptionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RemoveDescription"]["type"]> = ["RemoveDescription"];
+export const removeDescription1TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RemoveDescription1"]["type"]> = ["RemoveDescription"];
+export const removeDescription2TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["RemoveDescription2"]["type"]> = ["RemoveDescription"];
+export const stringConstructionValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StringConstruction"]> = ["Plain", "Wound"];
+export const stringsChangedTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["StringsChanged"]["type"]> = ["StringsChanged"];
+export const updateDescriptionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["UpdateDescription"]["type"]> = ["UpdateDescription"];
+export const updateDescription1TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["UpdateDescription1"]["type"]> = ["UpdateDescription"];
+export const updateDescription2TypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["UpdateDescription2"]["type"]> = ["UpdateDescription"];
+export const wishlistStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WishlistStatus"]> = ["Ordered", "Received", "Wanted"];

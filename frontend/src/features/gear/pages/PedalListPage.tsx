@@ -1,15 +1,13 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { pedalsQuery } from "@/api/queries";
+import { pedalsQuery } from "@/features/gear/api";
 import type { Column } from "@/components/data/DataTable";
 import { CollectionPage } from "@/components/data/CollectionPage";
 import type { FilterOption } from "@/components/data/FilterBar";
 import { StatusBadge } from "@/components/display/StatusBadge";
 import { formatEnum } from "@/lib/utils";
+import type { GuitarPedal, PedalType } from "@/features/gear/types";
 
-type GuitarPedal = components["schemas"]["GuitarPedal"];
-type PedalType = components["schemas"]["PedalType"];
 
 const searchFields: (keyof GuitarPedal & string)[] = ["model", "brand"];
 

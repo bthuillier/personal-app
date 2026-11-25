@@ -10,41 +10,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface TextField {
-  name: string;
+/**
+ * A form's value object: every field is edited as a string (dates as
+ * `YYYY-MM-DD`, enums as their value), which matches the API's JSON bodies.
+ */
+type StringFields<T> = { [K in keyof T]?: string };
+
+interface BaseField<T> {
+  /** Checked against the submitted type: a typo is a compile error. */
+  name: keyof T & string;
   label: string;
+  required?: boolean;
+}
+
+interface TextField<T> extends BaseField<T> {
   type: "text";
-  required?: boolean;
 }
 
-interface DateField {
-  name: string;
-  label: string;
+interface DateField<T> extends BaseField<T> {
   type: "date";
-  required?: boolean;
 }
 
-interface SelectField {
-  name: string;
-  label: string;
+interface SelectField<T> extends BaseField<T> {
   type: "select";
-  options: string[];
-  required?: boolean;
+  options: readonly string[];
+  /** Initial choice when creating; defaults to the first option. */
+  defaultValue?: string;
 }
 
-export type FieldDefinition = TextField | DateField | SelectField;
+export type FieldDefinition<T> = TextField<T> | DateField<T> | SelectField<T>;
 
-interface ItemFormProps {
-  fields: FieldDefinition[];
+interface ItemFormProps<T extends StringFields<T>> {
+  fields: FieldDefinition<T>[];
   /** The form closes and resets only once this resolves; on error it stays open. */
-  onSubmit: (values: Record<string, string>) => void | Promise<void>;
+  onSubmit: (values: T) => void | Promise<void>;
   submitLabel?: string;
   buttonLabel?: string;
   /**
    * Prefilled values, read once on mount. In collapsible mode, providing them
    * also opens the form right away.
    */
-  initialValues?: Record<string, string>;
+  initialValues?: Partial<T>;
   /** Called when the user clicks Cancel. */
   onCancel?: () => void;
   /**
@@ -56,13 +62,16 @@ interface ItemFormProps {
   collapsible?: boolean;
 }
 
-function defaultValues(fields: FieldDefinition[]): Record<string, string> {
+function defaultValues<T>(fields: FieldDefinition<T>[]): Record<string, string> {
   return Object.fromEntries(
-    fields.map((f) => [f.name, f.type === "select" ? f.options[0] : ""]),
+    fields.map((f) => [
+      f.name,
+      f.type === "select" ? (f.defaultValue ?? f.options[0]) : "",
+    ]),
   );
 }
 
-export function ItemForm({
+export function ItemForm<T extends StringFields<T>>({
   fields,
   onSubmit,
   submitLabel = "Save",
@@ -70,7 +79,7 @@ export function ItemForm({
   initialValues,
   onCancel,
   collapsible = true,
-}: ItemFormProps) {
+}: ItemFormProps<T>) {
   const [open, setOpen] = useState(!collapsible || !!initialValues);
   const [values, setValues] = useState<Record<string, string>>(() => ({
     ...defaultValues(fields),
@@ -83,7 +92,8 @@ export function ItemForm({
     e.preventDefault();
     setSubmitting(true);
     try {
-      await onSubmit(values);
+      // Every key comes from `fields`, whose names are keys of T.
+      await onSubmit(values as T);
       if (collapsible) {
         setValues(defaultValues(fields));
         setOpen(false);

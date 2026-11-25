@@ -2,7 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { ItemForm, type FieldDefinition } from "./ItemForm";
 
-const albumFields: FieldDefinition[] = [
+interface NewAlbum {
+  name: string;
+  artist: string;
+  format: string;
+  releaseDate: string;
+}
+
+const albumFields: FieldDefinition<NewAlbum>[] = [
   { name: "name", label: "Album", type: "text" },
   { name: "artist", label: "Artist", type: "text" },
   { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },

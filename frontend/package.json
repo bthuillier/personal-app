@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-api": "openapi-typescript ../openapi.yaml -o src/api/schema.d.ts",
+    "generate-api": "openapi-typescript ../openapi.yaml --enum-values -o src/api/schema.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

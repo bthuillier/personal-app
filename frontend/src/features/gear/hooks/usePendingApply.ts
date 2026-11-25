@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { AppliedRecommendation } from "@/pages/gear/GuitarDetailPage";
+import type { AppliedRecommendation } from "@/features/gear/types";
 
 /**
  * Tracks a recommendation the user has chosen to "apply" but not yet

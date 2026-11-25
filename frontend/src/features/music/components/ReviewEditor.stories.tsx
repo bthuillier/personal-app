@@ -17,7 +17,7 @@ const review = {
 };
 
 const meta = {
-  title: "Form/ReviewEditor",
+  title: "Music/ReviewEditor",
   component: ReviewEditor,
   args: { onSave: fn(), onCancel: fn() },
 } satisfies Meta<typeof ReviewEditor>;

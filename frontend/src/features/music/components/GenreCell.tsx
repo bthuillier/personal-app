@@ -7,7 +7,7 @@ import {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/api/mutations";
+import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/features/music/api";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";

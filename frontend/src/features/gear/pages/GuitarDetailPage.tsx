@@ -1,30 +1,28 @@
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { guitarsQuery, guitarEventsQuery } from "@/api/queries";
-import { useChangeGuitarStrings } from "@/api/mutations";
+import { guitarsQuery, guitarEventsQuery } from "@/features/gear/api";
+import { useChangeGuitarStrings } from "@/features/gear/api";
 import { Button } from "@/components/ui/button";
 import { DataTable, type Column } from "@/components/data/DataTable";
-import { TuningBadge } from "@/pages/gear/TuningBadge";
+import { TuningBadge } from "@/features/gear/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
-import { formatGaugeList } from "@/lib/strings";
-import { usePendingApply } from "@/hooks/usePendingApply";
+import { formatGaugeList } from "@/features/gear/lib/strings";
+import { usePendingApply } from "@/features/gear/hooks/usePendingApply";
 import { Panel } from "@/components/display/Panel";
 import { DescriptionList } from "@/components/display/DescriptionList";
 import { BackLink, PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
 import { EmptyState } from "@/components/display/EmptyState";
 import { QueryGate } from "@/components/data/QueryGate";
-import { StringRecommendationPanel } from "./StringRecommendationPanel";
+import { StringRecommendationPanel } from "@/features/gear/components/StringRecommendationPanel";
 import {
   ChangeStringsDrawer,
   type ChangeStringsFormValues,
-} from "./ChangeStringsDrawer";
+} from "@/features/gear/components/ChangeStringsDrawer";
+import type { GuitarEvent, GuitarMaterial, Pickup } from "@/features/gear/types";
 
-type GuitarEvent = components["schemas"]["GuitarEvent"];
 type StringsChanged = Extract<GuitarEvent, { stringBrand: string }>;
-type GuitarTuning = components["schemas"]["GuitarTuning"];
 
 function isStringsChanged(event: GuitarEvent): event is StringsChanged {
   return "stringBrand" in event;
@@ -32,18 +30,12 @@ function isStringsChanged(event: GuitarEvent): event is StringsChanged {
 
 const BACK = { to: "/gear/guitars", label: "Back to Guitars" };
 
-export interface AppliedRecommendation {
-  brand: string;
-  gauges: number[];
-  tuning: GuitarTuning;
-}
-
-function formatPickup(pickup?: components["schemas"]["Pickup"]) {
+function formatPickup(pickup?: Pickup) {
   if (!pickup) return "-";
   return `${formatEnum(pickup.brand)} ${pickup.model} (${formatEnum(pickup.type)})`;
 }
 
-function formatMaterials(materials?: components["schemas"]["GuitarMaterial"][]): string {
+function formatMaterials(materials?: GuitarMaterial[]): string {
   if (!materials || materials.length === 0) return "-";
   return materials.map(formatEnum).join(" | ");
 }

@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useMemo, useState } from "react";
-import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +25,9 @@ import {
   getTuningName,
   parseTuningText,
   tuningsForStringCount,
-} from "@/lib/tuning";
+} from "@/features/gear/lib/tuning";
+import type { GuitarTuning } from "@/features/gear/types";
 
-type GuitarTuning = components["schemas"]["GuitarTuning"];
 
 const CUSTOM = "__custom__";
 

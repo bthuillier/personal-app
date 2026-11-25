@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { albumsQuery, wishlistQuery } from "@/api/queries";
+import { albumsQuery, wishlistQuery } from "@/features/music/api";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
 import { QueryGate } from "@/components/data/QueryGate";
@@ -10,10 +9,10 @@ import { BarList } from "@/components/display/BarList";
 import { EmptyState } from "@/components/display/EmptyState";
 import { ListRow, ListRows } from "@/components/display/ListRow";
 import { countBy, formatCounts } from "@/lib/stats";
+import type { WishlistAlbum } from "@/features/music/types";
 
 const TOP_GENRES_LIMIT = 5;
 
-type WishlistAlbum = components["schemas"]["WishlistAlbum"];
 
 export function MusicHomePage() {
   const albumsResult = useQuery(albumsQuery);

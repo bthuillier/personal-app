@@ -1,23 +1,29 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { albumsQuery } from "@/api/queries";
-import { useCreateAlbum } from "@/api/mutations";
+import { albumsQuery } from "@/features/music/api";
+import { useCreateAlbum } from "@/features/music/api";
 import type { Column } from "@/components/data/DataTable";
 import { CollectionPage } from "@/components/data/CollectionPage";
 import type { FilterOption } from "@/components/data/FilterBar";
 import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
-import { GenreCell } from "@/pages/music/GenreCell";
+import { GenreCell } from "@/features/music/components/GenreCell";
+import { albumFormats, type Album, type CreateAlbum } from "@/features/music/types";
 
-type PartialAlbum = components["schemas"]["PartialAlbum"];
+type PartialAlbum = Album;
 
 const searchFields: (keyof PartialAlbum & string)[] = ["name", "artist"];
 
-const formFields: FieldDefinition[] = [
+const formFields: FieldDefinition<CreateAlbum>[] = [
   { name: "name", label: "Album", type: "text" },
   { name: "artist", label: "Artist", type: "text" },
-  { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },
+  {
+    name: "format",
+    label: "Format",
+    type: "select",
+    options: albumFormats,
+    defaultValue: "Vinyl",
+  },
   { name: "releaseDate", label: "Release Date", type: "date" },
 ];
 
@@ -53,15 +59,13 @@ export function AlbumListPage() {
     [knownGenres],
   );
 
-  async function handleCreate(values: Record<string, string>) {
-    await createMutation.mutateAsync(
-      values as unknown as components["schemas"]["CreateAlbum"],
-    );
+  async function handleCreate(values: CreateAlbum) {
+    await createMutation.mutateAsync(values);
   }
 
   const filters: FilterOption<PartialAlbum>[] = useMemo(
     () => [
-      { name: "format", label: "Format", options: ["CD", "Vinyl"] },
+      { name: "format", label: "Format", options: albumFormats },
       {
         name: "year",
         label: "Year",

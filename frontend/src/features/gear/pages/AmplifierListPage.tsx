@@ -1,15 +1,13 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { amplifiersQuery } from "@/api/queries";
+import { amplifiersQuery } from "@/features/gear/api";
 import type { Column } from "@/components/data/DataTable";
 import { CollectionPage } from "@/components/data/CollectionPage";
 import type { FilterOption } from "@/components/data/FilterBar";
 import { StatusBadge } from "@/components/display/StatusBadge";
 import { formatEnum } from "@/lib/utils";
+import { ampTypes, type AmpType, type Amplifier } from "@/features/gear/types";
 
-type Amplifier = components["schemas"]["Amplifier"];
-type AmpType = components["schemas"]["AmpType"];
 
 const searchFields: (keyof Amplifier & string)[] = ["model", "brand"];
 
@@ -31,7 +29,7 @@ export function AmplifierListPage() {
       {
         name: "type",
         label: "Type",
-        options: ["Tube", "SolidState"],
+        options: ampTypes,
       },
     ],
     [],

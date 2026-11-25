@@ -1,36 +1,24 @@
 import { NavLink, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
-
-const sectionsByDomain: Record<string, { to: string; label: string }[]> = {
-  gear: [
-    { to: "/gear", label: "Overview" },
-    { to: "/gear/guitars", label: "Guitars" },
-    { to: "/gear/amplifiers", label: "Amplifiers" },
-    { to: "/gear/pedals", label: "Pedals" },
-  ],
-  music: [
-    { to: "/music", label: "Overview" },
-    { to: "/music/wishlist", label: "Wishlist" },
-    { to: "/music/albums", label: "Albums" },
-    { to: "/music/recap", label: "Recap" },
-  ],
-};
+import { isInSection, pageUrl } from "@/navigation";
+import { sections } from "@/sections";
 
 export function Sidebar() {
   const { pathname } = useLocation();
-  const domain = pathname.split("/")[1];
-  const links = sectionsByDomain[domain];
+  const section = sections.find((s) => isInSection(pathname, s));
+  if (!section) return null;
 
-  if (!links) return null;
+  const links = section.pages.filter((page) => page.label);
 
   return (
     <aside className="flex w-56 flex-col gap-1 border-r border-border bg-muted/30 py-4 pl-4">
       <nav className="flex flex-col gap-0.5">
-        {links.map((link) => (
+        {links.map((page) => (
           <NavLink
-            key={link.to}
-            to={link.to}
-            end={link.to === `/gear` || link.to === `/music`}
+            key={page.path}
+            to={pageUrl(section, page)}
+            // The overview link must not stay active on every page of the section.
+            end={page.path === ""}
             className={({ isActive }) =>
               cn(
                 "border-l-2 px-3 py-1.5 text-sm transition-colors",
@@ -40,7 +28,7 @@ export function Sidebar() {
               )
             }
           >
-            {link.label}
+            {page.label}
           </NavLink>
         ))}
       </nav>

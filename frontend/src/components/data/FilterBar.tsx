@@ -13,7 +13,7 @@ import {
 interface StaticFilterOption {
   name: string;
   label: string;
-  options: string[];
+  options: readonly string[];
 }
 
 interface DynamicFilterOption<T> {
@@ -101,7 +101,7 @@ export function FilterBar<T>({
   }, [data, searchFields]);
 
   const resolvedOptions = useMemo(() => {
-    const map: Record<string, string[]> = {};
+    const map: Record<string, readonly string[]> = {};
     for (const filter of filters) {
       if (isStatic(filter)) {
         map[filter.name] = filter.options;

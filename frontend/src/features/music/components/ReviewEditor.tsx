@@ -1,13 +1,12 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StarRating } from "@/components/display/StarRating";
 import { cn } from "@/lib/utils";
+import type { Review } from "@/features/music/types";
 
-type Review = components["schemas"]["Review"];
 
 interface ReviewEditorProps {
   initial?: Review;

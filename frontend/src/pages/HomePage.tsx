@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  guitarsQuery,
-  amplifiersQuery,
-  pedalsQuery,
-  albumsQuery,
-  wishlistQuery,
-} from "@/api/queries";
+import { albumsQuery, wishlistQuery } from "@/features/music/api";
+import { guitarsQuery, amplifiersQuery, pedalsQuery } from "@/features/gear/api";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
 import { QueryGate } from "@/components/data/QueryGate";

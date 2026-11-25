@@ -1,10 +1,7 @@
 import { NavLink, useLocation } from "react-router";
 import { cn } from "@/lib/utils";
-
-const domains = [
-  { to: "/gear", label: "Gear", prefix: "/gear" },
-  { to: "/music", label: "Music", prefix: "/music" },
-];
+import { isInSection } from "@/navigation";
+import { sections } from "@/sections";
 
 export function TopNav() {
   const { pathname } = useLocation();
@@ -15,12 +12,12 @@ export function TopNav() {
         Personal App
       </NavLink>
       <nav className="flex items-center gap-1">
-        {domains.map((domain) => {
-          const isActive = pathname.startsWith(domain.prefix);
+        {sections.map((section) => {
+          const isActive = isInSection(pathname, section);
           return (
             <NavLink
-              key={domain.prefix}
-              to={domain.to}
+              key={section.path}
+              to={section.path}
               className={cn(
                 "relative px-3 py-1.5 text-sm font-medium transition-colors",
                 isActive
@@ -28,7 +25,7 @@ export function TopNav() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {domain.label}
+              {section.label}
             </NavLink>
           );
         })}

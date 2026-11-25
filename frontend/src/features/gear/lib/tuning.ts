@@ -1,7 +1,5 @@
-import type { components } from "@/api/schema";
+import type { Note, NoteName } from "@/features/gear/types";
 
-type Note = components["schemas"]["Note"];
-type NoteName = components["schemas"]["NoteName"];
 
 export interface NamedTuning {
   name: string;

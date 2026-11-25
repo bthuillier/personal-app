@@ -1,15 +1,14 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import type { components } from "@/api/schema";
-import { guitarsQuery } from "@/api/queries";
+import { guitarsQuery } from "@/features/gear/api";
 import type { Column } from "@/components/data/DataTable";
 import { CollectionPage } from "@/components/data/CollectionPage";
 import type { FilterOption } from "@/components/data/FilterBar";
-import { TuningBadge } from "@/pages/gear/TuningBadge";
+import { TuningBadge } from "@/features/gear/components/TuningBadge";
 import { formatEnum } from "@/lib/utils";
+import type { Guitar } from "@/features/gear/types";
 
-type Guitar = components["schemas"]["Guitar"];
 
 const searchFields: (keyof Guitar & string)[] = ["model", "brand"];
 

@@ -1,13 +1,12 @@
-import type { components } from "@/api/schema";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatNotes, getTuningName } from "@/lib/tuning";
+import { formatNotes, getTuningName } from "@/features/gear/lib/tuning";
+import type { GuitarTuning } from "@/features/gear/types";
 
-type GuitarTuning = components["schemas"]["GuitarTuning"];
 
 export function TuningBadge({ tuning }: { tuning: GuitarTuning }) {
   const notes = tuning.notes;

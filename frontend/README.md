@@ -18,39 +18,39 @@ React 19 single-page application built with TypeScript, Vite, and TailwindCSS v4
 
 ```
 src/
-├── main.tsx                    # App entry (React 19 + QueryClient + Router)
-├── index.css                   # Tailwind imports + OKLch theme variables
-├── routes.tsx                  # Route definitions
+├── main.tsx                 # App entry (React 19 + QueryClient + Router)
+├── index.css                # Tailwind imports + OKLch theme variables
+├── routes.tsx               # Router, built from `sections`
+├── navigation.ts            # AppSection / SectionPage types + URL helpers
+├── sections.ts              # Top-level areas: routes, top nav and sidebar derive from it
 ├── api/
-│   ├── client.ts               # openapi-fetch instance + error middleware
-│   ├── schema.d.ts             # Auto-generated types from openapi.yaml
-│   └── error.ts                # ApiError class + error message helper
-├── lib/
-│   └── utils.ts                # cn() helper (clsx + tailwind-merge)
-├── types/                      # Shared type definitions
-├── pages/
-│   └── music/
-│       ├── AlbumListPage.tsx    # Album collection with filters and sorting
-│       └── WishlistPage.tsx     # Wishlist CRUD with status workflow
-└── components/
-    ├── layout/
-    │   ├── AppLayout.tsx        # Sidebar + content layout with outlet
-    │   ├── TopNav.tsx           # Header bar
-    │   └── Sidebar.tsx          # Navigation sidebar (Music section)
-    ├── ui/                      # shadcn/ui primitives (button, input, table, etc.)
-    ├── DataTable.tsx            # Generic sortable table
-    ├── FilterBar.tsx            # Search + dynamic filters
-    ├── ItemForm.tsx             # Generic modal form for adding items
-    ├── StatusBadge.tsx          # Colored status indicator
-    └── SearchInput.tsx          # Search with autocomplete
+│   ├── client.ts            # openapi-fetch instance, QueryClient, error toasts
+│   ├── schema.ts            # Generated from openapi.yaml (types + enum value arrays)
+│   ├── error.ts             # ApiError + error message helper
+│   └── useInvalidatingMutation.ts
+├── features/                # One folder per domain, mirroring the backend
+│   ├── music/
+│   │   ├── section.tsx      # Pages, paths and sidebar labels of the area
+│   │   ├── api.ts           # Queries + mutations
+│   │   ├── types.ts         # Domain type aliases + enum values
+│   │   ├── pages/           # AlbumList, AlbumDetail, Wishlist, MusicHome, YearRecap
+│   │   └── components/      # GenreCell, ReviewEditor
+│   └── gear/                # Same layout (+ hooks/, lib/ for tunings and strings)
+├── pages/                   # App-level pages: Home, 404, route error
+├── components/              # Generic component library (see Storybook)
+│   ├── ui/                  # shadcn/ui primitives
+│   ├── layout/              # AppLayout, TopNav, Sidebar, Page, PageHeader, Section
+│   ├── data/                # CollectionPage, DataTable, FilterBar, QueryGate, ...
+│   ├── display/             # StatCard, Panel, BarList, ErrorState, StarRating, ...
+│   └── form/                # ItemForm
+└── lib/                     # cn(), formatEnum(), countBy()
 ```
 
-## Routes
+**Adding a page:** create it in `features/<domain>/pages/` and declare it in that
+domain's `section.tsx` — give it a `label` to list it in the sidebar.
 
-| Path | Page | Description |
-|------|------|-------------|
-| `/music/wishlist` | WishlistPage | Add albums, track Wanted → Ordered → Received |
-| `/music/albums` | AlbumListPage | Browse owned album collection |
+**Component library:** `pnpm storybook` (or `just storybook`) on http://localhost:6006.
+Each generic component has a `*.stories.tsx` next to it.
 
 ## Getting Started
 
@@ -78,7 +78,7 @@ The frontend uses a fully typed API client generated from the backend's OpenAPI 
 
 1. Backend defines endpoints with Tapir (typed Scala)
 2. `generateOpenApi.scala` produces `openapi.yaml`
-3. `openapi-typescript` generates `src/api/schema.d.ts`
+3. `openapi-typescript` generates `src/api/schema.ts` (types, plus `--enum-values` arrays such as `albumFormatValues`)
 4. `openapi-fetch` creates a typed client using those types
 
 ### Regenerating types

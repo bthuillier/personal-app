@@ -1,6 +1,5 @@
-import type { components } from "@/api/schema";
+import type { StringSpec } from "@/features/gear/types";
 
-type StringSpec = components["schemas"]["StringSpec"];
 
 /** Format a gauge list as a hyphenated string, e.g. [10, 13, 17] → "10-13-17". */
 export function formatGaugeList(gauges?: number[]): string {

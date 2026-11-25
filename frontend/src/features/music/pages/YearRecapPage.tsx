@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import type { components } from "@/api/schema";
-import { albumsQuery } from "@/api/queries";
+import { albumsQuery } from "@/features/music/api";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
 import { Section } from "@/components/layout/Section";
@@ -23,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Album } from "@/features/music/types";
 
-type PartialAlbum = components["schemas"]["PartialAlbum"];
+type PartialAlbum = Album;
 type ReviewedAlbum = PartialAlbum & {
   review: NonNullable<PartialAlbum["review"]>;
 };

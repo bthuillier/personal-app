@@ -1,25 +1,24 @@
 import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { albumsQuery } from "@/api/queries";
-import { useReviewAlbum, useUpdateAlbumDetails } from "@/api/mutations";
+import { albumsQuery } from "@/features/music/api";
+import { useReviewAlbum, useUpdateAlbumDetails } from "@/features/music/api";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/display/StarRating";
-import { ReviewEditor, MarkdownView } from "@/components/form/ReviewEditor";
+import { ReviewEditor, MarkdownView } from "@/features/music/components/ReviewEditor";
 import { Panel } from "@/components/display/Panel";
 import { BackLink, PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
 import { EmptyState } from "@/components/display/EmptyState";
 import { QueryGate } from "@/components/data/QueryGate";
 import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
+import { albumFormats, type AlbumDetails } from "@/features/music/types";
 
 const BACK = { to: "/music/albums", label: "Back to Albums" };
 
-type AlbumDetails = components["schemas"]["AlbumDetails"];
 
-const detailFields: FieldDefinition[] = [
-  { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },
+const detailFields: FieldDefinition<AlbumDetails>[] = [
+  { name: "format", label: "Format", type: "select", options: albumFormats },
   { name: "releaseDate", label: "Release Date", type: "date" },
 ];
 
@@ -80,9 +79,7 @@ export function AlbumDetailPage() {
             initialValues={{ format: album.format, releaseDate: album.releaseDate }}
             onCancel={() => setEditingDetails(false)}
             onSubmit={async (values) => {
-              const updated = await detailsMutation.mutateAsync(
-                values as AlbumDetails,
-              );
+              const updated = await detailsMutation.mutateAsync(values);
               setEditingDetails(false);
               // A format change gives the album a new id.
               if (updated.id !== album.id) {

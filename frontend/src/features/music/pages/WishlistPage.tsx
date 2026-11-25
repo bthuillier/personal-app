@@ -1,20 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import type { components } from "@/api/schema";
-import { wishlistQuery } from "@/api/queries";
-import {
-  useAddToWishlist,
-  useOrderWishlistAlbum,
-  useReceiveWishlistAlbum,
-} from "@/api/mutations";
+import { wishlistQuery } from "@/features/music/api";
+import { useAddToWishlist, useOrderWishlistAlbum, useReceiveWishlistAlbum } from "@/features/music/api";
 import type { Column } from "@/components/data/DataTable";
 import { CollectionPage } from "@/components/data/CollectionPage";
 import type { FilterOption } from "@/components/data/FilterBar";
 import { StatusBadge } from "@/components/display/StatusBadge";
 import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
 import { Button } from "@/components/ui/button";
+import { albumFormats, wishlistStatuses, type AddAlbumToWishlist, type WishlistAlbum, type WishlistStatus } from "@/features/music/types";
 
-type WishlistAlbum = components["schemas"]["WishlistAlbum"];
-type WishlistStatus = components["schemas"]["WishlistStatus"];
 
 const statusColorMap: Record<WishlistStatus, "default" | "secondary" | "outline"> = {
   Wanted: "outline",
@@ -25,16 +19,28 @@ const statusColorMap: Record<WishlistStatus, "default" | "secondary" | "outline"
 const searchFields: (keyof WishlistAlbum & string)[] = ["name", "artist"];
 
 const filters: FilterOption<WishlistAlbum>[] = [
-  { name: "status", label: "Status", options: ["Wanted", "Ordered", "Received"] },
-  { name: "format", label: "Format", options: ["CD", "Vinyl"] },
+  { name: "status", label: "Status", options: wishlistStatuses },
+  { name: "format", label: "Format", options: albumFormats },
 ];
 
-const formFields: FieldDefinition[] = [
+const formFields: FieldDefinition<AddAlbumToWishlist>[] = [
   { name: "name", label: "Album", type: "text" },
   { name: "artist", label: "Artist", type: "text" },
-  { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },
+  {
+    name: "format",
+    label: "Format",
+    type: "select",
+    options: albumFormats,
+    defaultValue: "Vinyl",
+  },
   { name: "releaseDate", label: "Release Date", type: "date" },
-  { name: "status", label: "Status", type: "select", options: ["Wanted", "Ordered"] },
+  {
+    name: "status",
+    label: "Status",
+    type: "select",
+    // A new entry can't already be received.
+    options: wishlistStatuses.filter((s) => s !== "Received"),
+  },
 ];
 
 export function WishlistPage() {
@@ -44,10 +50,8 @@ export function WishlistPage() {
   const orderMutation = useOrderWishlistAlbum();
   const receivedMutation = useReceiveWishlistAlbum();
 
-  async function handleAdd(values: Record<string, string>) {
-    await addMutation.mutateAsync(
-      values as unknown as components["schemas"]["AddAlbumToWishlist"],
-    );
+  async function handleAdd(values: AddAlbumToWishlist) {
+    await addMutation.mutateAsync(values);
   }
 
   const columns: Column<WishlistAlbum>[] = [
