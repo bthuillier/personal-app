@@ -1,11 +1,27 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { components } from "@/api/schema";
 import { albumsQuery } from "@/api/queries";
-import { StarRating } from "@/components/StarRating";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Page } from "@/components/layout/Page";
+import { Section } from "@/components/layout/Section";
+import { StatCard, StatGrid } from "@/components/display/StatCard";
+import { StarRating } from "@/components/display/StarRating";
+import { BarList } from "@/components/display/BarList";
+import { EmptyState, LoadingState } from "@/components/display/EmptyState";
+import { ListRow, ListRows } from "@/components/display/ListRow";
+import { countBy, formatCounts } from "@/lib/stats";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type PartialAlbum = components["schemas"]["PartialAlbum"];
 type ReviewedAlbum = PartialAlbum & {
@@ -69,23 +85,8 @@ export function YearRecapPage() {
       ? reviewed.reduce((sum, a) => sum + a.review.rating, 0) / reviewed.length
       : null;
 
-  const formatCounts = yearAlbums.reduce(
-    (acc, a) => {
-      acc[a.format] = (acc[a.format] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  const genreCounts = new Map<string, number>();
-  for (const album of yearAlbums) {
-    for (const g of album.genre ?? []) {
-      genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1);
-    }
-  }
-  const topGenres = [...genreCounts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, TOP_GENRES_LIMIT);
+  const formatBreakdown = countBy(yearAlbums, (a) => a.format);
+  const topGenres = countBy(yearAlbums, (a) => a.genre, TOP_GENRES_LIMIT);
 
   const yearIndex = years.indexOf(year);
   const newerYear = yearIndex > 0 ? years[yearIndex - 1] : undefined;
@@ -96,139 +97,123 @@ export function YearRecapPage() {
 
   const selectYear = (y: string) => setSearchParams({ year: y });
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
-  }
+  if (isLoading) return <LoadingState />;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Recap {year}</h1>
-          <p className="text-muted-foreground">
-            Albums released in {year}, ranked by your reviews
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
-          <YearStepButton
-            label="Older year"
-            target={olderYear}
-            onSelect={selectYear}
-          >
-            <ChevronLeftIcon size={16} />
-          </YearStepButton>
-          <select
-            value={year}
-            onChange={(e) => selectYear(e.target.value)}
-            className="h-8 rounded-md border border-border bg-background px-2 text-sm tabular-nums"
-            aria-label="Year"
-          >
-            {!years.includes(year) && <option value={year}>{year}</option>}
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <YearStepButton
-            label="Newer year"
-            target={newerYear}
-            onSelect={selectYear}
-          >
-            <ChevronRightIcon size={16} />
-          </YearStepButton>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        title={`Recap ${year}`}
+        subtitle={`Albums released in ${year}, ranked by your reviews`}
+        actions={
+          <div className="flex items-center gap-1">
+            <YearStepButton label="Older year" target={olderYear} onSelect={selectYear}>
+              <ChevronLeftIcon size={16} />
+            </YearStepButton>
+            <Select
+              value={year}
+              onValueChange={(y) => {
+                if (y != null) selectYear(y);
+              }}
+            >
+              <SelectTrigger aria-label="Year" className="tabular-nums">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {!years.includes(year) && <SelectItem value={year}>{year}</SelectItem>}
+                {years.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <YearStepButton label="Newer year" target={newerYear} onSelect={selectYear}>
+              <ChevronRightIcon size={16} />
+            </YearStepButton>
+          </div>
+        }
+      />
 
       {yearAlbums.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No albums released in {year} in your collection.
-        </p>
+        <EmptyState>No albums released in {year} in your collection.</EmptyState>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Albums">
-              <p className="mt-1 text-3xl font-bold">{yearAlbums.length}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {Object.entries(formatCounts)
-                  .map(([format, count]) => `${count} ${format}`)
-                  .join(" · ")}
-              </p>
-            </StatCard>
-            <StatCard label="Reviewed">
-              <p className="mt-1 text-3xl font-bold">
-                {reviewed.length}
-                <span className="text-lg font-normal text-muted-foreground">
-                  {" "}
-                  / {yearAlbums.length}
-                </span>
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {unreviewed.length === 0
-                  ? "All reviewed"
-                  : `${unreviewed.length} left to review`}
-              </p>
-            </StatCard>
-            <StatCard label="Average rating">
-              {averageRating === null ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  No reviews yet.
-                </p>
-              ) : (
+          <StatGrid>
+            <StatCard
+              label="Albums"
+              value={yearAlbums.length}
+              detail={formatCounts(formatBreakdown)}
+            />
+            <StatCard
+              label="Reviewed"
+              value={
                 <>
-                  <p className="mt-1 text-3xl font-bold tabular-nums">
+                  {reviewed.length}
+                  <span className="text-lg font-normal text-muted-foreground">
+                    {" "}
+                    / {yearAlbums.length}
+                  </span>
+                </>
+              }
+              detail={
+                unreviewed.length === 0
+                  ? "All reviewed"
+                  : `${unreviewed.length} left to review`
+              }
+            />
+            <StatCard
+              label="Average rating"
+              value={
+                averageRating === null ? undefined : (
+                  <>
                     {(averageRating / 2).toFixed(2)}
                     <span className="text-lg font-normal text-muted-foreground">
                       {" "}
                       / 5
                     </span>
-                  </p>
-                  <div className="mt-1">
-                    <StarRating
-                      value={Math.round(averageRating)}
-                      readOnly
-                      showLabel={false}
-                      size={14}
-                    />
-                  </div>
-                </>
-              )}
+                  </>
+                )
+              }
+            >
+              <div className="mt-1">
+                {averageRating === null ? (
+                  <EmptyState>No reviews yet.</EmptyState>
+                ) : (
+                  <StarRating
+                    value={Math.round(averageRating)}
+                    readOnly
+                    showLabel={false}
+                    size={14}
+                  />
+                )}
+              </div>
             </StatCard>
             <StatCard label="Top genres">
-              {topGenres.length === 0 ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  No genres assigned.
-                </p>
-              ) : (
-                <ul className="mt-2 flex flex-col gap-1 text-sm">
-                  {topGenres.map(([name, count]) => (
-                    <li key={name} className="flex justify-between gap-2">
-                      <span className="truncate">{name}</span>
-                      <span className="tabular-nums text-muted-foreground">
-                        {count}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="mt-3">
+                {topGenres.length === 0 ? (
+                  <EmptyState>No genres assigned yet.</EmptyState>
+                ) : (
+                  <BarList
+                    items={topGenres}
+                    href={(genre) => `/music/albums?genre=${encodeURIComponent(genre)}`}
+                  />
+                )}
+              </div>
             </StatCard>
-          </div>
+          </StatGrid>
 
-          <section>
-            <h2 className="mb-3 text-lg font-semibold">
-              Top {TOP_LIMIT} of {year}
-            </h2>
+          <Section title={`Top ${TOP_LIMIT} of ${year}`}>
             {top.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <EmptyState>
                 Review some albums from {year} to build your top {TOP_LIMIT}.
-              </p>
+              </EmptyState>
             ) : (
               <ol className="flex flex-col gap-2">
                 {top.map(({ album, rank }) => (
                   <li key={album.id}>
-                    <Link
+                    <ListRow
                       to={`/music/albums/${album.id}`}
-                      className="flex items-center gap-4 rounded-md border border-border px-4 py-3 transition-colors hover:bg-muted/50"
+                      className="flex items-center gap-4 text-base"
                     >
                       <span
                         className={cn(
@@ -247,56 +232,30 @@ export function YearRecapPage() {
                         </p>
                       </div>
                       <div className="shrink-0">
-                        <StarRating
-                          value={album.review.rating}
-                          readOnly
-                          size={16}
-                        />
+                        <StarRating value={album.review.rating} readOnly size={16} />
                       </div>
-                    </Link>
+                    </ListRow>
                   </li>
                 ))}
               </ol>
             )}
-          </section>
+          </Section>
 
           {unreviewed.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-lg font-semibold">Not reviewed yet</h2>
-              <div className="flex flex-col gap-2">
+            <Section title="Not reviewed yet">
+              <ListRows>
                 {unreviewed.map((album) => (
-                  <Link
-                    key={album.id}
-                    to={`/music/albums/${album.id}`}
-                    className="rounded-md border border-border px-4 py-3 text-sm transition-colors hover:bg-muted/50"
-                  >
+                  <ListRow key={album.id} to={`/music/albums/${album.id}`}>
                     <span className="font-medium">{album.name}</span>{" "}
-                    <span className="text-muted-foreground">
-                      by {album.artist}
-                    </span>
-                  </Link>
+                    <span className="text-muted-foreground">by {album.artist}</span>
+                  </ListRow>
                 ))}
-              </div>
-            </section>
+              </ListRows>
+            </Section>
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-lg border border-border p-5">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      {children}
-    </div>
+    </Page>
   );
 }
 
@@ -312,14 +271,14 @@ function YearStepButton({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="icon"
       aria-label={label}
       disabled={!target}
       onClick={() => target && onSelect(target)}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40 disabled:hover:text-muted-foreground"
     >
       {children}
-    </button>
+    </Button>
   );
 }

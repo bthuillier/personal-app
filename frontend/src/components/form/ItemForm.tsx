@@ -36,18 +36,24 @@ export type FieldDefinition = TextField | DateField | SelectField;
 
 interface ItemFormProps {
   fields: FieldDefinition[];
-  onSubmit: (values: Record<string, string>) => void;
+  /** The form closes and resets only once this resolves; on error it stays open. */
+  onSubmit: (values: Record<string, string>) => void | Promise<void>;
   submitLabel?: string;
   buttonLabel?: string;
   /**
-   * Optional prefilled values. When provided, the form opens prefilled with
-   * these values; subsequent changes to `initialValues` re-prefill the form
-   * (useful when an external action — e.g. "Apply recommendation" — wants to
-   * push new values into an already-open form).
+   * Prefilled values, read once on mount. In collapsible mode, providing them
+   * also opens the form right away.
    */
   initialValues?: Record<string, string>;
   /** Called when the user clicks Cancel. */
   onCancel?: () => void;
+  /**
+   * `true` (default): a "+ Add" button that opens the form, which closes and
+   * resets after a successful submit — for creating items.
+   * `false`: the form is always shown and Save stays disabled until a value
+   * changes — for editing an existing item; the parent decides when to hide it.
+   */
+  collapsible?: boolean;
 }
 
 function defaultValues(fields: FieldDefinition[]): Record<string, string> {
@@ -63,23 +69,39 @@ export function ItemForm({
   buttonLabel = "+ Add",
   initialValues,
   onCancel,
+  collapsible = true,
 }: ItemFormProps) {
-  const [open, setOpen] = useState(!!initialValues);
+  const [open, setOpen] = useState(!collapsible || !!initialValues);
   const [values, setValues] = useState<Record<string, string>>(() => ({
     ...defaultValues(fields),
     ...initialValues,
   }));
 
-  function handleSubmit(e: FormEvent) {
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onSubmit(values);
-    setValues(defaultValues(fields));
-    setOpen(false);
+    setSubmitting(true);
+    try {
+      await onSubmit(values);
+      if (collapsible) {
+        setValues(defaultValues(fields));
+        setOpen(false);
+      }
+    } catch {
+      // The error toast is shown by the mutation cache; keep the input.
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function updateValue(name: string, value: string) {
     setValues((prev) => ({ ...prev, [name]: value }));
   }
+
+  const unchanged =
+    !collapsible &&
+    fields.every((f) => values[f.name] === (initialValues?.[f.name] ?? ""));
 
   if (!open) {
     return (
@@ -133,18 +155,23 @@ export function ItemForm({
           )}
         </div>
       ))}
-      <div className="flex gap-2">
-        <Button type="submit">{submitLabel}</Button>
+      <div className="ml-auto flex gap-2">
         <Button
           type="button"
           variant="outline"
+          disabled={submitting}
           onClick={() => {
-            setValues(defaultValues(fields));
-            setOpen(false);
+            if (collapsible) {
+              setValues(defaultValues(fields));
+              setOpen(false);
+            }
             onCancel?.();
           }}
         >
           Cancel
+        </Button>
+        <Button type="submit" disabled={submitting || unchanged}>
+          {submitting ? "Saving..." : submitLabel}
         </Button>
       </div>
     </form>

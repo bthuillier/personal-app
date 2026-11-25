@@ -2,9 +2,10 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { amplifiersQuery } from "@/api/queries";
-import { DataTable, type Column } from "@/components/DataTable";
-import { FilterBar, type FilterOption } from "@/components/FilterBar";
-import { StatusBadge } from "@/components/StatusBadge";
+import type { Column } from "@/components/data/DataTable";
+import { CollectionPage } from "@/components/data/CollectionPage";
+import type { FilterOption } from "@/components/data/FilterBar";
+import { StatusBadge } from "@/components/display/StatusBadge";
 import { formatEnum } from "@/lib/utils";
 
 type Amplifier = components["schemas"]["Amplifier"];
@@ -54,30 +55,16 @@ export function AmplifierListPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Amplifiers</h2>
-      </div>
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      )}
-      {!isLoading && (
-        <FilterBar
-          data={amplifiers}
-          searchPlaceholder="Search by model or brand..."
-          searchFields={searchFields}
-          filters={filters}
-        >
-          {(filtered) => (
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey={(a) => a.id}
-              emptyMessage="No amplifiers found."
-            />
-          )}
-        </FilterBar>
-      )}
-    </div>
+    <CollectionPage
+      title="Amplifiers"
+      data={amplifiers}
+      isLoading={isLoading}
+      columns={columns}
+      rowKey={(a) => a.id}
+      searchFields={searchFields}
+      searchPlaceholder="Search by model or brand..."
+      filters={filters}
+      emptyMessage="No amplifiers found."
+    />
   );
 }

@@ -12,7 +12,7 @@ const sectionsByDomain: Record<string, { to: string; label: string }[]> = {
     { to: "/music", label: "Overview" },
     { to: "/music/wishlist", label: "Wishlist" },
     { to: "/music/albums", label: "Albums" },
-    { to: "/music/recap", label: "Yearly Recap" },
+    { to: "/music/recap", label: "Recap" },
   ],
 };
 

@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import type { components } from "@/api/schema";
 import { guitarsQuery } from "@/api/queries";
-import { DataTable, type Column } from "@/components/DataTable";
-import { FilterBar, type FilterOption } from "@/components/FilterBar";
-import { TuningBadge } from "@/components/TuningBadge";
+import type { Column } from "@/components/data/DataTable";
+import { CollectionPage } from "@/components/data/CollectionPage";
+import type { FilterOption } from "@/components/data/FilterBar";
+import { TuningBadge } from "@/pages/gear/TuningBadge";
 import { formatEnum } from "@/lib/utils";
 
 type Guitar = components["schemas"]["Guitar"];
@@ -13,6 +14,7 @@ type Guitar = components["schemas"]["Guitar"];
 const searchFields: (keyof Guitar & string)[] = ["model", "brand"];
 
 export function GuitarListPage() {
+  const navigate = useNavigate();
   const { data: guitars = [], isLoading } = useQuery(guitarsQuery);
 
   const filters: FilterOption<Guitar>[] = useMemo(
@@ -36,18 +38,7 @@ export function GuitarListPage() {
       header: "Guitar",
       accessor: "model",
       primary: true,
-      render: (row) => {
-        const label = `${formatEnum(row.brand)} ${row.model}`;
-        return (
-          <Link
-            to={`/gear/guitars/${encodeURIComponent(row.id)}`}
-            title={label}
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            {label}
-          </Link>
-        );
-      },
+      render: (row) => `${formatEnum(row.brand)} ${row.model}`,
     },
     { header: "Year", accessor: "year" },
     {
@@ -70,30 +61,17 @@ export function GuitarListPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Guitars</h2>
-      </div>
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      )}
-      {!isLoading && (
-        <FilterBar
-          data={guitars}
-          searchPlaceholder="Search by model or brand..."
-          searchFields={searchFields}
-          filters={filters}
-        >
-          {(filtered) => (
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey={(g) => g.id}
-              emptyMessage="No guitars found."
-            />
-          )}
-        </FilterBar>
-      )}
-    </div>
+    <CollectionPage
+      title="Guitars"
+      data={guitars}
+      isLoading={isLoading}
+      columns={columns}
+      rowKey={(g) => g.id}
+      onRowClick={(g) => navigate(`/gear/guitars/${encodeURIComponent(g.id)}`)}
+      searchFields={searchFields}
+      searchPlaceholder="Search by model or brand..."
+      filters={filters}
+      emptyMessage="No guitars found."
+    />
   );
 }

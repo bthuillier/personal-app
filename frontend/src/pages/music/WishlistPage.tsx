@@ -6,9 +6,11 @@ import {
   useOrderWishlistAlbum,
   useReceiveWishlistAlbum,
 } from "@/api/mutations";
-import { DataTable, type Column } from "@/components/DataTable";
-import { StatusBadge } from "@/components/StatusBadge";
-import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
+import type { Column } from "@/components/data/DataTable";
+import { CollectionPage } from "@/components/data/CollectionPage";
+import type { FilterOption } from "@/components/data/FilterBar";
+import { StatusBadge } from "@/components/display/StatusBadge";
+import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
 import { Button } from "@/components/ui/button";
 
 type WishlistAlbum = components["schemas"]["WishlistAlbum"];
@@ -19,6 +21,13 @@ const statusColorMap: Record<WishlistStatus, "default" | "secondary" | "outline"
   Ordered: "secondary",
   Received: "default",
 };
+
+const searchFields: (keyof WishlistAlbum & string)[] = ["name", "artist"];
+
+const filters: FilterOption<WishlistAlbum>[] = [
+  { name: "status", label: "Status", options: ["Wanted", "Ordered", "Received"] },
+  { name: "format", label: "Format", options: ["CD", "Vinyl"] },
+];
 
 const formFields: FieldDefinition[] = [
   { name: "name", label: "Album", type: "text" },
@@ -60,6 +69,7 @@ export function WishlistPage() {
             <Button
               size="sm"
               variant="secondary"
+              disabled={orderMutation.isPending && orderMutation.variables === row.id}
               onClick={() => orderMutation.mutate(row.id)}
             >
               Mark Ordered
@@ -68,6 +78,9 @@ export function WishlistPage() {
           {row.status === "Ordered" && (
             <Button
               size="sm"
+              disabled={
+                receivedMutation.isPending && receivedMutation.variables === row.id
+              }
               onClick={() => receivedMutation.mutate(row.id)}
             >
               Mark Received
@@ -79,27 +92,25 @@ export function WishlistPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Album Wishlist</h2>
+    <CollectionPage
+      title="Wishlist"
+      actions={
         <ItemForm
           fields={formFields}
           onSubmit={handleAdd}
           buttonLabel="+ Add Album"
           submitLabel="Add to Wishlist"
         />
-      </div>
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      )}
-      {!isLoading && (
-        <DataTable
-          columns={columns}
-          data={albums}
-          rowKey={(a) => a.id}
-          emptyMessage="No albums in your wishlist yet."
-        />
-      )}
-    </div>
+      }
+      data={albums}
+      isLoading={isLoading}
+      columns={columns}
+      rowKey={(a) => a.id}
+      searchFields={searchFields}
+      searchPlaceholder="Search by name or artist..."
+      filters={filters}
+      emptyMessage="No albums found."
+      emptyCollectionMessage="No albums in your wishlist yet."
+    />
   );
 }

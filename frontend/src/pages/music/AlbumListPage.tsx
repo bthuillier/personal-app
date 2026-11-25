@@ -4,10 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { albumsQuery } from "@/api/queries";
 import { useCreateAlbum } from "@/api/mutations";
-import { DataTable, type Column } from "@/components/DataTable";
-import { FilterBar, type FilterOption } from "@/components/FilterBar";
-import { ItemForm, type FieldDefinition } from "@/components/ItemForm";
-import { GenreCell } from "@/components/GenreCell";
+import type { Column } from "@/components/data/DataTable";
+import { CollectionPage } from "@/components/data/CollectionPage";
+import type { FilterOption } from "@/components/data/FilterBar";
+import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
+import { GenreCell } from "@/pages/music/GenreCell";
 
 type PartialAlbum = components["schemas"]["PartialAlbum"];
 
@@ -76,37 +77,25 @@ export function AlbumListPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Albums</h2>
+    <CollectionPage
+      title="Albums"
+      actions={
         <ItemForm
           fields={formFields}
           onSubmit={handleCreate}
           buttonLabel="+ Add Album"
           submitLabel="Add Album"
         />
-      </div>
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      )}
-      {!isLoading && (
-        <FilterBar
-          data={albums}
-          searchPlaceholder="Search by name or artist..."
-          searchFields={searchFields}
-          filters={filters}
-        >
-          {(filtered) => (
-            <DataTable
-              columns={columns}
-              data={filtered}
-              rowKey={(a) => a.id}
-              emptyMessage="No albums found."
-              onRowClick={(a) => navigate(`/music/albums/${a.id}`)}
-            />
-          )}
-        </FilterBar>
-      )}
-    </div>
+      }
+      data={albums}
+      isLoading={isLoading}
+      columns={columns}
+      rowKey={(a) => a.id}
+      onRowClick={(a) => navigate(`/music/albums/${a.id}`)}
+      searchFields={searchFields}
+      searchPlaceholder="Search by name or artist..."
+      filters={filters}
+      emptyMessage="No albums found."
+    />
   );
 }

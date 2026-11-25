@@ -1,110 +1,136 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type QueryKey,
+} from "@tanstack/react-query";
 import { api } from "./client";
+import {
+  albumsQuery,
+  guitarEventsQuery,
+  guitarsQuery,
+  wishlistQuery,
+} from "./queries";
 import type { components } from "./schema";
 
-export function useCreateAlbum() {
+type Schemas = components["schemas"];
+
+/**
+ * A mutation that refetches the given queries once it succeeds. Keys come
+ * from `queries.ts`, so a renamed key can't silently stop invalidating.
+ */
+function useInvalidatingMutation<TVariables, TData = void>(
+  mutationFn: (variables: TVariables) => Promise<TData>,
+  invalidates: QueryKey[],
+) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (body: components["schemas"]["CreateAlbum"]) => {
-      await api.POST("/api/albums", { body });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
+    mutationFn,
+    onSuccess: () =>
+      Promise.all(
+        invalidates.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+      ),
   });
 }
 
+// ---------- Albums ----------
+
+export function useCreateAlbum() {
+  return useInvalidatingMutation(
+    async (body: Schemas["CreateAlbum"]) => {
+      await api.POST("/api/albums", { body });
+    },
+    [albumsQuery.queryKey],
+  );
+}
+
 export function useAddAlbumGenre(albumId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (genre: string) => {
+  return useInvalidatingMutation(
+    async (genre: string) => {
       await api.POST("/api/albums/{albumId}/genres", {
         params: { path: { albumId }, query: { genre } },
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
-  });
+    [albumsQuery.queryKey],
+  );
 }
 
 export function useRemoveAlbumGenre(albumId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (genre: string) => {
+  return useInvalidatingMutation(
+    async (genre: string) => {
       await api.DELETE("/api/albums/{albumId}/genres", {
         params: { path: { albumId }, query: { genre } },
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
-  });
+    [albumsQuery.queryKey],
+  );
 }
 
 export function useReviewAlbum(albumId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: components["schemas"]["Review"]) => {
+  return useInvalidatingMutation(
+    async (body: Schemas["Review"]) => {
       await api.POST("/api/albums/{albumId}/review", {
         params: { path: { albumId } },
         body,
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
-  });
+    [albumsQuery.queryKey],
+  );
 }
 
+/** Resolves with the updated album: a format change gives it a new id. */
 export function useUpdateAlbumDetails(albumId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: components["schemas"]["AlbumDetails"]) => {
+  return useInvalidatingMutation(
+    async (body: Schemas["AlbumDetails"]) => {
       const { data } = await api.PUT("/api/albums/{albumId}/details", {
         params: { path: { albumId } },
         body,
       });
       return data!;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["albums"] }),
-  });
+    [albumsQuery.queryKey],
+  );
 }
 
+// ---------- Wishlist ----------
+
 export function useAddToWishlist() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: components["schemas"]["AddAlbumToWishlist"]) => {
+  return useInvalidatingMutation(
+    async (body: Schemas["AddAlbumToWishlist"]) => {
       await api.POST("/api/wishlist/albums", { body });
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
+    [wishlistQuery.queryKey],
+  );
 }
 
 export function useOrderWishlistAlbum() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
+  return useInvalidatingMutation(
+    async (id: string) => {
       await api.POST("/api/wishlist/albums/{id}/order", {
         params: { path: { id } },
       });
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
+    [wishlistQuery.queryKey],
+  );
 }
 
+/** Receiving an album also adds it to the collection (server-side event). */
 export function useReceiveWishlistAlbum() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
+  return useInvalidatingMutation(
+    async (id: string) => {
       await api.POST("/api/wishlist/albums/{id}/received", {
         params: { path: { id } },
       });
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["wishlist-albums"] }),
-  });
+    [wishlistQuery.queryKey, albumsQuery.queryKey],
+  );
 }
 
+// ---------- Guitars ----------
+
+/** Read-only computation: nothing to invalidate. */
 export function useStringRecommendation(id: string) {
   return useMutation({
-    mutationFn: async (
-      body: components["schemas"]["StringRecommendationRequest"],
-    ) => {
+    mutationFn: async (body: Schemas["StringRecommendationRequest"]) => {
       const { data } = await api.POST("/api/guitars/{id}/string-recommendation", {
         params: { path: { id } },
         body,
@@ -115,17 +141,13 @@ export function useStringRecommendation(id: string) {
 }
 
 export function useChangeGuitarStrings(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: components["schemas"]["ChangeStrings"]) => {
+  return useInvalidatingMutation(
+    async (body: Schemas["ChangeStrings"]) => {
       await api.POST("/api/guitars/{id}/commands", {
         params: { path: { id } },
         body,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["guitars"] });
-      queryClient.invalidateQueries({ queryKey: ["guitar-events", id] });
-    },
-  });
+    [guitarsQuery.queryKey, guitarEventsQuery(id).queryKey],
+  );
 }

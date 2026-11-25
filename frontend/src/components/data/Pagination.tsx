@@ -10,7 +10,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
   DEFAULT_PAGE_SIZE_OPTIONS,
   type Pagination,
-} from "@/components/usePagination";
+} from "@/components/data/usePagination";
 
 interface PaginationControlsProps<T> {
   pagination: Pagination<T>;

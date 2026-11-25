@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { cn, formatEnum } from "@/lib/utils";
-import { SearchInput } from "@/components/SearchInput";
+import { SearchInput } from "@/components/data/SearchInput";
 import {
   Select,
   SelectContent,

@@ -26,6 +26,7 @@ import {
 import { formatStringSpec } from "@/lib/strings";
 import { cn } from "@/lib/utils";
 import type { AppliedRecommendation } from "./GuitarDetailPage";
+import { Panel } from "@/components/display/Panel";
 
 type Guitar = components["schemas"]["Guitar"];
 type StringRecommendation = components["schemas"]["StringRecommendation"];
@@ -116,17 +117,10 @@ export function StringRecommendationPanel({
   }
 
   return (
-    <section className="rounded-lg border border-border p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Try Another Tuning
-          </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Find NYXL gauges that match the current setup&apos;s tension on a different tuning.
-          </p>
-        </div>
-      </div>
+    <Panel
+      title="Try Another Tuning"
+      description="Find NYXL gauges that match the current setup's tension on a different tuning."
+    >
 
       <div className="mb-4 flex items-end gap-3">
         <div className="flex flex-col gap-1.5">
@@ -221,6 +215,6 @@ export function StringRecommendationPanel({
           )}
         </>
       )}
-    </section>
+    </Panel>
   );
 }

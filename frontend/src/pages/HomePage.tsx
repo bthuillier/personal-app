@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
 import {
   guitarsQuery,
   amplifiersQuery,
@@ -7,6 +6,9 @@ import {
   albumsQuery,
   wishlistQuery,
 } from "@/api/queries";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Page } from "@/components/layout/Page";
+import { StatCard, StatGrid } from "@/components/display/StatCard";
 
 export function HomePage() {
   const { data: guitars = [] } = useQuery(guitarsQuery);
@@ -19,36 +21,23 @@ export function HomePage() {
   const totalMusic = albums.length + wishlist.length;
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl font-bold">Home</h1>
-        <p className="text-muted-foreground">Overview of your collection</p>
-      </div>
+    <Page>
+      <PageHeader title="Home" subtitle="Overview of your collection" />
 
-      <div className="grid grid-cols-2 gap-6">
-        <Link
+      <StatGrid columns={2}>
+        <StatCard
           to="/gear"
-          className="rounded-lg border border-border p-6 transition-colors hover:bg-muted/50"
-        >
-          <h2 className="text-lg font-semibold">Gear</h2>
-          <p className="mt-1 text-3xl font-bold">{totalGear}</p>
-          <p className="text-sm text-muted-foreground">
-            {guitars.length} guitars · {amplifiers.length} amps ·{" "}
-            {pedals.length} pedals
-          </p>
-        </Link>
-
-        <Link
+          label="Gear"
+          value={totalGear}
+          detail={`${guitars.length} guitars · ${amplifiers.length} amps · ${pedals.length} pedals`}
+        />
+        <StatCard
           to="/music"
-          className="rounded-lg border border-border p-6 transition-colors hover:bg-muted/50"
-        >
-          <h2 className="text-lg font-semibold">Music</h2>
-          <p className="mt-1 text-3xl font-bold">{totalMusic}</p>
-          <p className="text-sm text-muted-foreground">
-            {albums.length} albums · {wishlist.length} wishlist items
-          </p>
-        </Link>
-      </div>
-    </div>
+          label="Music"
+          value={totalMusic}
+          detail={`${albums.length} albums · ${wishlist.length} wishlist items`}
+        />
+      </StatGrid>
+    </Page>
   );
 }

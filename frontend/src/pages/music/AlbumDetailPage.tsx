@@ -1,12 +1,26 @@
 import { useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import type { components } from "@/api/schema";
 import { albumsQuery } from "@/api/queries";
 import { useReviewAlbum, useUpdateAlbumDetails } from "@/api/mutations";
 import { Button } from "@/components/ui/button";
-import { StarRating } from "@/components/StarRating";
-import { ReviewEditor, MarkdownView } from "@/components/ReviewEditor";
-import { AlbumDetailsEditor } from "./AlbumDetailsEditor";
+import { StarRating } from "@/components/display/StarRating";
+import { ReviewEditor, MarkdownView } from "@/components/form/ReviewEditor";
+import { Panel } from "@/components/display/Panel";
+import { BackLink, PageHeader } from "@/components/layout/PageHeader";
+import { Page } from "@/components/layout/Page";
+import { EmptyState, LoadingState } from "@/components/display/EmptyState";
+import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
+
+const BACK = { to: "/music/albums", label: "Back to Albums" };
+
+type AlbumDetails = components["schemas"]["AlbumDetails"];
+
+const detailFields: FieldDefinition[] = [
+  { name: "format", label: "Format", type: "select", options: ["Vinyl", "CD"] },
+  { name: "releaseDate", label: "Release Date", type: "date" },
+];
 
 export function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,82 +37,70 @@ export function AlbumDetailPage() {
   const reviewMutation = useReviewAlbum(id ?? "");
   const detailsMutation = useUpdateAlbumDetails(id ?? "");
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading...</p>;
-  }
+  if (isLoading) return <LoadingState />;
 
   if (!album) {
     return (
       <div className="flex flex-col gap-4">
-        <Link
-          to="/music/albums"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          &larr; Back to Albums
-        </Link>
-        <p className="text-sm text-muted-foreground">Album not found.</p>
+        <BackLink {...BACK} />
+        <EmptyState>Album not found.</EmptyState>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-1">
-        <Link
-          to="/music/albums"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          &larr; Back to Albums
-        </Link>
-        <h2 className="text-xl font-semibold">{album.name}</h2>
-        <div className="flex items-center gap-3">
-          <p className="text-sm text-muted-foreground">
-            {album.artist} &middot; {album.format} &middot; {album.releaseDate}
-          </p>
-          {!editingDetails && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setEditingDetails(true)}
-            >
-              Edit
-            </Button>
-          )}
-        </div>
+    <Page>
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          back={BACK}
+          title={album.name}
+          subtitle={
+            <>
+              {album.artist} &middot; {album.format} &middot; {album.releaseDate}
+            </>
+          }
+          actions={
+            !editingDetails && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingDetails(true)}
+              >
+                Edit Details
+              </Button>
+            )
+          }
+        />
         {editingDetails && (
-          <div className="mt-2">
-            <AlbumDetailsEditor
-              initial={{ format: album.format, releaseDate: album.releaseDate }}
-              onCancel={() => setEditingDetails(false)}
-              onSave={async (details) => {
-                const updated = await detailsMutation.mutateAsync(details);
-                setEditingDetails(false);
-                // A format change gives the album a new id.
-                if (updated.id !== album.id) {
-                  navigate(`/music/albums/${updated.id}`, { replace: true });
-                }
-              }}
-            />
-          </div>
+          <ItemForm
+            collapsible={false}
+            fields={detailFields}
+            initialValues={{ format: album.format, releaseDate: album.releaseDate }}
+            onCancel={() => setEditingDetails(false)}
+            onSubmit={async (values) => {
+              const updated = await detailsMutation.mutateAsync(
+                values as AlbumDetails,
+              );
+              setEditingDetails(false);
+              // A format change gives the album a new id.
+              if (updated.id !== album.id) {
+                navigate(`/music/albums/${updated.id}`, { replace: true });
+              }
+            }}
+          />
         )}
       </div>
 
-      <section className="rounded-lg border border-border p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Review
-          </h3>
-          {!editing && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing(true)}
-            >
+      <Panel
+        title="Review"
+        actions={
+          !editing && (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
               {album.review ? "Edit Review" : "Add Review"}
             </Button>
-          )}
-        </div>
-
+          )
+        }
+      >
         {editing ? (
           <ReviewEditor
             initial={album.review}
@@ -117,9 +119,9 @@ export function AlbumDetailPage() {
             <MarkdownView source={album.review.description} />
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No review yet.</p>
+          <EmptyState>No review yet.</EmptyState>
         )}
-      </section>
-    </div>
+      </Panel>
+    </Page>
   );
 }

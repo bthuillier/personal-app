@@ -7,8 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls } from "@/components/Pagination";
-import { usePagination } from "@/components/usePagination";
+import { PaginationControls } from "@/components/data/Pagination";
+import { usePagination } from "@/components/data/usePagination";
 import { cn } from "@/lib/utils";
 
 export interface Column<T> {
@@ -177,9 +177,21 @@ export function DataTable<T>({
               <TableRow
                 key={rowKey(row)}
                 className={cn(
-                  onRowClick && "cursor-pointer hover:bg-muted/50",
+                  onRowClick &&
+                    "cursor-pointer hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none",
                 )}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                tabIndex={onRowClick ? 0 : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? (e) => {
+                        // Only the row itself: keep Enter working in nested inputs/buttons.
+                        if (e.key === "Enter" && e.target === e.currentTarget) {
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
               >
                 {columns.map((col) => (
                   <TableCell

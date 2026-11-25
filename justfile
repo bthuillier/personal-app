@@ -25,6 +25,10 @@ update-backend:
 update-frontend:
     cd frontend && pnpm update
 
+# Browse the component library on http://localhost:6006
+storybook:
+    cd frontend && pnpm storybook
+
 # Build backend and frontend
 build: build-backend build-frontend
 

@@ -1,15 +1,20 @@
 import { useMemo, useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { components } from "@/api/schema";
 import { guitarsQuery, guitarEventsQuery } from "@/api/queries";
 import { useChangeGuitarStrings } from "@/api/mutations";
 import { Button } from "@/components/ui/button";
-import { DataTable, type Column } from "@/components/DataTable";
-import { TuningBadge } from "@/components/TuningBadge";
+import { DataTable, type Column } from "@/components/data/DataTable";
+import { TuningBadge } from "@/pages/gear/TuningBadge";
 import { formatEnum } from "@/lib/utils";
 import { formatGaugeList } from "@/lib/strings";
 import { usePendingApply } from "@/hooks/usePendingApply";
+import { Panel } from "@/components/display/Panel";
+import { DescriptionList } from "@/components/display/DescriptionList";
+import { BackLink, PageHeader } from "@/components/layout/PageHeader";
+import { Page } from "@/components/layout/Page";
+import { EmptyState, LoadingState } from "@/components/display/EmptyState";
 import { StringRecommendationPanel } from "./StringRecommendationPanel";
 import {
   ChangeStringsDrawer,
@@ -23,6 +28,8 @@ type GuitarTuning = components["schemas"]["GuitarTuning"];
 function isStringsChanged(event: GuitarEvent): event is StringsChanged {
   return "stringBrand" in event;
 }
+
+const BACK = { to: "/gear/guitars", label: "Back to Guitars" };
 
 export interface AppliedRecommendation {
   brand: string;
@@ -43,7 +50,7 @@ function formatMaterials(materials?: components["schemas"]["GuitarMaterial"][]):
 export function GuitarDetailPage() {
   const { id } = useParams<{ id: string }>();
 
-  const { data: guitars = [] } = useQuery(guitarsQuery);
+  const { data: guitars = [], isLoading } = useQuery(guitarsQuery);
 
   const guitar = useMemo(
     () => guitars.find((g) => g.id === id),
@@ -81,13 +88,13 @@ export function GuitarDetailPage() {
     pendingApply.clear();
   }
 
+  if (isLoading) return <LoadingState />;
+
   if (!guitar) {
     return (
       <div className="flex flex-col gap-4">
-        <Link to="/gear/guitars" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; Back to Guitars
-        </Link>
-        <p className="text-sm text-muted-foreground">Guitar not found.</p>
+        <BackLink {...BACK} />
+        <EmptyState>Guitar not found.</EmptyState>
       </div>
     );
   }
@@ -112,88 +119,67 @@ export function GuitarDetailPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <Link to="/gear/guitars" className="text-sm text-muted-foreground hover:text-foreground">
-            &larr; Back to Guitars
-          </Link>
-          <h2 className="text-xl font-semibold">
-            {formatEnum(guitar.brand)} {guitar.model}
-          </h2>
-          <p className="text-sm text-muted-foreground">
+    <Page>
+      <PageHeader
+        back={BACK}
+        title={`${formatEnum(guitar.brand)} ${guitar.model}`}
+        subtitle={
+          <>
             {guitar.year} &middot; S/N: {guitar.serialNumber}
-          </p>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Specifications */}
-        <section className="rounded-lg border border-border p-5">
-          <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-            Specifications
-          </h3>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Body</dt>
-            <dd>{formatEnum(specs.bodyMaterial)} — {specs.bodyFinish}</dd>
-            {specs.top && (
-              <>
-                <dt className="text-muted-foreground">Top</dt>
-                <dd>{formatEnum(specs.top)}</dd>
-              </>
-            )}
-            {specs.neckMaterial && specs.neckMaterial.length > 0 && (
-              <>
-                <dt className="text-muted-foreground">Neck</dt>
-                <dd>{formatMaterials(specs.neckMaterial)}</dd>
-              </>
-            )}
-            <dt className="text-muted-foreground">Fretboard</dt>
-            <dd>{formatEnum(specs.fretboardMaterial)}</dd>
-            <dt className="text-muted-foreground">Frets</dt>
-            <dd>{specs.numberOfFrets}</dd>
-            <dt className="text-muted-foreground">Scale Length</dt>
-            <dd>{specs.scaleLengthInInches}&quot;</dd>
-            <dt className="text-muted-foreground">Strings</dt>
-            <dd>{specs.numberOfStrings}</dd>
-            <dt className="text-muted-foreground">Bridge Pickup</dt>
-            <dd>{formatPickup(specs.pickupConfiguration.bridgePickup)}</dd>
-            {specs.pickupConfiguration.neckPickup && (
-              <>
-                <dt className="text-muted-foreground">Neck Pickup</dt>
-                <dd>{formatPickup(specs.pickupConfiguration.neckPickup)}</dd>
-              </>
-            )}
-            {specs.pickupConfiguration.middlePickup && (
-              <>
-                <dt className="text-muted-foreground">Middle Pickup</dt>
-                <dd>{formatPickup(specs.pickupConfiguration.middlePickup)}</dd>
-              </>
-            )}
-          </dl>
-        </section>
+        <Panel title="Specifications">
+          <DescriptionList
+            items={[
+              { label: "Body", value: `${formatEnum(specs.bodyMaterial)} — ${specs.bodyFinish}` },
+              { label: "Top", value: specs.top && formatEnum(specs.top) },
+              {
+                label: "Neck",
+                value:
+                  specs.neckMaterial && specs.neckMaterial.length > 0
+                    ? formatMaterials(specs.neckMaterial)
+                    : null,
+              },
+              { label: "Fretboard", value: formatEnum(specs.fretboardMaterial) },
+              { label: "Frets", value: specs.numberOfFrets },
+              { label: "Scale Length", value: `${specs.scaleLengthInInches}"` },
+              { label: "Strings", value: specs.numberOfStrings },
+              {
+                label: "Bridge Pickup",
+                value: formatPickup(specs.pickupConfiguration.bridgePickup),
+              },
+              {
+                label: "Neck Pickup",
+                value:
+                  specs.pickupConfiguration.neckPickup &&
+                  formatPickup(specs.pickupConfiguration.neckPickup),
+              },
+              {
+                label: "Middle Pickup",
+                value:
+                  specs.pickupConfiguration.middlePickup &&
+                  formatPickup(specs.pickupConfiguration.middlePickup),
+              },
+            ]}
+          />
+        </Panel>
 
-        {/* Current Setup */}
-        <section className="rounded-lg border border-border p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
-              Current Setup
-            </h3>
-            <Button onClick={() => setManualOpen(true)}>Change Strings</Button>
-          </div>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Strings</dt>
-            <dd>{setup.stringBrand}</dd>
-            <dt className="text-muted-foreground">Gauge</dt>
-            <dd>{formatGaugeList(setup.stringGauge)}</dd>
-            <dt className="text-muted-foreground">Tuning</dt>
-            <dd>
-              <TuningBadge tuning={setup.tuning} />
-            </dd>
-            <dt className="text-muted-foreground">Last Change</dt>
-            <dd>{setup.lastStringChange}</dd>
-          </dl>
-        </section>
+        <Panel
+          title="Current Setup"
+          actions={<Button onClick={() => setManualOpen(true)}>Change Strings</Button>}
+        >
+          <DescriptionList
+            items={[
+              { label: "Strings", value: setup.stringBrand },
+              { label: "Gauge", value: formatGaugeList(setup.stringGauge) },
+              { label: "Tuning", value: <TuningBadge tuning={setup.tuning} /> },
+              { label: "Last Change", value: setup.lastStringChange },
+            ]}
+          />
+        </Panel>
       </div>
 
       <StringRecommendationPanel
@@ -221,18 +207,14 @@ export function GuitarDetailPage() {
         }
       />
 
-      {/* Event History */}
-      <section>
-        <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-          String Change History
-        </h3>
+      <Panel title="String Change History">
         <DataTable
           columns={eventColumns}
           data={stringChangeEvents}
           rowKey={(e) => `${e.date}-${e.stringBrand}`}
           emptyMessage="No string changes recorded."
         />
-      </section>
-    </div>
+      </Panel>
+    </Page>
   );
 }
