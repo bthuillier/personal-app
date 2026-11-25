@@ -1,16 +1,12 @@
-import {
-  useState,
-  useMemo,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-} from "react";
-import { createPortal } from "react-dom";
+import { useMemo, useState } from "react";
 import { useAddAlbumGenre, useRemoveAlbumGenre } from "@/features/music/api";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import {
+  Autocomplete,
+  AutocompleteContent,
+  AutocompleteInput,
+  AutocompleteItem,
+} from "@/components/ui/autocomplete";
 
 interface GenreCellProps {
   albumId: string;
@@ -20,137 +16,51 @@ interface GenreCellProps {
 
 const MAX_SUGGESTIONS = 8;
 
+/**
+ * An album's genres as removable badges, plus a "+" that opens an input to
+ * add one: pick a known genre from the suggestions, or type a new one and
+ * press Enter.
+ */
 export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
-  const [highlightIndex, setHighlightIndex] = useState(-1);
-  const [menuStyle, setMenuStyle] = useState<{
-    left: number;
-    top: number;
-    placement: "below" | "above";
-  } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement | null>(null);
+  const [highlighted, setHighlighted] = useState<string | undefined>();
+  const [popupOpen, setPopupOpen] = useState(false);
 
   const addMutation = useAddAlbumGenre(albumId);
   const removeMutation = useRemoveAlbumGenre(albumId);
 
   const current = useMemo(() => genres ?? [], [genres]);
 
-  const closeEditor = useCallback(() => {
-    setEditing(false);
-    setValue("");
-    setHighlightIndex(-1);
-    setMenuStyle(null);
-  }, []);
-
-  const suggestions = useMemo(() => {
+  const matches = useMemo(() => {
     const query = value.toLowerCase().trim();
     if (!query) return [];
-    const pool = knownGenres.filter((g) => !current.includes(g));
-    return pool
-      .filter((g) => g.toLowerCase().includes(query))
-      .slice(0, MAX_SUGGESTIONS);
+    return knownGenres.filter(
+      (g) => !current.includes(g) && g.toLowerCase().includes(query),
+    );
   }, [value, knownGenres, current]);
 
-  const updateMenuPosition = useCallback(() => {
-    const input = inputRef.current;
-    const list = listRef.current;
-    if (!input) return;
-    const inputRect = input.getBoundingClientRect();
-    const listHeight = list?.offsetHeight ?? 0;
-    const spaceBelow = window.innerHeight - inputRect.bottom;
-    const spaceAbove = inputRect.top;
-    const placement: "below" | "above" =
-      spaceBelow < listHeight + 8 && spaceAbove > spaceBelow ? "above" : "below";
-    const top =
-      placement === "below" ? inputRect.bottom + 4 : inputRect.top - 4 - listHeight;
-    setMenuStyle((prev) => {
-      if (
-        prev &&
-        prev.left === inputRect.left &&
-        prev.top === top &&
-        prev.placement === placement
-      ) {
-        return prev;
-      }
-      return { left: inputRect.left, top, placement };
-    });
-  }, []);
-
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
-
-  useLayoutEffect(() => {
-    if (!editing || suggestions.length === 0) return;
-    updateMenuPosition();
-  }, [editing, suggestions, updateMenuPosition]);
-
-  useEffect(() => {
-    if (!editing || suggestions.length === 0) return;
-    window.addEventListener("scroll", updateMenuPosition, true);
-    window.addEventListener("resize", updateMenuPosition);
-    return () => {
-      window.removeEventListener("scroll", updateMenuPosition, true);
-      window.removeEventListener("resize", updateMenuPosition);
-    };
-  }, [editing, suggestions, updateMenuPosition]);
-
-  useEffect(() => {
-    if (!editing) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        closeEditor();
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [editing, closeEditor]);
-
-  function submit(raw: string) {
-    const genre = raw.trim();
-    if (!genre) return;
-    if (current.includes(genre)) {
-      closeEditor();
-      return;
-    }
-    addMutation.mutate(genre);
-    closeEditor();
+  function close() {
+    setEditing(false);
+    setValue("");
+    setHighlighted(undefined);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "ArrowDown" && suggestions.length > 0) {
-      e.preventDefault();
-      setHighlightIndex((i) => (i + 1) % suggestions.length);
-    } else if (e.key === "ArrowUp" && suggestions.length > 0) {
-      e.preventDefault();
-      setHighlightIndex((i) =>
-        i <= 0 ? suggestions.length - 1 : i - 1,
-      );
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const picked =
-        highlightIndex >= 0 ? suggestions[highlightIndex] : value;
-      submit(picked);
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      closeEditor();
-    }
+  function add(raw: string) {
+    const genre = raw.trim();
+    if (genre && !current.includes(genre)) addMutation.mutate(genre);
+    close();
   }
 
   return (
+    // The cell sits in a clickable table row: keep clicks (including on the
+    // portaled suggestions, which bubble through React) from opening the album.
     <div
-      ref={containerRef}
       className="flex flex-wrap items-center gap-1"
       onClick={(e) => e.stopPropagation()}
     >
       {current.map((g) => (
-        <Badge key={g} variant="secondary" className="group/genre gap-1 pr-1">
+        <Badge key={g} variant="secondary" className="gap-1 pr-1">
           <span>{g}</span>
           <button
             type="button"
@@ -163,51 +73,42 @@ export function GenreCell({ albumId, genres, knownGenres }: GenreCellProps) {
         </Badge>
       ))}
       {editing ? (
-        <>
-          <Input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              setHighlightIndex(-1);
-            }}
-            onKeyDown={handleKeyDown}
+        <Autocomplete
+          items={matches}
+          filter={null}
+          limit={MAX_SUGGESTIONS}
+          value={value}
+          onValueChange={(next, details) => {
+            if (details.reason === "item-press") add(next);
+            else setValue(next);
+          }}
+          onItemHighlighted={setHighlighted}
+          onOpenChange={setPopupOpen}
+        >
+          <AutocompleteInput
+            autoFocus
+            aria-label="Add genre"
             placeholder="Add genre..."
-            className="h-6 w-32 px-2 py-0 text-xs"
+            className="h-6 w-32 px-2 py-0 text-xs md:text-xs"
+            onKeyDown={(e) => {
+              // With a suggestion highlighted, Base UI picks it (item-press).
+              if (e.key === "Enter" && highlighted === undefined) {
+                e.preventDefault();
+                add(value);
+              } else if (e.key === "Escape" && !popupOpen) {
+                close();
+              }
+            }}
+            onBlur={close}
           />
-          {suggestions.length > 0 &&
-            createPortal(
-              <ul
-                ref={listRef}
-                style={{
-                  position: "fixed",
-                  left: menuStyle?.left ?? -9999,
-                  top: menuStyle?.top ?? -9999,
-                  visibility: menuStyle ? "visible" : "hidden",
-                }}
-                className="z-50 w-40 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-md"
-              >
-                {suggestions.map((s, i) => (
-                  <li
-                    key={s}
-                    className={cn(
-                      "cursor-pointer px-2 py-1 text-xs",
-                      i === highlightIndex
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-muted",
-                    )}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      submit(s);
-                    }}
-                  >
-                    {s}
-                  </li>
-                ))}
-              </ul>,
-              document.body,
+          <AutocompleteContent className="w-40">
+            {(genre: string) => (
+              <AutocompleteItem key={genre} value={genre} className="text-xs">
+                {genre}
+              </AutocompleteItem>
             )}
-        </>
+          </AutocompleteContent>
+        </Autocomplete>
       ) : (
         <button
           type="button"
