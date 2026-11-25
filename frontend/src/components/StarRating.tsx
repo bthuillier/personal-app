@@ -7,6 +7,7 @@ interface StarRatingProps {
   onChange?: (next: number) => void;
   readOnly?: boolean;
   size?: number;
+  showLabel?: boolean;
 }
 
 const STAR_COUNT = 5;
@@ -26,6 +27,7 @@ export function StarRating({
   onChange,
   readOnly = false,
   size = 20,
+  showLabel = true,
 }: StarRatingProps) {
   const [hover, setHover] = useState<number | null>(null);
   const displayed = hover ?? value;
@@ -53,9 +55,11 @@ export function StarRating({
           />
         );
       })}
-      <span className="ml-2 text-sm tabular-nums text-muted-foreground">
-        {(displayed / 2).toFixed(1)} / {STAR_COUNT}
-      </span>
+      {showLabel && (
+        <span className="ml-2 text-sm tabular-nums text-muted-foreground">
+          {(displayed / 2).toFixed(1)} / {STAR_COUNT}
+        </span>
+      )}
     </div>
   );
 }
