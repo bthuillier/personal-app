@@ -3,6 +3,7 @@ import type { components } from "@/api/schema";
 import { albumsQuery, wishlistQuery } from "@/api/queries";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
+import { QueryGate } from "@/components/data/QueryGate";
 import { Section } from "@/components/layout/Section";
 import { StatCard, StatGrid } from "@/components/display/StatCard";
 import { BarList } from "@/components/display/BarList";
@@ -15,8 +16,10 @@ const TOP_GENRES_LIMIT = 5;
 type WishlistAlbum = components["schemas"]["WishlistAlbum"];
 
 export function MusicHomePage() {
-  const { data: albums = [] } = useQuery(albumsQuery);
-  const { data: wishlist = [] } = useQuery(wishlistQuery);
+  const albumsResult = useQuery(albumsQuery);
+  const albums = albumsResult.data ?? [];
+  const wishlistResult = useQuery(wishlistQuery);
+  const wishlist = wishlistResult.data ?? [];
 
   const wanted = wishlist.filter((w) => w.status === "Wanted");
   const ordered = wishlist.filter((w) => w.status === "Ordered");
@@ -30,41 +33,43 @@ export function MusicHomePage() {
   return (
     <Page>
       <PageHeader title="Music" subtitle="Your music collection at a glance" />
+      <QueryGate queries={[albumsResult, wishlistResult]}>
 
-      <StatGrid>
-        <StatCard
-          to="/music/albums"
-          label="Albums"
-          value={albums.length}
-          detail={formatCounts(formatBreakdown)}
-        />
-        <StatCard
-          to="/music/wishlist"
-          label="Wishlist"
-          value={wishlist.length}
-          detail={`${wanted.length} wanted · ${ordered.length} ordered`}
-        />
-        <StatCard
-          label="Uncategorized"
-          value={albumsWithoutGenre}
-          detail={`${albumsWithoutGenre === 1 ? "album needs" : "albums need"} a genre`}
-        />
-        <StatCard label="Top genres">
-          <div className="mt-3">
-            {topGenres.length === 0 ? (
-              <EmptyState>No genres assigned yet.</EmptyState>
-            ) : (
-              <BarList
-                items={topGenres}
-                href={(genre) => `/music/albums?genre=${encodeURIComponent(genre)}`}
-              />
-            )}
-          </div>
-        </StatCard>
-      </StatGrid>
+        <StatGrid>
+          <StatCard
+            to="/music/albums"
+            label="Albums"
+            value={albums.length}
+            detail={formatCounts(formatBreakdown)}
+          />
+          <StatCard
+            to="/music/wishlist"
+            label="Wishlist"
+            value={wishlist.length}
+            detail={`${wanted.length} wanted · ${ordered.length} ordered`}
+          />
+          <StatCard
+            label="Uncategorized"
+            value={albumsWithoutGenre}
+            detail={`${albumsWithoutGenre === 1 ? "album needs" : "albums need"} a genre`}
+          />
+          <StatCard label="Top genres">
+            <div className="mt-3">
+              {topGenres.length === 0 ? (
+                <EmptyState>No genres assigned yet.</EmptyState>
+              ) : (
+                <BarList
+                  items={topGenres}
+                  href={(genre) => `/music/albums?genre=${encodeURIComponent(genre)}`}
+                />
+              )}
+            </div>
+          </StatCard>
+        </StatGrid>
 
-      <WishlistSection title="On the way" albums={ordered} />
-      <WishlistSection title="Wanted" albums={wanted} />
+        <WishlistSection title="On the way" albums={ordered} />
+        <WishlistSection title="Wanted" albums={wanted} />
+      </QueryGate>
     </Page>
   );
 }

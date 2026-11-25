@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CollectionPage } from "./CollectionPage";
 import type { Column } from "./DataTable";
 import type { FilterOption } from "./FilterBar";
+import type { QueryState } from "./QueryGate";
 import { sampleAlbums, type SampleAlbum } from "./sampleAlbums.fixtures";
 
 const columns: Column<SampleAlbum>[] = [
@@ -18,14 +19,26 @@ const filters: FilterOption<SampleAlbum>[] = [
   { name: "genre", label: "Genre", extract: (row) => row.genre },
 ];
 
+function queryState(
+  state: Partial<QueryState<SampleAlbum[]>>,
+): QueryState<SampleAlbum[]> {
+  return {
+    data: undefined,
+    isPending: false,
+    isError: false,
+    error: null,
+    refetch: fn(),
+    ...state,
+  } as QueryState<SampleAlbum[]>;
+}
+
 const meta = {
   title: "Data/CollectionPage",
   component: CollectionPage<SampleAlbum>,
   args: {
     title: "Albums",
     actions: <Button>+ Add Album</Button>,
-    data: sampleAlbums,
-    isLoading: false,
+    query: queryState({ data: sampleAlbums }),
     columns,
     rowKey: (a: SampleAlbum) => a.id,
     onRowClick: fn(),
@@ -44,11 +57,21 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Loading: Story = {
-  args: { isLoading: true },
+  args: { query: queryState({ isPending: true }) },
+};
+
+/** The API failed: error message and a Retry that refetches. */
+export const Failed: Story = {
+  args: {
+    query: queryState({
+      isError: true,
+      error: new Error("Failed to fetch"),
+    }),
+  },
 };
 
 export const EmptyCollection: Story = {
-  args: { data: [] },
+  args: { query: queryState({ data: [] }) },
 };
 
 export const SearchOnly: Story = {

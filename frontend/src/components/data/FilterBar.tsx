@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, type ReactNode } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { cn, formatEnum } from "@/lib/utils";
 import { SearchInput } from "@/components/data/SearchInput";
@@ -32,6 +32,17 @@ interface FilterBarProps<T> {
   children: (filtered: T[]) => ReactNode;
 }
 
+const SEARCH_PARAM = "q";
+const NO_FILTERS: never[] = [];
+
+/** Copy of `params` with `name` set, or removed when `value` is empty. */
+function withParam(params: URLSearchParams, name: string, value: string) {
+  const next = new URLSearchParams(params);
+  if (value) next.set(name, value);
+  else next.delete(name);
+  return next;
+}
+
 function allValue(filter: { label: string }) {
   return `All ${filter.label}s`;
 }
@@ -44,25 +55,39 @@ export function FilterBar<T>({
   data,
   searchPlaceholder = "Search...",
   searchFields,
-  filters = [],
+  filters = NO_FILTERS,
   children,
 }: FilterBarProps<T>) {
+  // The URL is the single source of truth for search and filters, so links,
+  // reloads and re-clicking a nav entry (which clears the query) all agree
+  // with what is displayed.
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
-  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
+  const urlSearch = searchParams.get(SEARCH_PARAM) ?? "";
+  const activeFilters = useMemo<Record<string, string>>(
     () =>
       Object.fromEntries(
         filters.map((f) => [f.name, searchParams.get(f.name) ?? allValue(f)]),
       ),
+    [filters, searchParams],
   );
 
+  // The input keeps its own state so typing stays instant; it is written to
+  // the URL once typing pauses, and reset when the URL changes elsewhere.
+  const [search, setSearch] = useState(urlSearch);
+  const [prevUrlSearch, setPrevUrlSearch] = useState(urlSearch);
+  if (urlSearch !== prevUrlSearch) {
+    setPrevUrlSearch(urlSearch);
+    if (urlSearch !== search) setSearch(urlSearch);
+  }
+
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setDebouncedSearch(search), 200);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [search]);
+    if (search === urlSearch) return;
+    const timeout = setTimeout(
+      () => setSearchParams((prev) => withParam(prev, SEARCH_PARAM, search), { replace: true }),
+      200,
+    );
+    return () => clearTimeout(timeout);
+  }, [search, urlSearch, setSearchParams]);
 
   const suggestions = useMemo(() => {
     const values = new Set<string>();
@@ -97,7 +122,7 @@ export function FilterBar<T>({
   }, [data, filters]);
 
   const filtered = useMemo(() => {
-    const query = debouncedSearch.toLowerCase().trim();
+    const query = urlSearch.toLowerCase().trim();
 
     return data.filter((row) => {
       if (query) {
@@ -125,23 +150,13 @@ export function FilterBar<T>({
 
       return true;
     });
-  }, [data, debouncedSearch, searchFields, activeFilters, filters]);
+  }, [data, urlSearch, searchFields, activeFilters, filters]);
 
   function updateFilter(name: string, value: string) {
-    setActiveFilters((prev) => ({ ...prev, [name]: value }));
     const filter = filters.find((f) => f.name === name);
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (filter && value === allValue(filter)) {
-          next.delete(name);
-        } else {
-          next.set(name, value);
-        }
-        return next;
-      },
-      { replace: true },
-    );
+    const param = filter && value === allValue(filter) ? "" : value;
+    // replace: tweaking filters shouldn't fill the history.
+    setSearchParams((prev) => withParam(prev, name, param), { replace: true });
   }
 
   return (

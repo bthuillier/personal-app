@@ -29,7 +29,7 @@ const pedalTypeColorMap: Record<PedalType, "default" | "secondary" | "outline" |
 };
 
 export function PedalListPage() {
-  const { data: pedals = [], isLoading } = useQuery(pedalsQuery);
+  const query = useQuery(pedalsQuery);
 
   const filters: FilterOption<GuitarPedal>[] = useMemo(
     () => [
@@ -62,8 +62,7 @@ export function PedalListPage() {
   return (
     <CollectionPage
       title="Pedals"
-      data={pedals}
-      isLoading={isLoading}
+      query={query}
       columns={columns}
       rowKey={(p) => p.id}
       searchFields={searchFields}

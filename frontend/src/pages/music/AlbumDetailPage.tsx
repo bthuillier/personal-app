@@ -10,7 +10,8 @@ import { ReviewEditor, MarkdownView } from "@/components/form/ReviewEditor";
 import { Panel } from "@/components/display/Panel";
 import { BackLink, PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
-import { EmptyState, LoadingState } from "@/components/display/EmptyState";
+import { EmptyState } from "@/components/display/EmptyState";
+import { QueryGate } from "@/components/data/QueryGate";
 import { ItemForm, type FieldDefinition } from "@/components/form/ItemForm";
 
 const BACK = { to: "/music/albums", label: "Back to Albums" };
@@ -24,7 +25,8 @@ const detailFields: FieldDefinition[] = [
 
 export function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: albums = [], isLoading } = useQuery(albumsQuery);
+  const albumsResult = useQuery(albumsQuery);
+  const { data: albums = [] } = albumsResult;
   const [editing, setEditing] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export function AlbumDetailPage() {
   const reviewMutation = useReviewAlbum(id ?? "");
   const detailsMutation = useUpdateAlbumDetails(id ?? "");
 
-  if (isLoading) return <LoadingState />;
+  if (!albumsResult.isSuccess) return <QueryGate queries={[albumsResult]} />;
 
   if (!album) {
     return (

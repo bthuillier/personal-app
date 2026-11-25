@@ -38,7 +38,7 @@ const formFields: FieldDefinition[] = [
 ];
 
 export function WishlistPage() {
-  const { data: albums = [], isLoading } = useQuery(wishlistQuery);
+  const query = useQuery(wishlistQuery);
 
   const addMutation = useAddToWishlist();
   const orderMutation = useOrderWishlistAlbum();
@@ -102,8 +102,7 @@ export function WishlistPage() {
           submitLabel="Add to Wishlist"
         />
       }
-      data={albums}
-      isLoading={isLoading}
+      query={query}
       columns={columns}
       rowKey={(a) => a.id}
       searchFields={searchFields}

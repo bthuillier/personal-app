@@ -28,7 +28,13 @@ function showErrorToast(error: Error) {
 }
 
 export const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: showErrorToast }),
+  queryCache: new QueryCache({
+    // A first load that fails is shown in the page (QueryGate); toast only
+    // when a refetch fails while older data is still displayed.
+    onError: (error, query) => {
+      if (query.state.data !== undefined) showErrorToast(error);
+    },
+  }),
   mutationCache: new MutationCache({ onError: showErrorToast }),
   defaultOptions: {
     queries: {

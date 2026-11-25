@@ -23,14 +23,14 @@ const formFields: FieldDefinition[] = [
 
 export function AlbumListPage() {
   const navigate = useNavigate();
-  const { data: albums = [], isLoading } = useQuery(albumsQuery);
+  const query = useQuery(albumsQuery);
   const createMutation = useCreateAlbum();
 
   const knownGenres = useMemo(() => {
     const set = new Set<string>();
-    for (const a of albums) for (const g of a.genre ?? []) set.add(g);
+    for (const a of query.data ?? []) for (const g of a.genre ?? []) set.add(g);
     return [...set].sort();
-  }, [albums]);
+  }, [query.data]);
 
   const columns = useMemo<Column<PartialAlbum>[]>(
     () => [
@@ -87,8 +87,7 @@ export function AlbumListPage() {
           submitLabel="Add Album"
         />
       }
-      data={albums}
-      isLoading={isLoading}
+      query={query}
       columns={columns}
       rowKey={(a) => a.id}
       onRowClick={(a) => navigate(`/music/albums/${a.id}`)}

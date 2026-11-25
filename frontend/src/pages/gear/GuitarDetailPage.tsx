@@ -14,7 +14,8 @@ import { Panel } from "@/components/display/Panel";
 import { DescriptionList } from "@/components/display/DescriptionList";
 import { BackLink, PageHeader } from "@/components/layout/PageHeader";
 import { Page } from "@/components/layout/Page";
-import { EmptyState, LoadingState } from "@/components/display/EmptyState";
+import { EmptyState } from "@/components/display/EmptyState";
+import { QueryGate } from "@/components/data/QueryGate";
 import { StringRecommendationPanel } from "./StringRecommendationPanel";
 import {
   ChangeStringsDrawer,
@@ -50,7 +51,8 @@ function formatMaterials(materials?: components["schemas"]["GuitarMaterial"][]):
 export function GuitarDetailPage() {
   const { id } = useParams<{ id: string }>();
 
-  const { data: guitars = [], isLoading } = useQuery(guitarsQuery);
+  const guitarsResult = useQuery(guitarsQuery);
+  const { data: guitars = [] } = guitarsResult;
 
   const guitar = useMemo(
     () => guitars.find((g) => g.id === id),
@@ -88,7 +90,7 @@ export function GuitarDetailPage() {
     pendingApply.clear();
   }
 
-  if (isLoading) return <LoadingState />;
+  if (!guitarsResult.isSuccess) return <QueryGate queries={[guitarsResult]} />;
 
   if (!guitar) {
     return (

@@ -10,7 +10,8 @@ import { Section } from "@/components/layout/Section";
 import { StatCard, StatGrid } from "@/components/display/StatCard";
 import { StarRating } from "@/components/display/StarRating";
 import { BarList } from "@/components/display/BarList";
-import { EmptyState, LoadingState } from "@/components/display/EmptyState";
+import { EmptyState } from "@/components/display/EmptyState";
+import { QueryGate } from "@/components/data/QueryGate";
 import { ListRow, ListRows } from "@/components/display/ListRow";
 import { countBy, formatCounts } from "@/lib/stats";
 import { cn } from "@/lib/utils";
@@ -55,7 +56,8 @@ function rankByRating(albums: ReviewedAlbum[]) {
 }
 
 export function YearRecapPage() {
-  const { data: albums = [], isLoading } = useQuery(albumsQuery);
+  const albumsResult = useQuery(albumsQuery);
+  const { data: albums = [] } = albumsResult;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const years = useMemo(
@@ -97,7 +99,7 @@ export function YearRecapPage() {
 
   const selectYear = (y: string) => setSearchParams({ year: y });
 
-  if (isLoading) return <LoadingState />;
+  if (!albumsResult.isSuccess) return <QueryGate queries={[albumsResult]} />;
 
   return (
     <Page>

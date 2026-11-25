@@ -19,7 +19,7 @@ const typeColorMap: Record<AmpType, "default" | "secondary" | "outline"> = {
 };
 
 export function AmplifierListPage() {
-  const { data: amplifiers = [], isLoading } = useQuery(amplifiersQuery);
+  const query = useQuery(amplifiersQuery);
 
   const filters: FilterOption<Amplifier>[] = useMemo(
     () => [
@@ -57,8 +57,7 @@ export function AmplifierListPage() {
   return (
     <CollectionPage
       title="Amplifiers"
-      data={amplifiers}
-      isLoading={isLoading}
+      query={query}
       columns={columns}
       rowKey={(a) => a.id}
       searchFields={searchFields}

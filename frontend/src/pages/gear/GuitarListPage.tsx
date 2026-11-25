@@ -15,7 +15,7 @@ const searchFields: (keyof Guitar & string)[] = ["model", "brand"];
 
 export function GuitarListPage() {
   const navigate = useNavigate();
-  const { data: guitars = [], isLoading } = useQuery(guitarsQuery);
+  const query = useQuery(guitarsQuery);
 
   const filters: FilterOption<Guitar>[] = useMemo(
     () => [
@@ -63,8 +63,7 @@ export function GuitarListPage() {
   return (
     <CollectionPage
       title="Guitars"
-      data={guitars}
-      isLoading={isLoading}
+      query={query}
       columns={columns}
       rowKey={(g) => g.id}
       onRowClick={(g) => navigate(`/gear/guitars/${encodeURIComponent(g.id)}`)}

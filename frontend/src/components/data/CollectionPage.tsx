@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { Page } from "@/components/layout/Page";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { LoadingState } from "@/components/display/EmptyState";
 import { DataTable, type Column } from "./DataTable";
 import { FilterBar, type FilterOption } from "./FilterBar";
+import { QueryGate, type QueryState } from "./QueryGate";
 
 export interface CollectionPageProps<T> {
   title: ReactNode;
@@ -11,8 +11,8 @@ export interface CollectionPageProps<T> {
   /** Header actions, e.g. an `ItemForm` to add an item. */
   actions?: ReactNode;
 
-  data: T[];
-  isLoading: boolean;
+  /** The list query; loading and error states are handled here. */
+  query: QueryState<T[]>;
 
   columns: Column<T>[];
   rowKey: (row: T) => string;
@@ -33,8 +33,7 @@ export function CollectionPage<T>({
   title,
   subtitle,
   actions,
-  data,
-  isLoading,
+  query,
   columns,
   rowKey,
   onRowClick,
@@ -44,12 +43,11 @@ export function CollectionPage<T>({
   emptyMessage,
   emptyCollectionMessage,
 }: CollectionPageProps<T>) {
+  const data = query.data ?? [];
   return (
     <Page>
       <PageHeader title={title} subtitle={subtitle} actions={actions} />
-      {isLoading ? (
-        <LoadingState />
-      ) : (
+      <QueryGate queries={[query]}>
         <FilterBar
           data={data}
           searchFields={searchFields}
@@ -70,7 +68,7 @@ export function CollectionPage<T>({
             />
           )}
         </FilterBar>
-      )}
+      </QueryGate>
     </Page>
   );
 }
