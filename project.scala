@@ -6,7 +6,7 @@
 //> using dependency org.typelevel::cats-effect:3.7.1
 
 //fs2
-//> using dependency co.fs2::fs2-core:3.14.0
+//> using dependency co.fs2::fs2-core:3.16.0
 
 // json
 //> using dependency io.circe::circe-core:0.14.17
